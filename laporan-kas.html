@@ -303,14 +303,16 @@
   const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind1YXJndHh1bGFxdXhweml1emhvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1MjMxNTYsImV4cCI6MjA5MDA5OTE1Nn0.EcVFAGh3ZgTDs8Paz9O_8MpkliKPF0vI7cAuuIsvb2U'
   const supabase = createClient(supabaseUrl, supabaseKey)
 
-  let saldoAwalGlobal = 0; // nilai dari sumber 'Saldo Awal'
+  let saldoAwalGlobal = 0;
 
   function formatRupiah(angka) {
     if (angka === null || isNaN(angka)) angka = 0;
     return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka);
   }
-  function formatDate(iso) {
-    return new Date(iso).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' });
+
+  // Tanggal hanya menampilkan hari, bulan, tahun (tanpa jam)
+  function formatDateOnly(iso) {
+    return new Date(iso).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' });
   }
 
   async function fetchSaldoAwal() {
@@ -341,7 +343,6 @@
   }
 
   function updateSummary(data) {
-    // total pemasukan dan pengeluaran dari data yang ditampilkan
     const totalPemasukan = data.reduce((sum, row) => sum + (row.pemasukan || 0), 0);
     const totalPengeluaran = data.reduce((sum, row) => sum + (row.pengeluaran || 0), 0);
     const saldoAkhir = saldoAwalGlobal + totalPemasukan - totalPengeluaran;
@@ -357,7 +358,7 @@
     tbody.innerHTML = '';
     data.forEach(row => {
       const tr = tbody.insertRow();
-      tr.insertCell(0).innerText = formatDate(row.tanggal);
+      tr.insertCell(0).innerText = formatDateOnly(row.tanggal);
       tr.insertCell(1).innerText = row.keterangan;
       tr.insertCell(2).innerText = row.pemasukan ? formatRupiah(row.pemasukan) : '-';
       tr.insertCell(3).innerText = row.pengeluaran ? formatRupiah(row.pengeluaran) : '-';
@@ -372,7 +373,7 @@
     const headers = ['tanggal','keterangan','pemasukan','pengeluaran','saldo','jenis','sumber'];
     const rows = data.map(row => headers.map(h => {
       let val = row[h];
-      if (h === 'tanggal') val = new Date(val).toLocaleString('id-ID');
+      if (h === 'tanggal') val = new Date(val).toLocaleDateString('id-ID');
       if (typeof val === 'number') val = val.toString();
       if (typeof val === 'string' && (val.includes(',') || val.includes('"'))) val = `"${val.replace(/"/g, '""')}"`;
       return val || '';
@@ -391,7 +392,7 @@
     window.print();
   }
 
-  // Inisialisasi: ambil saldo awal lalu load data awal
+  // Inisialisasi
   await fetchSaldoAwal();
   loadKas();
 
