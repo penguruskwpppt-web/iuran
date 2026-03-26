@@ -192,25 +192,14 @@
   </nav>
 
   <div class="container">
-    <h1>Admin Panel</h1>
-    <div class="tabs">
-      <button class="tab-btn active" data-tab="users">Manajemen User</button>
-      <button class="tab-btn" data-tab="stats">Statistik Lengkap</button>
+    <h1>Panel Pengurus</h1>
+    <div class="tabs" id="tabsContainer">
+      <button class="tab-btn active" data-tab="stats">Statistik Lengkap</button>
       <button class="tab-btn" data-tab="backup">Backup Data</button>
+      <!-- Tab Manajemen User hanya akan ditampilkan jika role admin -->
     </div>
 
-    <div id="tab-users" class="tab-content active">
-      <h2>Daftar User & Role</h2>
-      <div style="overflow-x: auto;">
-        <table id="users-table">
-          <thead><tr><th>Email</th><th>Role</th><th>Aksi</th></tr></thead>
-          <tbody></tbody>
-        </table>
-      </div>
-      <p class="info">Catatan: Hanya admin yang bisa mengubah role.</p>
-    </div>
-
-    <div id="tab-stats" class="tab-content">
+    <div id="tab-stats" class="tab-content active">
       <h2>Statistik Lengkap</h2>
       <div id="stats-data"><p>Memuat data...</p></div>
     </div>
@@ -222,6 +211,17 @@
       <button id="export-kas" class="btn-primary">Export Semua Transaksi Kas (CSV)</button>
       <p class="info">Klik tombol untuk mengunduh file CSV.</p>
     </div>
+
+    <div id="tab-users" class="tab-content" style="display: none;">
+      <h2>Daftar User & Role</h2>
+      <div style="overflow-x: auto;">
+        <table id="users-table">
+          <thead><tr><th>Email</th><th>Role</th><th>Aksi</th> </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <p class="info">Catatan: Hanya admin yang bisa mengubah role.</p>
+    </div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -231,7 +231,9 @@
       const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind1YXJndHh1bGFxdXhweml1emhvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1MjMxNTYsImV4cCI6MjA5MDA5OTE1Nn0.EcVFAGh3ZgTDs8Paz9O_8MpkliKPF0vI7cAuuIsvb2U';
       const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-      // Cek login dan role admin
+      let userRole = null;
+
+      // Cek login dan role
       (async () => {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) {
@@ -243,10 +245,33 @@
           .select('role')
           .eq('id', user.id)
           .single();
-        if (error || !profile || profile.role !== 'admin') {
-          alert('Akses ditolak. Halaman ini hanya untuk admin.');
+        if (error || !profile) {
+          alert('Profil tidak ditemukan. Hubungi administrator.');
           window.location.href = '../index.html';
+          return;
         }
+        userRole = profile.role;
+        const allowedRoles = ['admin', 'bendahara', 'sekretaris'];
+        if (!allowedRoles.includes(userRole)) {
+          alert('Akses ditolak. Hanya pengurus yang dapat mengakses halaman ini.');
+          window.location.href = '../index.html';
+          return;
+        }
+
+        // Jika role admin, tampilkan tab Manajemen User
+        if (userRole === 'admin') {
+          const tabsContainer = document.getElementById('tabsContainer');
+          const usersTabBtn = document.createElement('button');
+          usersTabBtn.className = 'tab-btn';
+          usersTabBtn.setAttribute('data-tab', 'users');
+          usersTabBtn.innerText = 'Manajemen User';
+          tabsContainer.appendChild(usersTabBtn);
+          // Tambahkan konten tab user (sudah ada di HTML, hanya perlu ditampilkan nanti)
+          document.getElementById('tab-users').style.display = 'block';
+        }
+
+        // Inisialisasi tampilan dan event listener
+        initDashboard();
       })();
 
       function formatRupiah(angka) {
@@ -254,7 +279,7 @@
         return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka);
       }
 
-      // Manajemen User
+      // ========== MANAJEMEN USER (hanya untuk admin) ==========
       async function loadUsers() {
         const { data: profiles, error } = await supabase
           .from('profiles')
@@ -301,7 +326,7 @@
         }
       }
 
-      // Statistik Lengkap
+      // ========== STATISTIK LENGKAP ==========
       async function loadStats() {
         const statsDiv = document.getElementById('stats-data');
         statsDiv.innerHTML = '<p>Memuat data...</p>';
@@ -348,7 +373,7 @@
         }
       }
 
-      // Ekspor CSV
+      // ========== EKSPOR CSV ==========
       async function exportToCSV(tableName, columns, filename) {
         try {
           let data;
@@ -386,9 +411,8 @@
         }
       }
 
-      // Inisialisasi
-      (async () => {
-        await loadUsers();
+      // ========== INISIALISASI ==========
+      async function initDashboard() {
         await loadStats();
 
         const tabs = document.querySelectorAll('.tab-btn');
@@ -400,7 +424,7 @@
             btn.classList.add('active');
             contents.forEach(c => c.classList.remove('active'));
             document.getElementById(`tab-${tabId}`).classList.add('active');
-            if (tabId === 'users') loadUsers();
+            if (tabId === 'users' && userRole === 'admin') loadUsers();
             if (tabId === 'stats') loadStats();
           });
         });
@@ -414,7 +438,7 @@
           await supabase.auth.signOut();
           window.location.href = 'login.html';
         });
-      })();
+      }
     })();
   </script>
 </body>
