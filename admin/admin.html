@@ -165,6 +165,42 @@
       font-size: 0.85rem;
       color: #64748b;
     }
+    .form-card {
+      background: white;
+      border-radius: 20px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+    .form-card h3 {
+      margin-bottom: 15px;
+      color: #0b2e4f;
+    }
+    .form-group {
+      margin-bottom: 15px;
+    }
+    .form-group label {
+      display: block;
+      margin-bottom: 6px;
+      font-weight: 600;
+    }
+    .form-group input, .form-group select, .form-group textarea {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+    }
+    .btn-sm {
+      padding: 6px 12px;
+      font-size: 0.8rem;
+    }
+    .btn-delete {
+      background: #e74c3c;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
     @media (max-width: 768px) {
       .navbar { flex-direction: column; align-items: stretch; }
       .nav-links { justify-content: center; }
@@ -182,14 +218,14 @@
       <img src="../images/logo.webp" alt="Logo">
       <span>Admin KWP3T</span>
     </div>
-   <div class="nav-links">
-  <a href="admin.html">Dashboard</a>
-  <a href="warga.html">Data Warga</a>
-  <a href="iuran.html">Bayar Iuran</a>
-  <a href="laporan.html">Laporan Kas</a>
-  <a href="riwayat.html" class="active">Riwayat Rumah</a>
-  <a href="#" id="logoutBtn">Logout</a>
-</div>
+    <div class="nav-links">
+      <a href="admin.html" class="active">Dashboard</a>
+      <a href="warga.html">Data Warga</a>
+      <a href="iuran.html">Bayar Iuran</a>
+      <a href="laporan.html">Laporan Kas</a>
+      <a href="riwayat.html">Riwayat Rumah</a>
+      <a href="#" id="logoutBtn">Logout</a>
+    </div>
   </nav>
 
   <div class="container">
@@ -197,7 +233,7 @@
     <div class="tabs" id="tabsContainer">
       <button class="tab-btn active" data-tab="stats">Statistik Lengkap</button>
       <button class="tab-btn" data-tab="backup">Backup Data</button>
-      <!-- Tab Manajemen User hanya akan ditampilkan jika role admin -->
+      <button class="tab-btn" data-tab="nonIuran">Transaksi Non-Iuran</button>
     </div>
 
     <div id="tab-stats" class="tab-content active">
@@ -213,13 +249,85 @@
       <p class="info">Klik tombol untuk mengunduh file CSV.</p>
     </div>
 
+    <div id="tab-nonIuran" class="tab-content">
+      <h2>Transaksi Non-Iuran</h2>
+      <!-- Form Pemasukan Lain -->
+      <div class="form-card">
+        <h3>➕ Pemasukan Lain</h3>
+        <form id="formPemasukanLain">
+          <div class="form-group">
+            <label>Kategori</label>
+            <select id="kategori_pemasukan">
+              <option value="Sumbangan">Sumbangan</option>
+              <option value="Lainnya">Lainnya (isi manual)</option>
+            </select>
+          </div>
+          <div id="kategori_pemasukan_manual_group" class="form-group" style="display: none;">
+            <label>Kategori Lainnya (isi)</label>
+            <input type="text" id="kategori_pemasukan_manual" placeholder="Contoh: Donasi, Hibah, dll">
+          </div>
+          <div class="form-group">
+            <label>Jumlah (Rp)</label>
+            <input type="number" id="jumlah_pemasukan" placeholder="0" required>
+          </div>
+          <div class="form-group">
+            <label>Catatan (opsional)</label>
+            <textarea id="catatan_pemasukan" rows="2" placeholder="Detail tambahan..."></textarea>
+          </div>
+          <button type="submit" class="btn-primary">Simpan Pemasukan</button>
+        </form>
+      </div>
+
+      <!-- Form Pengeluaran Lain -->
+      <div class="form-card">
+        <h3>➖ Pengeluaran Lain</h3>
+        <form id="formPengeluaranLain">
+          <div class="form-group">
+            <label>Kategori</label>
+            <select id="kategori_pengeluaran">
+              <option value="Perbaikan">Perbaikan</option>
+              <option value="Kebersihan">Kebersihan</option>
+              <option value="Administrasi">Administrasi</option>
+              <option value="Keamanan">Keamanan</option>
+              <option value="Lainnya">Lainnya (isi manual)</option>
+            </select>
+          </div>
+          <div id="kategori_pengeluaran_manual_group" class="form-group" style="display: none;">
+            <label>Kategori Lainnya (isi)</label>
+            <input type="text" id="kategori_pengeluaran_manual" placeholder="Contoh: Konsumsi, Transport, dll">
+          </div>
+          <div class="form-group">
+            <label>Jumlah (Rp)</label>
+            <input type="number" id="jumlah_pengeluaran" placeholder="0" required>
+          </div>
+          <div class="form-group">
+            <label>Keterangan (opsional)</label>
+            <textarea id="catatan_pengeluaran" rows="2" placeholder="Detail tambahan..."></textarea>
+          </div>
+          <button type="submit" class="btn-primary">Simpan Pengeluaran</button>
+        </form>
+      </div>
+
+      <div class="form-card">
+        <h3>📋 Riwayat Transaksi Non-Iuran Terbaru</h3>
+        <div style="overflow-x: auto;">
+          <table id="nonIuranTable">
+            <thead>
+              <tr><th>Tanggal</th><th>Jenis</th><th>Keterangan</th><th>Jumlah</th><th>Aksi</th>
+            </thead>
+            <tbody></tbody>
+          闭
+        </div>
+      </div>
+    </div>
+
     <div id="tab-users" class="tab-content" style="display: none;">
       <h2>Daftar User & Role</h2>
       <div style="overflow-x: auto;">
         <table id="users-table">
-          <thead><tr><th>Email</th><th>Role</th><th>Aksi</th> </thead>
+          <thead> vowel<th>Email</th><th>Role</th><th>Aksi</th> </thead>
           <tbody></tbody>
-        </table>
+         </table>
       </div>
       <p class="info">Catatan: Hanya admin yang bisa mengubah role.</p>
     </div>
@@ -267,67 +375,20 @@
           usersTabBtn.setAttribute('data-tab', 'users');
           usersTabBtn.innerText = 'Manajemen User';
           tabsContainer.appendChild(usersTabBtn);
-          // Tambahkan konten tab user (sudah ada di HTML, hanya perlu ditampilkan nanti)
           document.getElementById('tab-users').style.display = 'block';
         }
 
-        // Inisialisasi tampilan dan event listener
         initDashboard();
+        initNonIuran();
       })();
 
+      // ========== FUNGSI UMUM ==========
       function formatRupiah(angka) {
         if (angka === null || isNaN(angka)) angka = 0;
         return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka);
       }
 
-      // ========== MANAJEMEN USER (hanya untuk admin) ==========
-      async function loadUsers() {
-        const { data: profiles, error } = await supabase
-          .from('profiles')
-          .select('id, email, role')
-          .order('email');
-        if (error) {
-          console.error(error);
-          alert('Gagal memuat daftar user');
-          return;
-        }
-        const tbody = document.querySelector('#users-table tbody');
-        tbody.innerHTML = '';
-        for (const prof of profiles) {
-          const row = tbody.insertRow();
-          row.insertCell(0).innerText = prof.email;
-          const roleCell = row.insertCell(1);
-          const select = document.createElement('select');
-          const roles = ['admin', 'bendahara', 'sekretaris'];
-          roles.forEach(r => {
-            const opt = document.createElement('option');
-            opt.value = r;
-            opt.textContent = r;
-            if (prof.role === r) opt.selected = true;
-            select.appendChild(opt);
-          });
-          roleCell.appendChild(select);
-          const actionCell = row.insertCell(2);
-          const saveBtn = document.createElement('button');
-          saveBtn.innerText = 'Simpan';
-          saveBtn.className = 'btn-save-role';
-          saveBtn.onclick = async () => {
-            const newRole = select.value;
-            const { error: updateError } = await supabase
-              .from('profiles')
-              .update({ role: newRole })
-              .eq('id', prof.id);
-            if (updateError) alert('Gagal update role: ' + updateError.message);
-            else {
-              alert(`Role user ${prof.email} diubah menjadi ${newRole}`);
-              loadUsers();
-            }
-          };
-          actionCell.appendChild(saveBtn);
-        }
-      }
-
-      // ========== STATISTIK LENGKAP ==========
+      // ========== STATISTIK ==========
       async function loadStats() {
         const statsDiv = document.getElementById('stats-data');
         statsDiv.innerHTML = '<p>Memuat data...</p>';
@@ -412,6 +473,224 @@
         }
       }
 
+      // ========== MANAJEMEN USER (hanya admin) ==========
+      async function loadUsers() {
+        const { data: profiles, error } = await supabase
+          .from('profiles')
+          .select('id, email, role')
+          .order('email');
+        if (error) {
+          console.error(error);
+          alert('Gagal memuat daftar user');
+          return;
+        }
+        const tbody = document.querySelector('#users-table tbody');
+        tbody.innerHTML = '';
+        for (const prof of profiles) {
+          const row = tbody.insertRow();
+          row.insertCell(0).innerText = prof.email;
+          const roleCell = row.insertCell(1);
+          const select = document.createElement('select');
+          const roles = ['admin', 'bendahara', 'sekretaris'];
+          roles.forEach(r => {
+            const opt = document.createElement('option');
+            opt.value = r;
+            opt.textContent = r;
+            if (prof.role === r) opt.selected = true;
+            select.appendChild(opt);
+          });
+          roleCell.appendChild(select);
+          const actionCell = row.insertCell(2);
+          const saveBtn = document.createElement('button');
+          saveBtn.innerText = 'Simpan';
+          saveBtn.className = 'btn-save-role';
+          saveBtn.onclick = async () => {
+            const newRole = select.value;
+            const { error: updateError } = await supabase
+              .from('profiles')
+              .update({ role: newRole })
+              .eq('id', prof.id);
+            if (updateError) alert('Gagal update role: ' + updateError.message);
+            else {
+              alert(`Role user ${prof.email} diubah menjadi ${newRole}`);
+              loadUsers();
+            }
+          };
+          actionCell.appendChild(saveBtn);
+        }
+      }
+
+      // ========== TRANSAKSI NON-IURAN ==========
+      // Fungsi untuk menampilkan input manual jika kategori "Lainnya" dipilih
+      function setupCategoryManual(selectId, manualGroupId, manualInputId) {
+        const select = document.getElementById(selectId);
+        const manualGroup = document.getElementById(manualGroupId);
+        const manualInput = document.getElementById(manualInputId);
+        select.addEventListener('change', () => {
+          if (select.value === 'Lainnya') {
+            manualGroup.style.display = 'block';
+            manualInput.required = true;
+          } else {
+            manualGroup.style.display = 'none';
+            manualInput.required = false;
+          }
+        });
+      }
+
+      async function addPemasukanLain(event) {
+        event.preventDefault();
+        let kategori = document.getElementById('kategori_pemasukan').value;
+        if (kategori === 'Lainnya') {
+          const manual = document.getElementById('kategori_pemasukan_manual').value.trim();
+          if (!manual) {
+            alert('Harap isi kategori manual.');
+            return;
+          }
+          kategori = manual;
+        }
+        const jumlah = parseInt(document.getElementById('jumlah_pemasukan').value);
+        const catatan = document.getElementById('catatan_pemasukan').value.trim();
+
+        if (!kategori || isNaN(jumlah) || jumlah <= 0) {
+          alert('Harap isi kategori dan jumlah dengan benar.');
+          return;
+        }
+
+        // Buat keterangan lengkap
+        let keterangan = `${kategori}`;
+        if (catatan) keterangan += ` - ${catatan}`;
+
+        // Ambil saldo terakhir
+        const { data: lastSaldo } = await supabase
+          .from('transaksi_kas')
+          .select('saldo')
+          .order('tanggal', { ascending: false })
+          .limit(1);
+        let saldo = lastSaldo?.[0]?.saldo || 0;
+        const newSaldo = saldo + jumlah;
+
+        const kasId = `IN-${new Date().toISOString().slice(0,10).replace(/-/g,'')}-${Date.now().toString().slice(-6)}`;
+        const { error } = await supabase
+          .from('transaksi_kas')
+          .insert([{
+            kas_id: kasId,
+            tanggal: new Date(),
+            keterangan: keterangan,
+            pemasukan: jumlah,
+            saldo: newSaldo,
+            jenis: 'Pemasukan',
+            sumber: 'Pemasukan Lain'
+          }]);
+        if (error) {
+          alert('Gagal menyimpan pemasukan: ' + error.message);
+        } else {
+          alert('✅ Pemasukan berhasil ditambahkan');
+          document.getElementById('formPemasukanLain').reset();
+          document.getElementById('kategori_pemasukan_manual_group').style.display = 'none';
+          loadNonIuranTransactions();
+          loadStats(); // refresh statistik
+        }
+      }
+
+      async function addPengeluaranLain(event) {
+        event.preventDefault();
+        let kategori = document.getElementById('kategori_pengeluaran').value;
+        if (kategori === 'Lainnya') {
+          const manual = document.getElementById('kategori_pengeluaran_manual').value.trim();
+          if (!manual) {
+            alert('Harap isi kategori manual.');
+            return;
+          }
+          kategori = manual;
+        }
+        const jumlah = parseInt(document.getElementById('jumlah_pengeluaran').value);
+        const catatan = document.getElementById('catatan_pengeluaran').value.trim();
+
+        if (!kategori || isNaN(jumlah) || jumlah <= 0) {
+          alert('Harap isi kategori dan jumlah dengan benar.');
+          return;
+        }
+
+        let keterangan = `${kategori}`;
+        if (catatan) keterangan += ` - ${catatan}`;
+
+        const { data: lastSaldo } = await supabase
+          .from('transaksi_kas')
+          .select('saldo')
+          .order('tanggal', { ascending: false })
+          .limit(1);
+        let saldo = lastSaldo?.[0]?.saldo || 0;
+        const newSaldo = saldo - jumlah;
+
+        const kasId = `EX-${new Date().toISOString().slice(0,10).replace(/-/g,'')}-${Date.now().toString().slice(-6)}`;
+        const { error } = await supabase
+          .from('transaksi_kas')
+          .insert([{
+            kas_id: kasId,
+            tanggal: new Date(),
+            keterangan: keterangan,
+            pengeluaran: jumlah,
+            saldo: newSaldo,
+            jenis: 'Pengeluaran',
+            sumber: 'Pengeluaran Lain'
+          }]);
+        if (error) {
+          alert('Gagal menyimpan pengeluaran: ' + error.message);
+        } else {
+          alert('✅ Pengeluaran berhasil ditambahkan');
+          document.getElementById('formPengeluaranLain').reset();
+          document.getElementById('kategori_pengeluaran_manual_group').style.display = 'none';
+          loadNonIuranTransactions();
+          loadStats();
+        }
+      }
+
+      async function loadNonIuranTransactions() {
+        const { data, error } = await supabase
+          .from('transaksi_kas')
+          .select('kas_id, tanggal, keterangan, pemasukan, pengeluaran, sumber')
+          .eq('jenis', 'Pemasukan')
+          .neq('sumber', 'Iuran Warga')
+          .or('jenis.eq.Pengeluaran')
+          .order('tanggal', { ascending: false })
+          .limit(20);
+        if (error) {
+          console.error(error);
+          return;
+        }
+        const tbody = document.querySelector('#nonIuranTable tbody');
+        tbody.innerHTML = '';
+        data.forEach(t => {
+          const row = tbody.insertRow();
+          const tanggal = new Date(t.tanggal).toLocaleDateString('id-ID');
+          const jenis = t.pemasukan ? 'Pemasukan' : 'Pengeluaran';
+          const jumlah = t.pemasukan ? t.pemasukan : t.pengeluaran;
+          row.insertCell(0).innerText = tanggal;
+          row.insertCell(1).innerText = jenis;
+          row.insertCell(2).innerText = t.keterangan;
+          row.insertCell(3).innerText = formatRupiah(jumlah);
+          const actionCell = row.insertCell(4);
+          const delBtn = document.createElement('button');
+          delBtn.innerText = 'Hapus';
+          delBtn.className = 'btn-delete btn-sm';
+          delBtn.onclick = async () => {
+            if (confirm('Hapus transaksi ini? Saldo tidak akan otomatis dikembalikan. Pastikan Anda membuat koreksi manual jika perlu.')) {
+              const { error: delError } = await supabase
+                .from('transaksi_kas')
+                .delete()
+                .eq('kas_id', t.kas_id);
+              if (delError) alert('Gagal hapus: ' + delError.message);
+              else {
+                alert('Transaksi dihapus');
+                loadNonIuranTransactions();
+                loadStats();
+              }
+            }
+          };
+          actionCell.appendChild(delBtn);
+        });
+      }
+
       // ========== INISIALISASI ==========
       async function initDashboard() {
         await loadStats();
@@ -427,19 +706,29 @@
             document.getElementById(`tab-${tabId}`).classList.add('active');
             if (tabId === 'users' && userRole === 'admin') loadUsers();
             if (tabId === 'stats') loadStats();
+            if (tabId === 'nonIuran') loadNonIuranTransactions();
           });
         });
 
         document.getElementById('export-warga').onclick = () => exportToCSV('warga', ['no_rumah','nama_pemilik','no_hp_pemilik','status_kepemilikan','kondisi_terakhir','iuran_per_bulan','koordinator','created_at','updated_at'], 'data_warga.csv');
         document.getElementById('export-transaksi').onclick = () => exportToCSV('transaksi_iuran', ['kas_id','no_rumah','bulan','jumlah','metode','bukti_tf','created_at'], 'transaksi_iuran.csv');
         document.getElementById('export-kas').onclick = () => exportToCSV('transaksi_kas', ['kas_id','tanggal','keterangan','pemasukan','pengeluaran','saldo','jenis','sumber'], 'transaksi_kas.csv');
-
-        document.getElementById('logoutBtn').addEventListener('click', async (e) => {
-          e.preventDefault();
-          await supabase.auth.signOut();
-          window.location.href = 'login.html';
-        });
       }
+
+      function initNonIuran() {
+        setupCategoryManual('kategori_pemasukan', 'kategori_pemasukan_manual_group', 'kategori_pemasukan_manual');
+        setupCategoryManual('kategori_pengeluaran', 'kategori_pengeluaran_manual_group', 'kategori_pengeluaran_manual');
+
+        document.getElementById('formPemasukanLain').addEventListener('submit', addPemasukanLain);
+        document.getElementById('formPengeluaranLain').addEventListener('submit', addPengeluaranLain);
+        loadNonIuranTransactions();
+      }
+
+      document.getElementById('logoutBtn').addEventListener('click', async (e) => {
+        e.preventDefault();
+        await supabase.auth.signOut();
+        window.location.href = 'login.html';
+      });
     })();
   </script>
 </body>
