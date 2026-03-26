@@ -128,79 +128,79 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
-    // ================= KONFIGURASI SUPABASE =================
-    const SUPABASE_URL = 'https://wuargtxulaquxpziuzho.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind1YXJndHh1bGFxdXhweml1emhvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1MjMxNTYsImV4cCI6MjA5MDA5OTE1Nn0.EcVFAGh3ZgTDs8Paz9O_8MpkliKPF0vI7cAuuIsvb2U';
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    (function() {
+      // Gunakan nama variabel unik untuk menghindari konflik
+      const SUPABASE_URL = 'https://wuargtxulaquxpziuzho.supabase.co';
+      const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind1YXJndHh1bGFxdXhweml1emhvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1MjMxNTYsImV4cCI6MjA5MDA5OTE1Nn0.EcVFAGh3ZgTDs8Paz9O_8MpkliKPF0vI7cAuuIsvb2U';
+      const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // Elemen DOM
-    const loginBtn = document.getElementById('loginBtn');
-    const emailInput = document.getElementById('email');
-    const passwordInput = document.getElementById('password');
-    const infoDiv = document.getElementById('infoMessage');
-    const errorDiv = document.getElementById('errorMessage');
+      const loginBtn = document.getElementById('loginBtn');
+      const emailInput = document.getElementById('email');
+      const passwordInput = document.getElementById('password');
+      const infoDiv = document.getElementById('infoMessage');
+      const errorDiv = document.getElementById('errorMessage');
 
-    function showInfo(msg) {
-      infoDiv.style.display = 'block';
-      infoDiv.innerText = msg;
-      errorDiv.style.display = 'none';
-    }
-    function showError(msg) {
-      errorDiv.style.display = 'block';
-      errorDiv.innerText = msg;
-      infoDiv.style.display = 'none';
-    }
-    function hideMessages() {
-      infoDiv.style.display = 'none';
-      errorDiv.style.display = 'none';
-    }
-
-    // Cek apakah sudah login – jika ya, langsung redirect ke admin.html
-    (async () => {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-          window.location.href = 'admin.html';
-        }
-      } catch (err) {
-        console.error('Error checking session:', err);
+      function showInfo(msg) {
+        infoDiv.style.display = 'block';
+        infoDiv.innerText = msg;
+        errorDiv.style.display = 'none';
       }
-    })();
-
-    loginBtn.addEventListener('click', async () => {
-      hideMessages();
-      const email = emailInput.value.trim();
-      const password = passwordInput.value.trim();
-
-      if (!email || !password) {
-        showError('Email dan password harus diisi.');
-        return;
+      function showError(msg) {
+        errorDiv.style.display = 'block';
+        errorDiv.innerText = msg;
+        infoDiv.style.display = 'none';
+      }
+      function hideMessages() {
+        infoDiv.style.display = 'none';
+        errorDiv.style.display = 'none';
       }
 
-      // Disable button selama proses
-      loginBtn.disabled = true;
-      loginBtn.textContent = '⏳ Memproses...';
-      showInfo('⏳ Memproses...');
-
-      try {
-        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) {
-          showError('Login gagal: ' + error.message);
-          console.error('Login error:', error);
-        } else {
-          showInfo('✅ Login berhasil, mengalihkan...');
-          setTimeout(() => {
+      // Cek apakah sudah login
+      (async () => {
+        try {
+          const { data: { user } } = await supabaseClient.auth.getUser();
+          if (user) {
             window.location.href = 'admin.html';
-          }, 500);
+          }
+        } catch (err) {
+          console.error('Error checking session:', err);
         }
-      } catch (err) {
-        showError('Terjadi kesalahan jaringan: ' + err.message);
-        console.error('Network error:', err);
-      } finally {
-        loginBtn.disabled = false;
-        loginBtn.textContent = 'Login';
-      }
-    });
+      })();
+
+      loginBtn.addEventListener('click', async () => {
+        hideMessages();
+        const email = emailInput.value.trim();
+        const password = passwordInput.value.trim();
+
+        if (!email || !password) {
+          showError('Email dan password harus diisi.');
+          return;
+        }
+
+        loginBtn.disabled = true;
+        loginBtn.textContent = '⏳ Memproses...';
+        showInfo('⏳ Memproses...');
+
+        try {
+          const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+          if (error) {
+            showError('Login gagal: ' + error.message);
+            console.error('Login error:', error);
+          } else {
+            showInfo('✅ Login berhasil, mengalihkan...');
+            setTimeout(() => {
+              window.location.href = 'admin.html';
+            }, 500);
+          }
+        } catch (err) {
+          showError('Terjadi kesalahan jaringan: ' + err.message);
+          console.error('Network error:', err);
+        } finally {
+          loginBtn.disabled = false;
+          loginBtn.textContent = 'Login';
+        }
+      });
+    })();
   </script>
 </body>
 </html>
