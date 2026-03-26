@@ -11,6 +11,5 @@ export function getMonthName(date) {
 }
 
 export function showToast(message, type = 'info') {
-  // Implementasi sederhana alert, bisa pakai library toast
-  alert(message)
+  alert(message) // Bisa diganti dengan library toast modern
 }
