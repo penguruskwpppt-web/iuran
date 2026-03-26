@@ -124,8 +124,9 @@
     <div class="form-card">
       <form id="iuranForm">
         <div class="form-group">
-          <label>Pilih Rumah</label>
-          <select id="no_rumah" required></select>
+          <label>Nomor Rumah</label>
+          <input type="text" id="no_rumah" list="rumahList" placeholder="Ketik atau pilih nomor rumah" autocomplete="off">
+          <datalist id="rumahList"></datalist>
         </div>
         <div class="form-group">
           <label>Bulan (YYYY-MM)</label>
@@ -164,39 +165,57 @@
       if (!user) window.location.href = 'login.html';
     })();
 
+    let allWarga = []; // untuk menyimpan data warga (no_rumah, iuran_per_bulan)
+
     function formatRupiah(angka) {
       return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka || 0);
     }
 
+    // Ambil semua warga (termasuk yang berpenghuni dan kosong) untuk daftar dan pengecekan
     async function loadWarga() {
       const { data, error } = await supabase
         .from('warga')
-        .select('no_rumah, nama_pemilik, iuran_per_bulan')
-        .eq('kondisi_terakhir', 'Berpenghuni')
-        .gt('iuran_per_bulan', 0);
-      if (error) console.error(error);
-      else {
-        const select = document.getElementById('no_rumah');
-        select.innerHTML = '<option value="">-- Pilih Rumah --</option>';
-        data.forEach(w => {
-          const option = document.createElement('option');
-          option.value = w.no_rumah;
-          option.textContent = `${w.no_rumah} - ${w.nama_pemilik} (${formatRupiah(w.iuran_per_bulan)})`;
-          option.setAttribute('data-iuran', w.iuran_per_bulan);
-          select.appendChild(option);
-        });
+        .select('no_rumah, nama_pemilik, iuran_per_bulan, kondisi_terakhir')
+        .order('no_rumah');
+      if (error) {
+        console.error(error);
+        return;
+      }
+      allWarga = data;
+      const datalist = document.getElementById('rumahList');
+      datalist.innerHTML = '';
+      data.forEach(w => {
+        const option = document.createElement('option');
+        option.value = w.no_rumah;
+        // Tampilkan nama pemilik sebagai label (opsional)
+        option.textContent = `${w.no_rumah} - ${w.nama_pemilik} (${w.kondisi_terakhir})`;
+        datalist.appendChild(option);
+      });
+    }
+
+    // Event ketika user memilih atau mengetik nomor rumah
+    async function onNoRumahChange() {
+      const noRumah = document.getElementById('no_rumah').value.trim();
+      if (!noRumah) {
+        document.getElementById('jumlah').value = '';
+        return;
+      }
+      // Cari data warga berdasarkan nomor rumah
+      const warga = allWarga.find(w => w.no_rumah === noRumah);
+      if (warga) {
+        document.getElementById('jumlah').value = warga.iuran_per_bulan;
+      } else {
+        // Jika tidak ditemukan, kosongkan jumlah (bisa tetap diisi manual)
+        document.getElementById('jumlah').value = '';
+        alert('Nomor rumah tidak terdaftar. Silakan cek kembali atau tambahkan data warga terlebih dahulu.');
       }
     }
 
-    document.getElementById('no_rumah').addEventListener('change', (e) => {
-      const selected = e.target.selectedOptions[0];
-      const iuran = selected.getAttribute('data-iuran');
-      if (iuran) document.getElementById('jumlah').value = iuran;
-    });
+    document.getElementById('no_rumah').addEventListener('input', onNoRumahChange);
 
     document.getElementById('iuranForm').addEventListener('submit', async (e) => {
       e.preventDefault();
-      const no_rumah = document.getElementById('no_rumah').value;
+      const no_rumah = document.getElementById('no_rumah').value.trim();
       const bulanStr = document.getElementById('bulan').value;
       const bulan = new Date(bulanStr + '-01');
       const jumlah = parseInt(document.getElementById('jumlah').value);
@@ -204,7 +223,14 @@
       const file = document.getElementById('buktiFile').files[0];
 
       if (!no_rumah || !bulanStr || !jumlah) {
-        alert('Harap lengkapi data');
+        alert('Harap lengkapi data: nomor rumah, bulan, dan jumlah iuran.');
+        return;
+      }
+
+      // Validasi nomor rumah ada di database
+      const warga = allWarga.find(w => w.no_rumah === no_rumah);
+      if (!warga) {
+        alert('Nomor rumah tidak ditemukan. Silakan tambahkan data warga terlebih dahulu.');
         return;
       }
 
@@ -266,10 +292,15 @@
 
       alert('Pembayaran iuran berhasil disimpan!');
       document.getElementById('iuranForm').reset();
-      loadWarga();
+      // Reset jumlah input (agar tidak tersimpan)
+      document.getElementById('jumlah').value = '';
+      // Refresh datalist tidak perlu, data warga sudah diambil sekali
     });
 
-    loadWarga();
+    // Inisialisasi
+    (async () => {
+      await loadWarga();
+    })();
 
     document.getElementById('logoutBtn').addEventListener('click', async (e) => {
       e.preventDefault();
