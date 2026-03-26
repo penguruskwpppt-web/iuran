@@ -8,6 +8,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <style>
+    /* CSS sama seperti sebelumnya */
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       font-family: 'Inter', sans-serif;
@@ -202,10 +203,33 @@
 
       let saldoAwalGlobal = 0;
 
-      // Cek login
+      // Cek login dan role
       (async () => {
         const { data: { user } } = await supabase.auth.getUser();
-        if (!user) window.location.href = 'login.html';
+        if (!user) {
+          window.location.href = 'login.html';
+          return;
+        }
+        const { data: profile, error } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', user.id)
+          .single();
+        if (error || !profile) {
+          alert('Profil tidak ditemukan. Hubungi administrator.');
+          window.location.href = '../index.html';
+          return;
+        }
+        const allowedRoles = ['admin', 'bendahara', 'sekretaris'];
+        if (!allowedRoles.includes(profile.role)) {
+          alert('Akses ditolak. Hanya pengurus yang dapat mengakses halaman ini.');
+          window.location.href = '../index.html';
+          return;
+        }
+        // Jika role valid, jalankan inisialisasi
+        await fetchSaldoAwal();
+        loadKas();
+        setupEventListeners();
       })();
 
       function formatRupiah(angka) {
@@ -290,11 +314,7 @@
         window.print();
       }
 
-      // Inisialisasi
-      (async () => {
-        await fetchSaldoAwal();
-        loadKas();
-
+      function setupEventListeners() {
         document.getElementById('filterBtn').addEventListener('click', () => {
           const start = document.getElementById('startDate').value;
           const end = document.getElementById('endDate').value;
@@ -307,13 +327,12 @@
         });
         document.getElementById('exportBtn').addEventListener('click', exportCSV);
         document.getElementById('printBtn').addEventListener('click', printReport);
-
         document.getElementById('logoutBtn').addEventListener('click', async (e) => {
           e.preventDefault();
           await supabase.auth.signOut();
           window.location.href = 'login.html';
         });
-      })();
+      }
     })();
   </script>
 </body>
