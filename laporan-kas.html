@@ -119,21 +119,24 @@
     .btn-export:hover {
       background: #219653;
     }
+    /* Tabel dengan font lebih kecil */
     table {
       width: 100%;
       border-collapse: collapse;
       margin-top: 20px;
       overflow-x: auto;
       display: block;
+      font-size: 0.85rem;
     }
     th, td {
       border: 1px solid #ddd;
-      padding: 12px;
+      padding: 10px;
       text-align: left;
     }
     th {
       background: #0b2e4f;
       color: white;
+      font-weight: 600;
     }
     /* Signature section */
     .signature-section {
@@ -147,16 +150,27 @@
     .signature-item {
       flex: 1;
       text-align: center;
+      min-width: 180px;
     }
-    .signature-item p {
-      margin: 8px 0;
+    .signature-item .title {
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    .signature-item .role {
+      margin: 12px 0 20px 0;
+      font-weight: 500;
     }
     .signature-line {
       margin-top: 40px;
-      border-top: 1px solid #ccc;
+      border-top: 1px solid #000;
       width: 80%;
       margin-left: auto;
       margin-right: auto;
+      margin-bottom: 8px;
+    }
+    .signature-name {
+      font-weight: 600;
+      margin-top: 8px;
     }
     .footer {
       text-align: center;
@@ -176,12 +190,6 @@
       }
       .btn-print, .btn-export {
         margin-left: 0;
-      }
-      table {
-        font-size: 0.8rem;
-      }
-      th, td {
-        padding: 8px;
       }
       .signature-section {
         flex-direction: column;
@@ -276,19 +284,22 @@
   <!-- Tanda Tangan -->
   <div class="signature-section">
     <div class="signature-item">
-      <p>Direkap oleh,</p>
+      <div class="title">Direkap oleh,</div>
+      <div class="role">Bendahara</div>
       <div class="signature-line"></div>
-      <p><strong>Bendahara Didiek Fahrizal</strong></p>
+      <div class="signature-name">Didiek Fahrizal</div>
     </div>
     <div class="signature-item">
-      <p>Dilaporkan Oleh,</p>
+      <div class="title">Dilaporkan Oleh,</div>
+      <div class="role">Sekretaris</div>
       <div class="signature-line"></div>
-      <p><strong>Sekretaris Supriyetno</strong></p>
+      <div class="signature-name">Supriyetno</div>
     </div>
     <div class="signature-item">
-      <p>Diketahui oleh,</p>
+      <div class="title">Diketahui oleh,</div>
+      <div class="role">Ketua</div>
       <div class="signature-line"></div>
-      <p><strong>Ketua Ramli Munthe</strong></p>
+      <div class="signature-name">Ramli Munthe</div>
     </div>
   </div>
 
@@ -310,7 +321,7 @@
     return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka);
   }
 
-  // Tanggal hanya menampilkan hari, bulan, tahun (tanpa jam)
+  // Tanggal hanya menampilkan tanggal, bulan, tahun (tanpa jam)
   function formatDateOnly(iso) {
     return new Date(iso).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' });
   }
@@ -343,9 +354,11 @@
   }
 
   function updateSummary(data) {
+    // Total pemasukan dan pengeluaran dari data yang ditampilkan
     const totalPemasukan = data.reduce((sum, row) => sum + (row.pemasukan || 0), 0);
     const totalPengeluaran = data.reduce((sum, row) => sum + (row.pengeluaran || 0), 0);
-    const saldoAkhir = saldoAwalGlobal + totalPemasukan - totalPengeluaran;
+    // Saldo Akhir diambil dari saldo baris terakhir data yang ditampilkan
+    const saldoAkhir = data.length > 0 ? data[data.length - 1].saldo : 0;
 
     document.getElementById('saldoAwal').innerText = formatRupiah(saldoAwalGlobal);
     document.getElementById('totalPemasukan').innerText = formatRupiah(totalPemasukan);
