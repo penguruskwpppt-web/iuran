@@ -68,6 +68,11 @@
       background: #e67e22;
       transform: translateY(-2px);
     }
+    .btn-login:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+      transform: none;
+    }
     .error-message {
       background: #fee2e2;
       color: #dc2626;
@@ -123,7 +128,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
-    // ================= KONFIGURASI SUPABASE (sesuai dengan proyek Anda) =================
+    // ================= KONFIGURASI SUPABASE =================
     const SUPABASE_URL = 'https://wuargtxulaquxpziuzho.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind1YXJndHh1bGFxdXhweml1emhvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1MjMxNTYsImV4cCI6MjA5MDA5OTE1Nn0.EcVFAGh3ZgTDs8Paz9O_8MpkliKPF0vI7cAuuIsvb2U';
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -152,9 +157,13 @@
 
     // Cek apakah sudah login – jika ya, langsung redirect ke admin.html
     (async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        window.location.href = 'admin.html';
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          window.location.href = 'admin.html';
+        }
+      } catch (err) {
+        console.error('Error checking session:', err);
       }
     })();
 
@@ -168,7 +177,11 @@
         return;
       }
 
+      // Disable button selama proses
+      loginBtn.disabled = true;
+      loginBtn.textContent = '⏳ Memproses...';
       showInfo('⏳ Memproses...');
+
       try {
         const { data, error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) {
@@ -183,6 +196,9 @@
       } catch (err) {
         showError('Terjadi kesalahan jaringan: ' + err.message);
         console.error('Network error:', err);
+      } finally {
+        loginBtn.disabled = false;
+        loginBtn.textContent = 'Login';
       }
     });
   </script>
