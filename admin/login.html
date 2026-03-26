@@ -3,40 +3,188 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Login - Iuran Warga</title>
-  <link rel="stylesheet" href="style.css">
+  <title>Login Admin - KWP3T</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background: linear-gradient(135deg, #0b2e4f 0%, #1e4f7a 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .login-container {
+      background: white;
+      border-radius: 24px;
+      padding: 40px 32px;
+      max-width: 420px;
+      width: 100%;
+      box-shadow: 0 20px 35px rgba(0,0,0,0.2);
+    }
+    .login-container h2 {
+      text-align: center;
+      margin-bottom: 24px;
+      color: #0b2e4f;
+      font-size: 1.8rem;
+    }
+    .form-group {
+      margin-bottom: 20px;
+    }
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: #1e293b;
+    }
+    .form-group input {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #cbd5e1;
+      border-radius: 12px;
+      font-size: 1rem;
+      transition: 0.2s;
+    }
+    .form-group input:focus {
+      outline: none;
+      border-color: #f59e0b;
+      box-shadow: 0 0 0 3px rgba(245,158,11,0.1);
+    }
+    .btn-login {
+      background: #f59e0b;
+      color: #000;
+      border: none;
+      padding: 12px;
+      border-radius: 40px;
+      font-weight: 700;
+      font-size: 1rem;
+      width: 100%;
+      cursor: pointer;
+      transition: 0.2s;
+      margin-top: 8px;
+    }
+    .btn-login:hover {
+      background: #e67e22;
+      transform: translateY(-2px);
+    }
+    .error-message {
+      background: #fee2e2;
+      color: #dc2626;
+      padding: 12px;
+      border-radius: 12px;
+      margin-top: 16px;
+      font-size: 0.9rem;
+      text-align: center;
+      display: none;
+    }
+    .info-message {
+      background: #e2e3e5;
+      color: #1e293b;
+      padding: 12px;
+      border-radius: 12px;
+      margin-top: 16px;
+      font-size: 0.9rem;
+      text-align: center;
+      display: none;
+    }
+    .back-link {
+      text-align: center;
+      margin-top: 20px;
+    }
+    .back-link a {
+      color: #0b2e4f;
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .back-link a:hover {
+      text-decoration: underline;
+    }
+  </style>
 </head>
 <body>
   <div class="login-container">
-    <h2>Login Aplikasi Iuran Warga</h2>
-    <form id="loginForm">
-      <input type="email" id="email" placeholder="Email" required>
-      <input type="password" id="password" placeholder="Password" required>
-      <button type="submit">Login</button>
-    </form>
-    <p id="errorMsg" class="error"></p>
+    <h2>🔐 Login Admin KWP3T</h2>
+    <div class="form-group">
+      <label>Email</label>
+      <input type="email" id="email" placeholder="Email" autocomplete="email">
+    </div>
+    <div class="form-group">
+      <label>Password</label>
+      <input type="password" id="password" placeholder="Password" autocomplete="current-password">
+    </div>
+    <button id="loginBtn" class="btn-login">Login</button>
+    <div id="infoMessage" class="info-message"></div>
+    <div id="errorMessage" class="error-message"></div>
+    <div class="back-link">
+      <a href="../index.html">← Kembali ke halaman utama</a>
+    </div>
   </div>
-  <script type="module">
-    import { supabase } from './app.js'
 
-    const form = document.getElementById('loginForm')
-    const errorMsg = document.getElementById('errorMsg')
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    // ================= KONFIGURASI SUPABASE (sesuai dengan proyek Anda) =================
+    const SUPABASE_URL = 'https://wuargtxulaquxpziuzho.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind1YXJndHh1bGFxdXhweml1emhvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1MjMxNTYsImV4cCI6MjA5MDA5OTE1Nn0.EcVFAGh3ZgTDs8Paz9O_8MpkliKPF0vI7cAuuIsvb2U';
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault()
-      const email = document.getElementById('email').value
-      const password = document.getElementById('password').value
+    // Elemen DOM
+    const loginBtn = document.getElementById('loginBtn');
+    const emailInput = document.getElementById('email');
+    const passwordInput = document.getElementById('password');
+    const infoDiv = document.getElementById('infoMessage');
+    const errorDiv = document.getElementById('errorMessage');
 
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email, password
-      })
+    function showInfo(msg) {
+      infoDiv.style.display = 'block';
+      infoDiv.innerText = msg;
+      errorDiv.style.display = 'none';
+    }
+    function showError(msg) {
+      errorDiv.style.display = 'block';
+      errorDiv.innerText = msg;
+      infoDiv.style.display = 'none';
+    }
+    function hideMessages() {
+      infoDiv.style.display = 'none';
+      errorDiv.style.display = 'none';
+    }
 
-      if (error) {
-        errorMsg.textContent = error.message
-      } else {
-        window.location.href = 'dashboard.html'
+    // Cek apakah sudah login – jika ya, langsung redirect ke admin.html
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        window.location.href = 'admin.html';
       }
-    })
+    })();
+
+    loginBtn.addEventListener('click', async () => {
+      hideMessages();
+      const email = emailInput.value.trim();
+      const password = passwordInput.value.trim();
+
+      if (!email || !password) {
+        showError('Email dan password harus diisi.');
+        return;
+      }
+
+      showInfo('⏳ Memproses...');
+      try {
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) {
+          showError('Login gagal: ' + error.message);
+          console.error('Login error:', error);
+        } else {
+          showInfo('✅ Login berhasil, mengalihkan...');
+          setTimeout(() => {
+            window.location.href = 'admin.html';
+          }, 500);
+        }
+      } catch (err) {
+        showError('Terjadi kesalahan jaringan: ' + err.message);
+        console.error('Network error:', err);
+      }
+    });
   </script>
 </body>
 </html>
