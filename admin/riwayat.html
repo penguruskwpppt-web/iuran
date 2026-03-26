@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title>Riwayat Rumah - KWP3T Admin</title>
+  <link rel="icon" href="../images/logo.webp" type="image/webp">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #f4f4f4;
+    }
+    .navbar {
+      background: #0b2e4f;
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .nav-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: white;
+      font-weight: bold;
+      font-size: 1.2rem;
+    }
+    .nav-brand img { width: 40px; border-radius: 50%; }
+    .nav-links {
+      display: flex;
+      gap: 15px;
+      flex-wrap: wrap;
+    }
+    .nav-links a {
+      color: white;
+      text-decoration: none;
+      padding: 5px 10px;
+      border-radius: 4px;
+      transition: background 0.3s;
+    }
+    .nav-links a:hover, .nav-links a.active {
+      background: #1e4f7a;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 20px auto;
+      padding: 0 20px;
+    }
+    h1 {
+      margin-bottom: 20px;
+      color: #0b2e4f;
+    }
+    .btn-primary {
+      background: #0b2e4f;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      margin-bottom: 20px;
+      transition: 0.2s;
+    }
+    .btn-primary:hover {
+      background: #1e4f7a;
+    }
+    .btn-edit, .btn-delete {
+      padding: 6px 12px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-right: 5px;
+    }
+    .btn-edit {
+      background: #f59e0b;
+      color: white;
+    }
+    .btn-delete {
+      background: #e74c3c;
+      color: white;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      border-radius: 12px;
+      overflow: hidden;
+      font-size: 0.85rem;
+    }
+    th, td {
+      border: 1px solid #e2e8f0;
+      padding: 12px;
+      text-align: left;
+    }
+    th {
+      background: #0b2e4f;
+      color: white;
+    }
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+    }
+    .modal-content {
+      background: white;
+      max-width: 500px;
+      width: 90%;
+      padding: 20px;
+      border-radius: 16px;
+    }
+    .modal-content h2 {
+      margin-bottom: 20px;
+    }
+    .modal-content input, .modal-content select, .modal-content textarea {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 12px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-family: inherit;
+    }
+    .modal-buttons {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      margin-top: 20px;
+    }
+    @media (max-width: 768px) {
+      .navbar { flex-direction: column; align-items: stretch; }
+      .nav-links { justify-content: center; }
+      table { font-size: 0.75rem; }
+      th, td { padding: 8px; }
+      .btn-edit, .btn-delete { padding: 4px 8px; font-size: 0.7rem; }
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar">
+    <div class="nav-brand">
+      <img src="../images/logo.webp" alt="Logo">
+      <span>Admin KWP3T</span>
+    </div>
+    <div class="nav-links">
+      <a href="admin.html">Dashboard</a>
+      <a href="warga.html">Data Warga</a>
+      <a href="iuran.html">Bayar Iuran</a>
+      <a href="laporan.html">Laporan Kas</a>
+      <a href="riwayat.html" class="active">Riwayat Rumah</a>
+      <a href="#" id="logoutBtn">Logout</a>
+    </div>
+  </nav>
+
+  <div class="container">
+    <h1>Riwayat Perubahan Status Rumah</h1>
+    <button id="btnTambahRiwayat" class="btn-primary"><i class="fas fa-plus"></i> Tambah Riwayat</button>
+    <div style="overflow-x: auto;">
+      <table id="riwayatTable">
+        <thead>
+          <tr><th>No Rumah</th><th>Nama Penghuni</th><th>Status</th><th>Iuran/Bulan</th><th>Berlaku Sejak</th><th>Keterangan</th><th>Aksi</th>
+        </thead>
+        <tbody></tbody>
+      闭
+    </div>
+  </div>
+
+  <!-- Modal Form Riwayat -->
+  <div id="modalRiwayat" class="modal">
+    <div class="modal-content">
+      <h2 id="modalTitle">Tambah Riwayat</h2>
+      <form id="riwayatForm">
+        <input type="hidden" id="id_riwayat">
+        <label>No Rumah</label>
+        <select id="no_rumah" required></select>
+        <label>Nama Penghuni</label>
+        <input type="text" id="nama_penghuni" placeholder="Nama penghuni (jika ada)">
+        <label>Status</label>
+        <select id="kondisi">
+          <option value="Berpenghuni">Berpenghuni</option>
+          <option value="Kosong">Kosong</option>
+          <option value="Dibebaskan">Dibebaskan</option>
+        </select>
+        <label>Iuran per Bulan (Rp)</label>
+        <input type="number" id="iuran_per_bulan" placeholder="Iuran per bulan">
+        <label>Berlaku Sejak (tanggal mulai)</label>
+        <input type="date" id="berlaku_sejak" required>
+        <label>Keterangan (opsional)</label>
+        <textarea id="keterangan" rows="2" placeholder="Misal: Pindah penghuni, perubahan status, dll."></textarea>
+        <div class="modal-buttons">
+          <button type="submit" class="btn-primary">Simpan</button>
+          <button type="button" id="closeModal" style="background:#ccc;">Batal</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    (function() {
+      const SUPABASE_URL = 'https://wuargtxulaquxpziuzho.supabase.co';
+      const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind1YXJndHh1bGFxdXhweml1emhvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1MjMxNTYsImV4cCI6MjA5MDA5OTE1Nn0.EcVFAGh3ZgTDs8Paz9O_8MpkliKPF0vI7cAuuIsvb2U';
+      const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+      let currentEditId = null;
+      let wargaList = []; // untuk dropdown
+
+      // Cek login dan role
+      (async () => {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+          window.location.href = 'login.html';
+          return;
+        }
+        const { data: profile, error } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', user.id)
+          .single();
+        if (error || !profile) {
+          alert('Profil tidak ditemukan. Hubungi administrator.');
+          window.location.href = '../index.html';
+          return;
+        }
+        const allowedRoles = ['admin', 'bendahara', 'sekretaris'];
+        if (!allowedRoles.includes(profile.role)) {
+          alert('Akses ditolak. Hanya pengurus yang dapat mengakses halaman ini.');
+          window.location.href = '../index.html';
+          return;
+        }
+        // Load data
+        loadWargaDropdown();
+        loadRiwayat();
+      })();
+
+      // Load daftar warga untuk dropdown
+      async function loadWargaDropdown() {
+        const { data, error } = await supabase
+          .from('warga')
+          .select('no_rumah, nama_pemilik, iuran_per_bulan')
+          .order('no_rumah');
+        if (error) console.error(error);
+        else {
+          wargaList = data;
+          const select = document.getElementById('no_rumah');
+          select.innerHTML = '<option value="">-- Pilih Rumah --</option>';
+          data.forEach(w => {
+            const option = document.createElement('option');
+            option.value = w.no_rumah;
+            option.textContent = `${w.no_rumah} - ${w.nama_pemilik} (iuran ${formatRupiah(w.iuran_per_bulan)})`;
+            option.setAttribute('data-iuran', w.iuran_per_bulan);
+            select.appendChild(option);
+          });
+        }
+      }
+
+      // Saat pilih rumah, isi iuran secara otomatis
+      document.getElementById('no_rumah').addEventListener('change', (e) => {
+        const selected = e.target.selectedOptions[0];
+        const iuran = selected.getAttribute('data-iuran');
+        if (iuran) document.getElementById('iuran_per_bulan').value = iuran;
+      });
+
+      // Fungsi untuk memperbarui data warga berdasarkan riwayat terbaru
+      async function updateWargaFromHistory(no_rumah) {
+        // Ambil riwayat terbaru untuk rumah tersebut (berdasarkan berlaku_sejak)
+        const { data: histories, error } = await supabase
+          .from('riwayat_kondisi')
+          .select('*')
+          .eq('no_rumah', no_rumah)
+          .order('berlaku_sejak', { ascending: false })
+          .limit(1);
+        if (error) {
+          console.error('Gagal mengambil riwayat terbaru:', error);
+          return;
+        }
+        if (histories && histories.length > 0) {
+          const latest = histories[0];
+          const { error: updateError } = await supabase
+            .from('warga')
+            .update({
+              kondisi_terakhir: latest.kondisi,
+              iuran_per_bulan: latest.iuran_per_bulan,
+              nama_pemilik: latest.nama_penghuni || (await getWargaNama(no_rumah)), // jika kosong, pertahankan nama lama
+              updated_at: new Date()
+            })
+            .eq('no_rumah', no_rumah);
+          if (updateError) console.error('Gagal update warga:', updateError);
+        } else {
+          // Jika tidak ada riwayat, jangan ubah
+        }
+      }
+
+      async function getWargaNama(no_rumah) {
+        const { data, error } = await supabase
+          .from('warga')
+          .select('nama_pemilik')
+          .eq('no_rumah', no_rumah)
+          .single();
+        if (error) return '';
+        return data.nama_pemilik;
+      }
+
+      // Load semua riwayat
+      async function loadRiwayat() {
+        const { data, error } = await supabase
+          .from('riwayat_kondisi')
+          .select('*')
+          .order('no_rumah', { ascending: true })
+          .order('berlaku_sejak', { ascending: false });
+        if (error) console.error(error);
+        else renderTable(data);
+      }
+
+      function renderTable(riwayat) {
+        const tbody = document.querySelector('#riwayatTable tbody');
+        tbody.innerHTML = '';
+        riwayat.forEach(r => {
+          const row = tbody.insertRow();
+          row.insertCell(0).innerText = r.no_rumah;
+          row.insertCell(1).innerText = r.nama_penghuni || '-';
+          row.insertCell(2).innerText = r.kondisi;
+          row.insertCell(3).innerText = formatRupiah(r.iuran_per_bulan);
+          row.insertCell(4).innerText = formatDate(r.berlaku_sejak);
+          row.insertCell(5).innerText = r.keterangan || '-';
+          const actionCell = row.insertCell(6);
+          const editBtn = document.createElement('button');
+          editBtn.innerText = 'Edit';
+          editBtn.className = 'btn-edit';
+          editBtn.onclick = () => openEditModal(r);
+          const deleteBtn = document.createElement('button');
+          deleteBtn.innerText = 'Hapus';
+          deleteBtn.className = 'btn-delete';
+          deleteBtn.onclick = () => deleteRiwayat(r.id, r.no_rumah);
+          actionCell.appendChild(editBtn);
+          actionCell.appendChild(deleteBtn);
+        });
+      }
+
+      function openEditModal(riwayat) {
+        currentEditId = riwayat.id;
+        document.getElementById('modalTitle').innerText = 'Edit Riwayat';
+        document.getElementById('id_riwayat').value = riwayat.id;
+        document.getElementById('no_rumah').value = riwayat.no_rumah;
+        document.getElementById('no_rumah').disabled = true; // tidak boleh ubah rumah saat edit
+        document.getElementById('nama_penghuni').value = riwayat.nama_penghuni || '';
+        document.getElementById('kondisi').value = riwayat.kondisi;
+        document.getElementById('iuran_per_bulan').value = riwayat.iuran_per_bulan;
+        document.getElementById('berlaku_sejak').value = riwayat.berlaku_sejak;
+        document.getElementById('keterangan').value = riwayat.keterangan || '';
+        document.getElementById('modalRiwayat').style.display = 'flex';
+      }
+
+      function openAddModal() {
+        currentEditId = null;
+        document.getElementById('modalTitle').innerText = 'Tambah Riwayat';
+        document.getElementById('id_riwayat').value = '';
+        document.getElementById('no_rumah').disabled = false;
+        document.getElementById('no_rumah').value = '';
+        document.getElementById('nama_penghuni').value = '';
+        document.getElementById('kondisi').value = 'Berpenghuni';
+        document.getElementById('iuran_per_bulan').value = '';
+        document.getElementById('berlaku_sejak').value = '';
+        document.getElementById('keterangan').value = '';
+        document.getElementById('modalRiwayat').style.display = 'flex';
+      }
+
+      document.getElementById('btnTambahRiwayat').onclick = openAddModal;
+      document.getElementById('closeModal').onclick = () => {
+        document.getElementById('modalRiwayat').style.display = 'none';
+      };
+
+      document.getElementById('riwayatForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const no_rumah = document.getElementById('no_rumah').value;
+        const nama_penghuni = document.getElementById('nama_penghuni').value || null;
+        const kondisi = document.getElementById('kondisi').value;
+        const iuran_per_bulan = parseInt(document.getElementById('iuran_per_bulan').value);
+        const berlaku_sejak = document.getElementById('berlaku_sejak').value;
+        const keterangan = document.getElementById('keterangan').value || null;
+
+        if (!no_rumah || !berlaku_sejak || isNaN(iuran_per_bulan)) {
+          alert('Harap isi semua field yang diperlukan.');
+          return;
+        }
+
+        const data = {
+          no_rumah,
+          nama_penghuni,
+          kondisi,
+          iuran_per_bulan,
+          berlaku_sejak,
+          keterangan,
+          diubah_oleh: (await supabase.auth.getUser()).data.user?.email || 'admin',
+          created_at: new Date()
+        };
+
+        let error;
+        if (currentEditId) {
+          // Update
+          const { error: updateError } = await supabase
+            .from('riwayat_kondisi')
+            .update(data)
+            .eq('id', currentEditId);
+          error = updateError;
+        } else {
+          // Insert
+          const { error: insertError } = await supabase
+            .from('riwayat_kondisi')
+            .insert([data]);
+          error = insertError;
+        }
+
+        if (error) {
+          alert('Gagal menyimpan riwayat: ' + error.message);
+          return;
+        }
+
+        // Perbarui warga dengan riwayat terbaru untuk rumah tersebut
+        await updateWargaFromHistory(no_rumah);
+
+        // Reset form dan reload
+        document.getElementById('modalRiwayat').style.display = 'none';
+        loadRiwayat();
+        loadWargaDropdown(); // refresh dropdown karena iuran warga mungkin berubah
+      });
+
+      async function deleteRiwayat(id, no_rumah) {
+        if (!confirm('Yakin hapus riwayat ini? Data warga akan disesuaikan dengan riwayat terbaru yang tersisa.')) return;
+        const { error } = await supabase
+          .from('riwayat_kondisi')
+          .delete()
+          .eq('id', id);
+        if (error) {
+          alert('Gagal hapus: ' + error.message);
+          return;
+        }
+        // Perbarui warga dengan riwayat terbaru yang tersisa
+        await updateWargaFromHistory(no_rumah);
+        loadRiwayat();
+        loadWargaDropdown();
+      }
+
+      function formatRupiah(angka) {
+        if (angka === null || isNaN(angka)) angka = 0;
+        return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka);
+      }
+
+      function formatDate(iso) {
+        return new Date(iso).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' });
+      }
+
+      document.getElementById('logoutBtn').addEventListener('click', async (e) => {
+        e.preventDefault();
+        await supabase.auth.signOut();
+        window.location.href = 'login.html';
+      });
+    })();
+  </script>
+</body>
+</html>
