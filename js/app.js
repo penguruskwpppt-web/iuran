@@ -25,3 +25,20 @@ export async function getUserProfile(userId) {
   if (error) throw error
   return data
 }
+// Di bagian bawah app.js, setelah fungsi yang sudah ada
+
+export async function checkAdmin() {
+  const user = await requireAuth() // akan redirect jika belum login
+  const { data: profile, error } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single()
+  if (error || !profile || profile.role !== 'admin') {
+    alert('Akses ditolak. Halaman ini hanya untuk admin.')
+    window.location.href = 'dashboard.html'
+    return false
+  }
+  return true
+}
+
