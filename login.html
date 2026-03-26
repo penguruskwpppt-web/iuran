@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - Iuran Warga</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" href="images/logo_192.png">
+</head>
+<body>
+  <div class="login-container">
+    <img src="images/logo_192.png" alt="Logo" class="logo" style="width: 80px;">
+    <h2>Login Aplikasi Iuran Warga</h2>
+    <form id="loginForm">
+      <input type="email" id="email" placeholder="Email" required>
+      <input type="password" id="password" placeholder="Password" required>
+      <button type="submit">Login</button>
+    </form>
+    <p id="errorMsg" class="error"></p>
+  </div>
+  <script type="module">
+    import { supabase } from './js/app.js'
+
+    const form = document.getElementById('loginForm')
+    const errorMsg = document.getElementById('errorMsg')
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault()
+      const email = document.getElementById('email').value
+      const password = document.getElementById('password').value
+
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+
+      if (error) {
+        errorMsg.textContent = error.message
+      } else {
+        window.location.href = 'dashboard.html'
+      }
+    })
+  </script>
+</body>
+</html>
