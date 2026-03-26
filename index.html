@@ -842,98 +842,99 @@
   }
 
   // ==================== CEK TUNGGAKAN PER RUMAH ====================
-  async function cekTunggakanByRumah() {
-    const noRumah = prompt("Masukkan nomor rumah yang ingin dicek tunggakannya:", "")
-    if (!noRumah) return
+ async function cekTunggakanByRumah() {
+  const noRumah = prompt("Masukkan nomor rumah yang ingin dicek tunggakannya:", "")
+  if (!noRumah) return
 
-    try {
-      // 1. Ambil data warga
-      const { data: warga, error: errWarga } = await supabase
-        .from('warga')
-        .select('nama_pemilik, kondisi_terakhir, iuran_per_bulan')
-        .eq('no_rumah', noRumah)
-        .single()
-      if (errWarga || !warga) {
-        alert(`Nomor rumah ${noRumah} tidak ditemukan.`)
-        return
-      }
-
-      const statusRumah = warga.kondisi_terakhir
-      if (statusRumah === 'Dibebaskan') {
-        alert(`🏠 Rumah ${noRumah} (${warga.nama_pemilik})\n\nStatus: DIBEBASKAN\nAnda tidak dikenakan iuran.`)
-        return
-      }
-
-      // 2. Ambil semua iuran yang sudah dibayar untuk rumah ini
-      const { data: payments, error: errPay } = await supabase
-        .from('transaksi_iuran')
-        .select('bulan, jumlah')
-        .eq('no_rumah', noRumah)
-        .order('bulan', { ascending: true })
-
-      const paidMonths = new Set()
-      payments?.forEach(p => {
-        const date = new Date(p.bulan)
-        const key = `${date.getFullYear()}-${date.getMonth()+1}`
-        paidMonths.add(key)
-      })
-
-      // 3. Tentukan periode cek: dari bulan pertama tercatat dalam sistem sampai bulan lalu
-      const { data: firstPayment } = await supabase
-        .from('transaksi_iuran')
-        .select('bulan')
-        .order('bulan', { ascending: true })
-        .limit(1)
-      let startDate = firstPayment && firstPayment[0] ? new Date(firstPayment[0].bulan) : new Date(2025, 10, 1) // default Nov 2025
-      const currentDate = new Date()
-      const currentYear = currentDate.getFullYear()
-      const currentMonth = currentDate.getMonth() + 1
-
-      const months = []
-      let year = startDate.getFullYear()
-      let month = startDate.getMonth() + 1
-      while (year < currentYear || (year === currentYear && month < currentMonth)) {
-        months.push({ year, month })
-        month++
-        if (month > 12) { month = 1; year++ }
-      }
-
-      // 4. Hitung tunggakan
-      const iuranPerBulan = warga.iuran_per_bulan
-      const tunggakan = []
-      let totalNominal = 0
-      months.forEach(m => {
-        const key = `${m.year}-${m.month}`
-        if (!paidMonths.has(key)) {
-          tunggakan.push(`${m.month}/${m.year}`)
-          totalNominal += iuranPerBulan
-        }
-      })
-
-      // 5. Tampilkan hasil
-      let pesan = `🏠 Rumah ${noRumah} (${warga.nama_pemilik})\n`
-      if (statusRumah === 'Kosong') {
-        pesan += `Status: KOSONG (iuran Rp ${formatRupiah(iuranPerBulan)}/bln)\n\n`
-      } else {
-        pesan += `Status: BERPENGHUNI (iuran Rp ${formatRupiah(iuranPerBulan)}/bln)\n\n`
-      }
-      if (tunggakan.length === 0) {
-        pesan += `✅ *Tidak Ada Tunggakan*\nTerima kasih telah membayar iuran tepat waktu. 🙏`
-      } else {
-        pesan += `⚠️ *Tunggakan ${tunggakan.length} bulan*:\n${tunggakan.join(', ')}\nTotal: *${formatRupiah(totalNominal)}*\n\n`
-        if (tunggakan.length >= 2) {
-          pesan += `⚠️ *PERINGATAN!* Jika tunggakan >2 bulan, layanan kebersihan akan dihentikan sementara.`
-        } else {
-          pesan += `Segera lunasi tunggakan Anda.`
-        }
-      }
-      alert(pesan.replace(/\*/g, ''))
-    } catch (err) {
-      console.error(err)
-      alert('Gagal memeriksa tunggakan.')
+  try {
+    // 1. Ambil data warga
+    const { data: warga, error: errWarga } = await supabase
+      .from('warga')
+      .select('nama_pemilik, kondisi_terakhir, iuran_per_bulan')
+      .eq('no_rumah', noRumah)
+      .single()
+    if (errWarga || !warga) {
+      alert(`Nomor rumah ${noRumah} tidak ditemukan.`)
+      return
     }
-  }
 
+    const statusRumah = warga.kondisi_terakhir
+    if (statusRumah === 'Dibebaskan') {
+      alert(`🏠 Rumah ${noRumah} (${warga.nama_pemilik})\n\nStatus: DIBEBASKAN\nAnda tidak dikenakan iuran.`)
+      return
+    }
+
+    // 2. Ambil semua iuran yang sudah dibayar untuk rumah ini
+    const { data: payments, error: errPay } = await supabase
+      .from('transaksi_iuran')
+      .select('bulan, jumlah')
+      .eq('no_rumah', noRumah)
+      .order('bulan', { ascending: true })
+
+    const paidMonths = new Set()
+    payments?.forEach(p => {
+      const date = new Date(p.bulan)
+      const key = `${date.getFullYear()}-${date.getMonth()+1}`
+      paidMonths.add(key)
+    })
+
+    // 3. Tentukan periode perhitungan: 1 November 2025 sampai bulan berjalan
+    const startDate = new Date(2025, 10, 1) // November 2025 (bulan ke-10 dalam JS)
+    const currentDate = new Date()
+    const currentYear = currentDate.getFullYear()
+    const currentMonth = currentDate.getMonth() + 1
+
+    const months = []
+    let year = startDate.getFullYear()
+    let month = startDate.getMonth() + 1
+    while (year < currentYear || (year === currentYear && month <= currentMonth)) {
+      months.push({ year, month })
+      month++
+      if (month > 12) { month = 1; year++ }
+    }
+
+    // 4. Hitung tunggakan
+    const iuranPerBulan = warga.iuran_per_bulan
+    const tunggakan = []
+    let totalNominal = 0
+    months.forEach(m => {
+      const key = `${m.year}-${m.month}`
+      if (!paidMonths.has(key)) {
+        tunggakan.push(`${m.month}/${m.year}`)
+        totalNominal += iuranPerBulan
+      }
+    })
+
+    // 5. Tampilkan hasil
+    let pesan = `🏠 Rumah ${noRumah} (${warga.nama_pemilik})\n`
+    if (statusRumah === 'Kosong') {
+      pesan += `Status: KOSONG (iuran Rp ${formatRupiah(iuranPerBulan)}/bln)\n\n`
+    } else {
+      pesan += `Status: BERPENGHUNI (iuran Rp ${formatRupiah(iuranPerBulan)}/bln)\n\n`
+    }
+    if (tunggakan.length === 0) {
+      pesan += `✅ *Tidak Ada Tunggakan* (Periode Nov 2025 – ${bulanSekarang()})\nTerima kasih telah membayar iuran tepat waktu. 🙏`
+    } else {
+      pesan += `⚠️ *Tunggakan ${tunggakan.length} bulan*:\n${tunggakan.join(', ')}\nTotal: *${formatRupiah(totalNominal)}*\n\n`
+      if (tunggakan.length >= 2) {
+        pesan += `⚠️ *PERINGATAN!* Jika tunggakan >2 bulan, layanan kebersihan akan dihentikan sementara.`
+      } else {
+        pesan += `Segera lunasi tunggakan Anda.`
+      }
+    }
+    alert(pesan.replace(/\*/g, ''))
+  } catch (err) {
+    console.error(err)
+    alert('Gagal memeriksa tunggakan.')
+  }
+}
+
+// Fungsi bantu untuk menampilkan bulan sekarang dalam format teks
+function bulanSekarang() {
+  const now = new Date()
+  return now.toLocaleString('id-ID', { month: 'long', year: 'numeric' })
+}
+  
   // ==================== LAPORAN KAS (AMBIL DARI SETTINGS) ====================
   async function openLaporanKas() {
     try {
