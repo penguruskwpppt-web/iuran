@@ -3,22 +3,45 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin Panel - Iuran Warga</title>
-  <link rel="stylesheet" href="style.css">
-  <link rel="icon" href="images/logo_192.png">
+  <title>Admin Panel - KWP3T</title>
+  <link rel="icon" href="../images/logo.webp" type="image/webp">
+  <link rel="stylesheet" href="../style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    /* Tambahan gaya khusus admin jika diperlukan */
+    .btn-logout {
+      background: #e74c3c;
+      color: white;
+    }
+    .btn-logout:hover {
+      background: #c0392b;
+    }
+    .btn-save-role {
+      background: #27ae60;
+      color: white;
+      padding: 4px 8px;
+      font-size: 0.8rem;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .btn-save-role:hover {
+      background: #2ecc71;
+    }
+  </style>
 </head>
 <body>
   <nav class="navbar">
     <div class="nav-brand">
-      <img src="images/logo_192.png" alt="Logo" width="40">
-      <span>Iuran Warga</span>
+      <img src="../images/logo.webp" alt="Logo" width="40">
+      <span>Admin KWP3T</span>
     </div>
     <div class="nav-links">
-      <a href="dashboard.html">Dashboard</a>
+      <a href="admin.html" class="active">Dashboard</a>
       <a href="warga.html">Data Warga</a>
       <a href="iuran.html">Bayar Iuran</a>
       <a href="laporan.html">Laporan Kas</a>
-      <a href="admin.html" class="active">Admin Panel</a>
       <a href="#" id="logoutBtn">Logout</a>
     </div>
   </nav>
@@ -37,7 +60,7 @@
       <div style="overflow-x: auto;">
         <table id="users-table">
           <thead>
-            <tr><th>Email</th><th>Role</th><th>Aksi</th></tr>
+            <tr><th>Email</th><th>Role</th><th>Aksi</th>
           </thead>
           <tbody></tbody>
         </table>
@@ -61,84 +84,113 @@
     </div>
   </div>
 
-  <script type="module">
-    import { supabase, requireAuth, checkAdmin } from './js/app.js'
-    import { formatRupiah, formatDate } from './js/utils.js'
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    // ========== KONFIGURASI SUPABASE ==========
+    const SUPABASE_URL = 'https://wuargtxulaquxpziuzho.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind1YXJndHh1bGFxdXhweml1emhvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1MjMxNTYsImV4cCI6MjA5MDA5OTE1Nn0.EcVFAGh3ZgTDs8Paz9O_8MpkliKPF0vI7cAuuIsvb2U';
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    await checkAdmin() // redirect jika bukan admin
+    // ========== CEK AUTENTIKASI DAN ROLE ADMIN ==========
+    async function checkAdmin() {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        window.location.href = 'login.html';
+        return false;
+      }
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single();
+      if (error || !profile || profile.role !== 'admin') {
+        alert('Akses ditolak. Halaman ini hanya untuk admin.');
+        window.location.href = '../index.html';
+        return false;
+      }
+      return true;
+    }
 
+    // ========== FUNGSI PEMBANTU ==========
+    function formatRupiah(angka) {
+      if (angka === null || isNaN(angka)) angka = 0;
+      return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka);
+    }
+
+    // ========== MANAJEMEN USER ==========
     async function loadUsers() {
       const { data: profiles, error } = await supabase
         .from('profiles')
         .select('id, email, role')
-        .order('email')
+        .order('email');
       if (error) {
-        console.error(error)
-        alert('Gagal memuat daftar user')
-        return
+        console.error(error);
+        alert('Gagal memuat daftar user');
+        return;
       }
-      const tbody = document.querySelector('#users-table tbody')
-      tbody.innerHTML = ''
+      const tbody = document.querySelector('#users-table tbody');
+      tbody.innerHTML = '';
       for (const prof of profiles) {
-        const row = tbody.insertRow()
-        row.insertCell(0).innerText = prof.email
-        const roleCell = row.insertCell(1)
-        const select = document.createElement('select')
-        const roles = ['admin', 'bendahara', 'sekretaris']
+        const row = tbody.insertRow();
+        row.insertCell(0).innerText = prof.email;
+        const roleCell = row.insertCell(1);
+        const select = document.createElement('select');
+        const roles = ['admin', 'bendahara', 'sekretaris'];
         roles.forEach(r => {
-          const opt = document.createElement('option')
-          opt.value = r
-          opt.textContent = r
-          if (prof.role === r) opt.selected = true
-          select.appendChild(opt)
-        })
-        roleCell.appendChild(select)
-        const actionCell = row.insertCell(2)
-        const saveBtn = document.createElement('button')
-        saveBtn.innerText = 'Simpan'
-        saveBtn.className = 'btn-save-role'
+          const opt = document.createElement('option');
+          opt.value = r;
+          opt.textContent = r;
+          if (prof.role === r) opt.selected = true;
+          select.appendChild(opt);
+        });
+        roleCell.appendChild(select);
+        const actionCell = row.insertCell(2);
+        const saveBtn = document.createElement('button');
+        saveBtn.innerText = 'Simpan';
+        saveBtn.className = 'btn-save-role';
         saveBtn.onclick = async () => {
-          const newRole = select.value
+          const newRole = select.value;
           const { error: updateError } = await supabase
             .from('profiles')
             .update({ role: newRole })
-            .eq('id', prof.id)
-          if (updateError) alert('Gagal update role: ' + updateError.message)
+            .eq('id', prof.id);
+          if (updateError) alert('Gagal update role: ' + updateError.message);
           else {
-            alert(`Role user ${prof.email} diubah menjadi ${newRole}`)
-            loadUsers()
+            alert(`Role user ${prof.email} diubah menjadi ${newRole}`);
+            loadUsers();
           }
-        }
-        actionCell.appendChild(saveBtn)
+        };
+        actionCell.appendChild(saveBtn);
       }
     }
 
+    // ========== STATISTIK LENGKAP ==========
     async function loadStats() {
-      const statsDiv = document.getElementById('stats-data')
-      statsDiv.innerHTML = '<p>Memuat data...</p>'
+      const statsDiv = document.getElementById('stats-data');
+      statsDiv.innerHTML = '<p>Memuat data...</p>';
       try {
-        const { count: totalWarga } = await supabase.from('warga').select('*', { count: 'exact', head: true })
-        const { count: totalPenghuni } = await supabase.from('warga').select('*', { count: 'exact', head: true }).eq('kondisi_terakhir', 'Berpenghuni')
-        const { count: totalKosong } = await supabase.from('warga').select('*', { count: 'exact', head: true }).eq('kondisi_terakhir', 'Kosong')
-        const { count: totalDibebaskan } = await supabase.from('warga').select('*', { count: 'exact', head: true }).eq('kondisi_terakhir', 'Dibebaskan')
+        const { count: totalWarga } = await supabase.from('warga').select('*', { count: 'exact', head: true });
+        const { count: totalPenghuni } = await supabase.from('warga').select('*', { count: 'exact', head: true }).eq('kondisi_terakhir', 'Berpenghuni');
+        const { count: totalKosong } = await supabase.from('warga').select('*', { count: 'exact', head: true }).eq('kondisi_terakhir', 'Kosong');
+        const { count: totalDibebaskan } = await supabase.from('warga').select('*', { count: 'exact', head: true }).eq('kondisi_terakhir', 'Dibebaskan');
 
-        const { data: iuranData } = await supabase.from('transaksi_iuran').select('jumlah')
-        let totalIuran = iuranData?.reduce((s,t)=>s+t.jumlah,0) || 0
+        const { data: iuranData } = await supabase.from('transaksi_iuran').select('jumlah');
+        let totalIuran = iuranData?.reduce((s,t)=>s+t.jumlah,0) || 0;
 
-        const { data: pemasukanLain } = await supabase.from('transaksi_kas').select('pemasukan').eq('jenis','Pemasukan').neq('sumber','Iuran Warga')
-        let totalPemasukanLain = pemasukanLain?.reduce((s,t)=>s+t.pemasukan,0) || 0
+        const { data: pemasukanLain } = await supabase.from('transaksi_kas').select('pemasukan').eq('jenis','Pemasukan').neq('sumber','Iuran Warga');
+        let totalPemasukanLain = pemasukanLain?.reduce((s,t)=>s+t.pemasukan,0) || 0;
 
-        const { data: pengeluaranData } = await supabase.from('transaksi_kas').select('pengeluaran').eq('jenis','Pengeluaran')
-        let totalPengeluaran = pengeluaranData?.reduce((s,t)=>s+t.pengeluaran,0) || 0
+        const { data: pengeluaranData } = await supabase.from('transaksi_kas').select('pengeluaran').eq('jenis','Pengeluaran');
+        let totalPengeluaran = pengeluaranData?.reduce((s,t)=>s+t.pengeluaran,0) || 0;
 
-        const { data: lastSaldo } = await supabase.from('transaksi_kas').select('saldo').order('tanggal',{ascending:false}).limit(1)
-        const saldo = lastSaldo?.[0]?.saldo || 0
+        const { data: lastSaldo } = await supabase.from('transaksi_kas').select('saldo').order('tanggal',{ascending:false}).limit(1);
+        const saldo = lastSaldo?.[0]?.saldo || 0;
 
-        const now = new Date()
-        const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).toISOString()
-        const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString()
-        const { data: iuranBulanIni } = await supabase.from('transaksi_kas').select('pemasukan').eq('jenis','Pemasukan').eq('sumber','Iuran Warga').gte('tanggal',firstDay).lte('tanggal',lastDay)
-        let totalIuranBulanIni = iuranBulanIni?.reduce((s,t)=>s+t.pemasukan,0) || 0
+        const now = new Date();
+        const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+        const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString();
+        const { data: iuranBulanIni } = await supabase.from('transaksi_kas').select('pemasukan').eq('jenis','Pemasukan').eq('sumber','Iuran Warga').gte('tanggal',firstDay).lte('tanggal',lastDay);
+        let totalIuranBulanIni = iuranBulanIni?.reduce((s,t)=>s+t.pemasukan,0) || 0;
 
         statsDiv.innerHTML = `
           <div class="stats-grid">
@@ -152,77 +204,86 @@
             <div class="card"><h3>Saldo Kas Terakhir</h3><p>${formatRupiah(saldo)}</p></div>
             <div class="card"><h3>Iuran Bulan Ini</h3><p>${formatRupiah(totalIuranBulanIni)}</p></div>
           </div>
-        `
+        `;
       } catch (err) {
-        console.error(err)
-        statsDiv.innerHTML = '<p>Gagal memuat statistik.</p>'
+        console.error(err);
+        statsDiv.innerHTML = '<p>Gagal memuat statistik.</p>';
       }
     }
 
+    // ========== EKSPOR CSV ==========
     async function exportToCSV(tableName, columns, filename) {
       try {
-        let data
+        let data;
         if (tableName === 'warga') {
-          const { data: wargaData } = await supabase.from('warga').select('*').order('no_rumah')
-          data = wargaData
+          const { data: wargaData } = await supabase.from('warga').select('*').order('no_rumah');
+          data = wargaData;
         } else if (tableName === 'transaksi_iuran') {
-          const { data: iuranData } = await supabase.from('transaksi_iuran').select('kas_id, no_rumah, bulan, jumlah, metode, bukti_tf, created_at').order('bulan', { ascending: false })
-          data = iuranData
+          const { data: iuranData } = await supabase.from('transaksi_iuran').select('kas_id, no_rumah, bulan, jumlah, metode, bukti_tf, created_at').order('bulan', { ascending: false });
+          data = iuranData;
         } else if (tableName === 'transaksi_kas') {
-          const { data: kasData } = await supabase.from('transaksi_kas').select('kas_id, tanggal, keterangan, pemasukan, pengeluaran, saldo, jenis, sumber').order('tanggal', { ascending: false })
-          data = kasData
-        } else throw new Error('Tabel tidak dikenal')
-
-        if (!data || data.length === 0) { alert('Tidak ada data'); return }
-        const headers = columns.join(',')
+          const { data: kasData } = await supabase.from('transaksi_kas').select('kas_id, tanggal, keterangan, pemasukan, pengeluaran, saldo, jenis, sumber').order('tanggal', { ascending: false });
+          data = kasData;
+        } else throw new Error('Tabel tidak dikenal');
+        if (!data || data.length === 0) { alert('Tidak ada data'); return; }
+        const headers = columns.join(',');
         const rows = data.map(row => columns.map(col => {
-          let val = row[col]
-          if (val === null || val === undefined) val = ''
-          if (typeof val === 'string' && (val.includes(',') || val.includes('"'))) val = `"${val.replace(/"/g, '""')}"`
-          return val
-        }).join(','))
-        const csv = [headers, ...rows].join('\n')
-        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
-        const link = document.createElement('a')
-        const url = URL.createObjectURL(blob)
-        link.href = url
-        link.download = filename
-        document.body.appendChild(link)
-        link.click()
-        document.body.removeChild(link)
-        URL.revokeObjectURL(url)
+          let val = row[col];
+          if (val === null || val === undefined) val = '';
+          if (typeof val === 'string' && (val.includes(',') || val.includes('"'))) val = `"${val.replace(/"/g, '""')}"`;
+          return val;
+        }).join(','));
+        const csv = [headers, ...rows].join('\n');
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        link.href = url;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
       } catch (err) {
-        console.error(err)
-        alert('Gagal ekspor: ' + err.message)
+        console.error(err);
+        alert('Gagal ekspor: ' + err.message);
       }
     }
 
-    document.getElementById('export-warga').onclick = () => exportToCSV('warga', ['no_rumah','nama_pemilik','no_hp_pemilik','status_kepemilikan','kondisi_terakhir','iuran_per_bulan','koordinator','created_at','updated_at'], 'data_warga.csv')
-    document.getElementById('export-transaksi').onclick = () => exportToCSV('transaksi_iuran', ['kas_id','no_rumah','bulan','jumlah','metode','bukti_tf','created_at'], 'transaksi_iuran.csv')
-    document.getElementById('export-kas').onclick = () => exportToCSV('transaksi_kas', ['kas_id','tanggal','keterangan','pemasukan','pengeluaran','saldo','jenis','sumber'], 'transaksi_kas.csv')
+    // ========== INISIALISASI ==========
+    (async () => {
+      const isAdmin = await checkAdmin();
+      if (!isAdmin) return;
 
-    const tabs = document.querySelectorAll('.tab-btn')
-    const contents = document.querySelectorAll('.tab-content')
-    tabs.forEach(btn => {
-      btn.addEventListener('click', () => {
-        const tabId = btn.dataset.tab
-        tabs.forEach(b => b.classList.remove('active'))
-        btn.classList.add('active')
-        contents.forEach(c => c.classList.remove('active'))
-        document.getElementById(`tab-${tabId}`).classList.add('active')
-        if (tabId === 'users') loadUsers()
-        if (tabId === 'stats') loadStats()
-      })
-    })
+      await loadUsers();
+      await loadStats();
 
-    loadUsers()
-    loadStats()
+      // Tab switching
+      const tabs = document.querySelectorAll('.tab-btn');
+      const contents = document.querySelectorAll('.tab-content');
+      tabs.forEach(btn => {
+        btn.addEventListener('click', () => {
+          const tabId = btn.dataset.tab;
+          tabs.forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          contents.forEach(c => c.classList.remove('active'));
+          document.getElementById(`tab-${tabId}`).classList.add('active');
+          if (tabId === 'users') loadUsers();
+          if (tabId === 'stats') loadStats();
+        });
+      });
 
-    document.getElementById('logoutBtn').addEventListener('click', async (e) => {
-      e.preventDefault()
-      await supabase.auth.signOut()
-      window.location.href = 'login.html'
-    })
+      // Export buttons
+      document.getElementById('export-warga').onclick = () => exportToCSV('warga', ['no_rumah','nama_pemilik','no_hp_pemilik','status_kepemilikan','kondisi_terakhir','iuran_per_bulan','koordinator','created_at','updated_at'], 'data_warga.csv');
+      document.getElementById('export-transaksi').onclick = () => exportToCSV('transaksi_iuran', ['kas_id','no_rumah','bulan','jumlah','metode','bukti_tf','created_at'], 'transaksi_iuran.csv');
+      document.getElementById('export-kas').onclick = () => exportToCSV('transaksi_kas', ['kas_id','tanggal','keterangan','pemasukan','pengeluaran','saldo','jenis','sumber'], 'transaksi_kas.csv');
+
+      // Logout
+      document.getElementById('logoutBtn').addEventListener('click', async (e) => {
+        e.preventDefault();
+        await supabase.auth.signOut();
+        window.location.href = 'login.html';
+      });
+    })();
   </script>
 </body>
 </html>
