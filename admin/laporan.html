@@ -189,7 +189,7 @@
           <tr><th>Tanggal</th><th>Keterangan</th><th>Pemasukan</th><th>Pengeluaran</th><th>Saldo</th><th>Sumber</th>
         </thead>
         <tbody></tbody>
-       </table>
+      </table>
     </div>
   </div>
 
@@ -289,9 +289,11 @@
       window.print();
     }
 
-    // Inisialisasi
-    await fetchSaldoAwal();
-    loadKas();
+    // Inisialisasi – perbaikan: bungkus dalam fungsi async IIFE
+    (async () => {
+      await fetchSaldoAwal();
+      loadKas();
+    })();
 
     document.getElementById('filterBtn').addEventListener('click', () => {
       const start = document.getElementById('startDate').value;
