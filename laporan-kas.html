@@ -176,6 +176,11 @@
       border-top: 1px solid #eef2f8;
       padding-top: 20px;
     }
+    .print-timestamp {
+      margin-top: 10px;
+      font-size: 0.75rem;
+      color: #888;
+    }
     @media (max-width: 768px) {
       .summary-grid {
         grid-template-columns: repeat(2, 1fr);
@@ -298,6 +303,7 @@
 
   <div class="footer">
     Sistem KWP3T v3.2026 | Design by Yetno
+    <div class="print-timestamp" id="printTimestamp"></div>
   </div>
 </div>
 
@@ -314,11 +320,11 @@
     return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka);
   }
 
-  // Format tanggal pendek: 1 Nov 2026
-  function formatShortDate(iso) {
+  // Format tanggal: 01 November 2026
+  function formatFullDate(iso) {
     const date = new Date(iso);
-    const day = date.getDate();
-    const month = date.toLocaleString('id-ID', { month: 'short' });
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = date.toLocaleString('id-ID', { month: 'long' });
     const year = date.getFullYear();
     return `${day} ${month} ${year}`;
   }
@@ -366,7 +372,7 @@
     tbody.innerHTML = '';
     data.forEach(row => {
       const tr = tbody.insertRow();
-      tr.insertCell(0).innerText = formatShortDate(row.tanggal);
+      tr.insertCell(0).innerText = formatFullDate(row.tanggal);
       tr.insertCell(1).innerText = row.keterangan;
       tr.insertCell(2).innerText = row.pemasukan ? formatRupiah(row.pemasukan) : '-';
       tr.insertCell(3).innerText = row.pengeluaran ? formatRupiah(row.pengeluaran) : '-';
@@ -381,7 +387,7 @@
     const headers = ['tanggal','keterangan','pemasukan','pengeluaran','saldo','jenis','sumber'];
     const rows = data.map(row => headers.map(h => {
       let val = row[h];
-      if (h === 'tanggal') val = formatShortDate(row.tanggal);
+      if (h === 'tanggal') val = formatFullDate(row.tanggal);
       if (typeof val === 'number') val = val.toString();
       if (typeof val === 'string' && (val.includes(',') || val.includes('"'))) val = `"${val.replace(/"/g, '""')}"`;
       return val || '';
@@ -396,9 +402,28 @@
     URL.revokeObjectURL(url);
   }
 
+  function updatePrintTimestamp() {
+    const now = new Date();
+    const options = { 
+      weekday: 'long', 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
+    };
+    const formatted = now.toLocaleString('id-ID', options);
+    document.getElementById('printTimestamp').innerText = `Dicetak: ${formatted}`;
+  }
+
   function printReport() {
+    updatePrintTimestamp(); // update timestamp before printing
     window.print();
   }
+
+  // Initial timestamp on load
+  updatePrintTimestamp();
 
   await fetchSaldoAwal();
   loadKas();
