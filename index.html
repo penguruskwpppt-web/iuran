@@ -10,7 +10,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <style>
-    /* ========== STYLE SAMA PERSIS SEPERTI ASLI ========== */
+    /* semua CSS dari kode asli – dipertahankan */
     :root {
       --primary: #0b2e4f;
       --accent: #f59e0b;
@@ -129,7 +129,7 @@
       transform: translateY(-2px);
     }
 
-    /* Modal (sama) */
+    /* Modal */
     .modal {
       display: none;
       position: fixed;
@@ -693,7 +693,7 @@
       <div class="stat-box"><div class="stat-icon"><i class="fas fa-wallet"></i></div><div class="stat-number" id="saldoKas">-</div><div class="stat-label">Saldo Kas</div></div>
       <div class="stat-box"><div class="stat-icon"><i class="fas fa-arrow-up"></i></div><div class="stat-number" id="totalPemasukan">-</div><div class="stat-label">Total Pemasukan</div></div>
       <div class="stat-box"><div class="stat-icon"><i class="fas fa-arrow-down"></i></div><div class="stat-number" id="totalPengeluaran">-</div><div class="stat-label">Total Pengeluaran</div></div>
-      <div class="stat-box"><div class="stat-icon"><i class="fas fa-exclamation-triangle"></i></div><div class="stat-number" id="totalTunggakan">-</div><div class="stat-label">Total Tunggakan</div></div>
+      <div class="stat-box"><div class="stat-icon"><i class="fas fa-calendar-alt"></i></div><div class="stat-number" id="iuranBulanIni">-</div><div class="stat-label">Iuran Bulan Ini</div></div>
     </div>
   </div>
 </section>
@@ -775,274 +775,284 @@
   <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="white" viewBox="0 0 24 24"><path d="M20.52 3.48A11.86 11.86 0 0012.06 0C5.4 0 .03 5.37.03 12.03c0 2.12.55 4.2 1.6 6.04L0 24l6.09-1.6a11.98 11.98 0 006.03 1.64h.01c6.66 0 12.03-5.37 12.03-12.03 0-3.21-1.25-6.23-3.64-8.53zM12.07 21.7a9.7 9.7 0 01-4.95-1.36l-.35-.21-3.61.95.96-3.52-.23-.36a9.68 9.68 0 01-1.5-5.17c0-5.36 4.36-9.72 9.72-9.72 2.6 0 5.04 1.01 6.87 2.85a9.65 9.65 0 012.84 6.86c0 5.36-4.36 9.72-9.72 9.72zm5.33-7.27c-.29-.15-1.73-.85-2-.95-.27-.1-.47-.15-.67.15-.2.29-.77.95-.94 1.15-.17.2-.35.22-.64.07-.29-.15-1.23-.45-2.34-1.44-.87-.78-1.46-1.74-1.63-2.03-.17-.29-.02-.45.13-.6.13-.13.29-.35.44-.52.15-.17.2-.29.3-.49.1-.2.05-.37-.02-.52-.07-.15-.67-1.61-.92-2.2-.24-.58-.49-.5-.67-.5h-.57c-.2 0-.52.07-.79.37-.27.29-1.04 1.02-1.04 2.48s1.06 2.87 1.21 3.07c.15.2 2.09 3.19 5.07 4.47.71.31 1.27.49 1.7.63.71.23 1.35.2 1.86.12.57-.08 1.73-.71 1.97-1.4.24-.69.24-1.28.17-1.4-.07-.12-.27-.2-.57-.35z"/></svg>
 </a>
 
-<!-- ========== SUPABASE JAVASCRIPT ========== -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script>
+<script type="module">
+  import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
+
   // ==================== KONFIGURASI SUPABASE ====================
-  // GANTI DENGAN KREDENSIAL PROYEK SUPABASE ANDA
-  const SUPABASE_URL = https://wuargtxulaquxpziuzho.supabase.co';      // GANTI
-  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind1YXJndHh1bGFxdXhweml1emhvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1MjMxNTYsImV4cCI6MjA5MDA5OTE1Nn0.EcVFAGh3ZgTDs8Paz9O_8MpkliKPF0vI7cAuuIsvb2U';                    // GANTI
+  // GANTI dengan URL dan anon key dari project Supabase Anda
+  const supabaseUrl = 'https://wuargtxulaquxpziuzho.supabase.co'
+  const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind1YXJndHh1bGFxdXhweml1emhvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1MjMxNTYsImV4cCI6MjA5MDA5OTE1Nn0.EcVFAGh3ZgTDs8Paz9O_8MpkliKPF0vI7cAuuIsvb2U'
+  const supabase = createClient(supabaseUrl, supabaseKey)
 
-  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-  // Helper: Format Rupiah
+  // ==================== FUNGSI PEMBANTU ====================
   function formatRupiah(angka) {
-    return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka);
+    if (angka === null || isNaN(angka)) angka = 0
+    return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka)
   }
 
-  // ==================== LOAD DASHBOARD ====================
+  // ==================== DASHBOARD STATISTIK ====================
   async function loadDashboard() {
     try {
-      // Total pemasukan
-      const { data: pemasukan, error: errPemasukan } = await supabase
-        .from('transaksi')
-        .select('jumlah')
-        .eq('jenis', 'Pemasukan');
-      if (errPemasukan) throw errPemasukan;
-      const totalPemasukan = pemasukan.reduce((sum, item) => sum + item.jumlah, 0);
+      // Saldo kas terakhir
+      const { data: lastKas, error: errSaldo } = await supabase
+        .from('transaksi_kas')
+        .select('saldo')
+        .order('tanggal', { ascending: false })
+        .limit(1)
+      const saldo = lastKas && lastKas.length > 0 ? lastKas[0].saldo : 0
+      document.getElementById('saldoKas').innerText = formatRupiah(saldo)
+
+      // Total pemasukan (semua)
+      const { data: allPemasukan, error: errPem } = await supabase
+        .from('transaksi_kas')
+        .select('pemasukan')
+        .eq('jenis', 'Pemasukan')
+      const totalPem = allPemasukan?.reduce((sum, t) => sum + t.pemasukan, 0) || 0
+      document.getElementById('totalPemasukan').innerText = formatRupiah(totalPem)
 
       // Total pengeluaran
-      const { data: pengeluaran, error: errPengeluaran } = await supabase
-        .from('transaksi')
-        .select('jumlah')
-        .eq('jenis', 'Pengeluaran');
-      if (errPengeluaran) throw errPengeluaran;
-      const totalPengeluaran = pengeluaran.reduce((sum, item) => sum + item.jumlah, 0);
+      const { data: allPengeluaran, error: errPeng } = await supabase
+        .from('transaksi_kas')
+        .select('pengeluaran')
+        .eq('jenis', 'Pengeluaran')
+      const totalPeng = allPengeluaran?.reduce((sum, t) => sum + t.pengeluaran, 0) || 0
+      document.getElementById('totalPengeluaran').innerText = formatRupiah(totalPeng)
 
-      const saldoKas = totalPemasukan - totalPengeluaran;
+      // Iuran bulan ini (dari transaksi_kas)
+      const now = new Date()
+      const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).toISOString()
+      const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString()
+      const { data: iuranBulanIni, error: errIuran } = await supabase
+        .from('transaksi_kas')
+        .select('pemasukan')
+        .eq('jenis', 'Pemasukan')
+        .eq('sumber', 'Iuran Warga')
+        .gte('tanggal', firstDay)
+        .lte('tanggal', lastDay)
+      const totalIuranBulanIni = iuranBulanIni?.reduce((sum, t) => sum + t.pemasukan, 0) || 0
+      document.getElementById('iuranBulanIni').innerText = formatRupiah(totalIuranBulanIni)
 
-      // Total tunggakan (iuran dengan status 'Tunggak')
-      const { data: tunggakan, error: errTunggakan } = await supabase
-        .from('iuran')
-        .select('jumlah')
-        .eq('status', 'Tunggak');
-      if (errTunggakan) throw errTunggakan;
-      const totalTunggakan = tunggakan.reduce((sum, item) => sum + item.jumlah, 0);
-
-      document.getElementById('saldoKas').innerText = formatRupiah(saldoKas);
-      document.getElementById('totalPemasukan').innerText = formatRupiah(totalPemasukan);
-      document.getElementById('totalPengeluaran').innerText = formatRupiah(totalPengeluaran);
-      document.getElementById('totalTunggakan').innerText = formatRupiah(totalTunggakan);
     } catch (err) {
-      console.error('Gagal memuat dashboard:', err);
-      alert('Gagal memuat data keuangan. Periksa koneksi atau konfigurasi Supabase.');
+      console.error('Gagal memuat dashboard:', err)
+      document.getElementById('saldoKas').innerText = 'Error'
+      document.getElementById('totalPemasukan').innerText = 'Error'
+      document.getElementById('totalPengeluaran').innerText = 'Error'
+      document.getElementById('iuranBulanIni').innerText = 'Error'
     }
   }
 
   // ==================== CEK TUNGGAKAN PER RUMAH ====================
   async function cekTunggakanByRumah() {
-    const noRumah = prompt("Masukkan nomor rumah yang ingin dicek tunggakannya:", "");
-    if (!noRumah) return;
+    const noRumah = prompt("Masukkan nomor rumah yang ingin dicek tunggakannya:", "")
+    if (!noRumah) return
 
     try {
-      // Ambil data warga
+      // 1. Ambil data warga
       const { data: warga, error: errWarga } = await supabase
         .from('warga')
-        .select('nama, status_rumah')
+        .select('nama_pemilik, kondisi_terakhir, iuran_per_bulan')
         .eq('no_rumah', noRumah)
-        .single();
-      if (errWarga) throw new Error('Nomor rumah tidak ditemukan');
+        .single()
+      if (errWarga || !warga) {
+        alert(`Nomor rumah ${noRumah} tidak ditemukan.`)
+        return
+      }
 
-      // Ambil daftar iuran dengan status 'Tunggak' untuk rumah ini
-      const { data: tunggakan, error: errIuran } = await supabase
-        .from('iuran')
-        .select('bulan, tahun, jumlah')
+      const statusRumah = warga.kondisi_terakhir
+      if (statusRumah === 'Dibebaskan') {
+        alert(`🏠 Rumah ${noRumah} (${warga.nama_pemilik})\n\nStatus: DIBEBASKAN\nAnda tidak dikenakan iuran.`)
+        return
+      }
+
+      // 2. Ambil semua iuran yang sudah dibayar untuk rumah ini
+      const { data: payments, error: errPay } = await supabase
+        .from('transaksi_iuran')
+        .select('bulan, jumlah')
         .eq('no_rumah', noRumah)
-        .eq('status', 'Tunggak');
-      if (errIuran) throw errIuran;
+        .order('bulan', { ascending: true })
 
-      const jumlahBulan = tunggakan.length;
-      const totalNominal = tunggakan.reduce((sum, item) => sum + item.jumlah, 0);
-      const bulanTunggak = tunggakan.map(t => `${t.bulan}/${t.tahun}`);
+      const paidMonths = new Set()
+      payments?.forEach(p => {
+        const date = new Date(p.bulan)
+        const key = `${date.getFullYear()}-${date.getMonth()+1}`
+        paidMonths.add(key)
+      })
 
-      // Ambil bulan terakhir bayar (status Lunas terbaru)
-      const { data: lastPaid, error: errLast } = await supabase
-        .from('iuran')
-        .select('bulan, tahun')
-        .eq('no_rumah', noRumah)
-        .eq('status', 'Lunas')
-        .order('tahun', { ascending: false })
-        .order('bulan', { ascending: false })
+      // 3. Tentukan periode cek: dari bulan pertama tercatat dalam sistem sampai bulan lalu
+      const { data: firstPayment } = await supabase
+        .from('transaksi_iuran')
+        .select('bulan')
+        .order('bulan', { ascending: true })
         .limit(1)
-        .maybeSingle();
+      let startDate = firstPayment && firstPayment[0] ? new Date(firstPayment[0].bulan) : new Date(2025, 10, 1) // default Nov 2025
+      const currentDate = new Date()
+      const currentYear = currentDate.getFullYear()
+      const currentMonth = currentDate.getMonth() + 1
 
-      let pesan = "";
-      const { nama, status_rumah } = warga;
-
-      if (status_rumah === "Dibebaskan") {
-        pesan = `🏠 Status Rumah Anda: *Dibebaskan*\n\nAnda tidak dikenakan iuran dan tidak berpartisipasi aktif untuk perbaikan komplek.\nJika ada perubahan status, silakan hubungi Sekretaris.`;
-      } else if (status_rumah === "Kosong") {
-        if (jumlahBulan === 0) {
-          pesan = `🏠 Rumah Kosong (No. ${noRumah})\n\nTerima kasih atas partisipasi Anda dalam membayar iuran meskipun rumah kosong.\nSemoga komplek kita tetap nyaman bersama.`;
-        } else {
-          pesan = `🏠 Rumah Kosong (No. ${noRumah})\n\nTerdapat tunggakan iuran sebesar *Rp ${totalNominal.toLocaleString('id-ID')}* untuk bulan: ${bulanTunggak.join(', ')}.\nSegera lunasi untuk menjaga lingkungan tetap terawat.`;
-        }
-      } else { // Berpenghuni
-        if (jumlahBulan === 0) {
-          pesan = `🏠 Rumah ${noRumah} (${nama})\n\n✅ *Tidak Ada Tunggakan*.\nTerima kasih atas ketertiban Anda dalam membayar iuran. 🙏\nBersama kita jaga lingkungan tetap aman dan bersih.`;
-        } else if (jumlahBulan === 1) {
-          pesan = `🏠 Rumah ${noRumah} (${nama})\n\n⚠️ Terdapat tunggakan *1 bulan* (${bulanTunggak[0]}) sebesar *Rp ${totalNominal.toLocaleString('id-ID')}*.\nMohon segera dilunasi agar tidak mengganggu layanan lingkungan.`;
-        } else if (jumlahBulan === 2) {
-          pesan = `🏠 Rumah ${noRumah} (${nama})\n\n⚠️ *Peringatan!* Tunggakan *2 bulan* (${bulanTunggak.join(', ')}) dengan total *Rp ${totalNominal.toLocaleString('id-ID')}*.\nSegera lunasi, jika melebihi 2 bulan layanan kebersihan akan dihentikan sementara.`;
-        } else {
-          pesan = `🏠 Rumah ${noRumah} (${nama})\n\n🚨 *Tunggakan ${jumlahBulan} bulan* (${bulanTunggak.join(', ')}) dengan total *Rp ${totalNominal.toLocaleString('id-ID')}*.\nLayanan kebersihan dan keamanan komplek akan dihentikan hingga tunggakan dilunasi. Hubungi Bendahara segera.`;
-        }
+      const months = []
+      let year = startDate.getFullYear()
+      let month = startDate.getMonth() + 1
+      while (year < currentYear || (year === currentYear && month < currentMonth)) {
+        months.push({ year, month })
+        month++
+        if (month > 12) { month = 1; year++ }
       }
 
-      if (lastPaid && jumlahBulan > 0) {
-        pesan += `\n\n*Terakhir bayar*: ${lastPaid.bulan}/${lastPaid.tahun}`;
-      }
+      // 4. Hitung tunggakan
+      const iuranPerBulan = warga.iuran_per_bulan
+      const tunggakan = []
+      let totalNominal = 0
+      months.forEach(m => {
+        const key = `${m.year}-${m.month}`
+        if (!paidMonths.has(key)) {
+          tunggakan.push(`${m.month}/${m.year}`)
+          totalNominal += iuranPerBulan
+        }
+      })
 
-      alert(pesan.replace(/\*/g, ''));
+      // 5. Tampilkan hasil
+      let pesan = `🏠 Rumah ${noRumah} (${warga.nama_pemilik})\n`
+      if (statusRumah === 'Kosong') {
+        pesan += `Status: KOSONG (iuran Rp ${formatRupiah(iuranPerBulan)}/bln)\n\n`
+      } else {
+        pesan += `Status: BERPENGHUNI (iuran Rp ${formatRupiah(iuranPerBulan)}/bln)\n\n`
+      }
+      if (tunggakan.length === 0) {
+        pesan += `✅ *Tidak Ada Tunggakan*\nTerima kasih telah membayar iuran tepat waktu. 🙏`
+      } else {
+        pesan += `⚠️ *Tunggakan ${tunggakan.length} bulan*:\n${tunggakan.join(', ')}\nTotal: *${formatRupiah(totalNominal)}*\n\n`
+        if (tunggakan.length >= 2) {
+          pesan += `⚠️ *PERINGATAN!* Jika tunggakan >2 bulan, layanan kebersihan akan dihentikan sementara.`
+        } else {
+          pesan += `Segera lunasi tunggakan Anda.`
+        }
+      }
+      alert(pesan.replace(/\*/g, ''))
     } catch (err) {
-      alert(`Gagal: ${err.message}`);
+      console.error(err)
+      alert('Gagal memeriksa tunggakan.')
     }
   }
 
-  // ==================== LAPORAN KAS TERBARU ====================
+  // ==================== LAPORAN KAS (AMBIL DARI SETTINGS) ====================
   async function openLaporanKas() {
     try {
-      // Ambil laporan kas terbaru (misal berdasarkan created_at)
-      const { data, error } = await supabase
-        .from('laporan_kas')
-        .select('file_id')
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .single();
-
-      if (error) throw new Error('Laporan kas tidak ditemukan');
-
-      // Asumsikan file disimpan di bucket 'laporan' dengan path file_id
-      const { data: urlData, error: urlError } = supabase.storage
-        .from('laporan')
-        .createSignedUrl(data.file_id, 60); // berlaku 60 detik
-
-      if (urlError) throw urlError;
-
-      window.open(urlData.signedUrl, '_blank');
+      // Ambil URL laporan terbaru dari tabel settings (pastikan tabel ini ada)
+      const { data: setting, error } = await supabase
+        .from('settings')
+        .select('value')
+        .eq('key', 'latest_laporan_kas_url')
+        .single()
+      if (error || !setting) {
+        alert('Laporan kas belum tersedia. Silakan hubungi pengurus.')
+        return
+      }
+      window.open(setting.value, '_blank')
     } catch (err) {
-      alert('Gagal mengambil laporan kas: ' + err.message);
+      console.error(err)
+      alert('Gagal mengambil laporan kas.')
     }
   }
 
-  // ==================== DOWNLOAD RESI ====================
+  // ==================== DOWNLOAD RESI (BUKTI TRANSFER) ====================
   async function downloadResi() {
-    const noRumah = prompt("Masukkan nomor rumah:", "");
-    if (!noRumah) return;
-    const bulan = prompt("Masukkan bulan (1-12):", "");
-    if (!bulan) return;
-    const tahun = prompt("Masukkan tahun (2025-2027):", "");
-    if (!tahun) return;
+    const noRumah = prompt("Masukkan nomor rumah:", "")
+    if (!noRumah) return
+    const bulan = prompt("Masukkan bulan (1-12):", "")
+    if (!bulan) return
+    const tahun = prompt("Masukkan tahun (2025-2027):", "")
+    if (!tahun) return
 
     try {
-      // Cari iuran yang sesuai dengan no_rumah, bulan, tahun
-      const { data: iuranData, error: iuranError } = await supabase
-        .from('iuran')
-        .select('bukti_url')
+      const { data: receipts, error } = await supabase
+        .from('transaksi_iuran')
+        .select('kas_id, bulan, jumlah, metode, bukti_tf')
         .eq('no_rumah', noRumah)
-        .eq('bulan', parseInt(bulan))
-        .eq('tahun', parseInt(tahun));
+        .gte('bulan', `${tahun}-${bulan.padStart(2,'0')}-01`)
+        .lt('bulan', `${tahun}-${(parseInt(bulan)+1).toString().padStart(2,'0')}-01`)
 
-      if (iuranError) throw iuranError;
-
-      if (!iuranData || iuranData.length === 0) {
-        alert('Tidak ditemukan resi untuk kriteria tersebut.');
-        return;
+      if (error || !receipts || receipts.length === 0) {
+        alert(`Tidak ditemukan bukti pembayaran untuk rumah ${noRumah} bulan ${bulan}/${tahun}.`)
+        return
       }
 
-      const container = document.getElementById('resiListContainer');
-      container.innerHTML = '';
-      iuranData.forEach((item, idx) => {
-        if (!item.bukti_url) return;
-        const itemDiv = document.createElement('div');
-        itemDiv.className = 'resi-item';
-        // Ambil nama file dari URL
-        const fileName = item.bukti_url.split('/').pop();
+      const container = document.getElementById('resiListContainer')
+      container.innerHTML = ''
+      receipts.forEach(rec => {
+        const date = new Date(rec.bulan)
+        const monthName = date.toLocaleString('id-ID', { month: 'long', year: 'numeric' })
+        const itemDiv = document.createElement('div')
+        itemDiv.className = 'resi-item'
         itemDiv.innerHTML = `
           <div>
-            <div class="resi-name">${escapeHtml(fileName)}</div>
-            <div class="resi-info">Resi ${bulan}/${tahun}</div>
+            <div class="resi-name">${monthName} - ${formatRupiah(rec.jumlah)} (${rec.metode})</div>
           </div>
-          <div style="display: flex; gap: 8px;">
-            <a href="${item.bukti_url}" class="resi-download" target="_blank"><i class="fas fa-eye"></i> Lihat</a>
-            <a href="${item.bukti_url}" class="resi-download" download target="_blank"><i class="fas fa-download"></i> Unduh</a>
+          <div>
+            ${rec.bukti_tf ? `<a href="${rec.bukti_tf}" class="resi-download" target="_blank"><i class="fas fa-eye"></i> Lihat Bukti</a>` : '<span style="color:gray;">Tidak ada bukti</span>'}
           </div>
-        `;
-        container.appendChild(itemDiv);
-      });
-
-      if (container.children.length === 0) {
-        alert('Tidak ada file bukti untuk kriteria tersebut.');
-        return;
-      }
-
-      document.getElementById('resiModal').style.display = 'flex';
+        `
+        container.appendChild(itemDiv)
+      })
+      document.getElementById('resiModal').style.display = 'flex'
     } catch (err) {
-      alert('Error: ' + err.message);
+      console.error(err)
+      alert('Gagal mengambil data resi.')
     }
   }
 
-  function escapeHtml(str) {
-    return str.replace(/[&<>]/g, function(m) {
-      if (m === '&') return '&amp;';
-      if (m === '<') return '&lt;';
-      if (m === '>') return '&gt;';
-      return m;
-    });
-  }
-
-  // ==================== INISIALISASI EVENT ====================
+  // ==================== INISIALISASI ====================
   document.addEventListener('DOMContentLoaded', () => {
-    loadDashboard();
+    loadDashboard()
 
-    document.getElementById('btnLaporanKas').addEventListener('click', e => {
-      e.preventDefault();
-      openLaporanKas();
-    });
-    document.getElementById('btnCekTunggakan').addEventListener('click', e => {
-      e.preventDefault();
-      cekTunggakanByRumah();
-    });
-    document.getElementById('btnDownloadResi').addEventListener('click', e => {
-      e.preventDefault();
-      downloadResi();
-    });
+    // Event listener untuk tombol-tombol
+    document.getElementById('btnLaporanKas').addEventListener('click', (e) => {
+      e.preventDefault()
+      openLaporanKas()
+    })
+    document.getElementById('btnCekTunggakan').addEventListener('click', (e) => {
+      e.preventDefault()
+      cekTunggakanByRumah()
+    })
+    document.getElementById('btnDownloadResi').addEventListener('click', (e) => {
+      e.preventDefault()
+      downloadResi()
+    })
 
-    // Modal payment
-    const paymentModal = document.getElementById('paymentModal');
-    const btnInfo = document.getElementById('btnInfoPembayaran');
-    const closePayment = document.querySelector('#paymentModal .close-modal');
+    // Modal pembayaran
+    const paymentModal = document.getElementById('paymentModal')
+    const btnInfo = document.getElementById('btnInfoPembayaran')
+    const closePayment = document.querySelector('#paymentModal .close-modal')
     btnInfo.addEventListener('click', (e) => {
-      e.preventDefault();
-      paymentModal.style.display = 'flex';
-    });
-    closePayment.addEventListener('click', () => { paymentModal.style.display = 'none'; });
-    window.addEventListener('click', (e) => { if (e.target === paymentModal) paymentModal.style.display = 'none'; });
+      e.preventDefault()
+      paymentModal.style.display = 'flex'
+    })
+    closePayment.addEventListener('click', () => { paymentModal.style.display = 'none' })
+    window.addEventListener('click', (e) => { if (e.target === paymentModal) paymentModal.style.display = 'none' })
 
     // Modal resi
-    const resiModal = document.getElementById('resiModal');
-    const closeResi = document.getElementById('closeResiModal');
-    closeResi.addEventListener('click', () => { resiModal.style.display = 'none'; });
-    window.addEventListener('click', (e) => { if (e.target === resiModal) resiModal.style.display = 'none'; });
+    const resiModal = document.getElementById('resiModal')
+    const closeResi = document.getElementById('closeResiModal')
+    closeResi.addEventListener('click', () => { resiModal.style.display = 'none' })
+    window.addEventListener('click', (e) => { if (e.target === resiModal) resiModal.style.display = 'none' })
 
     // Menu mobile
-    const menuToggle = document.getElementById('menuToggle');
-    const navLinks = document.getElementById('navLinks');
-    menuToggle.addEventListener('click', () => navLinks.classList.toggle('active'));
+    const menuToggle = document.getElementById('menuToggle')
+    const navLinks = document.getElementById('navLinks')
+    menuToggle.addEventListener('click', () => navLinks.classList.toggle('active'))
 
     // FAQ
     document.querySelectorAll('.faq-question').forEach(q => {
       q.addEventListener('click', () => {
-        const item = q.parentElement;
-        item.classList.toggle('active');
-        const answer = item.querySelector('.faq-answer');
-        if (item.classList.contains('active')) answer.style.maxHeight = answer.scrollHeight + "px";
-        else answer.style.maxHeight = "0px";
-      });
-    });
+        const item = q.parentElement
+        item.classList.toggle('active')
+        const answer = item.querySelector('.faq-answer')
+        if (item.classList.contains('active')) answer.style.maxHeight = answer.scrollHeight + "px"
+        else answer.style.maxHeight = "0px"
+      })
+    })
 
-    document.getElementById('year').textContent = new Date().getFullYear();
-  });
+    document.getElementById('year').textContent = new Date().getFullYear()
+  })
 </script>
 </body>
 </html>
