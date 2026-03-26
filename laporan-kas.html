@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Laporan Kas - KWP3T</title>
+  <link rel="icon" href="images/logo.webp" type="image/webp">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #f4f4f4;
+      padding: 20px;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 24px;
+      padding: 24px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    /* Header laporan */
+    .report-header {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      margin-bottom: 30px;
+      padding-bottom: 20px;
+      border-bottom: 2px solid #eef2f8;
+    }
+    .report-header img {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+    .report-header h1 {
+      font-size: 1.8rem;
+      color: #0b2e4f;
+      margin: 0;
+    }
+    .report-header p {
+      color: #64748b;
+      margin-top: 5px;
+    }
+    /* Summary cards */
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+    .summary-card {
+      background: #f8fafc;
+      border-radius: 16px;
+      padding: 20px;
+      text-align: center;
+      border-left: 5px solid var(--accent, #f59e0b);
+    }
+    .summary-card h3 {
+      font-size: 0.9rem;
+      color: #64748b;
+      margin-bottom: 8px;
+    }
+    .summary-card .amount {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: #0b2e4f;
+    }
+    .filter-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      align-items: flex-end;
+      margin-bottom: 24px;
+      background: #f8fafc;
+      padding: 16px;
+      border-radius: 16px;
+    }
+    .filter-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .filter-group label {
+      font-weight: 600;
+      font-size: 0.85rem;
+    }
+    input, button {
+      padding: 8px 12px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-family: inherit;
+    }
+    button {
+      background: #0b2e4f;
+      color: white;
+      border: none;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    button:hover {
+      background: #1e4f7a;
+    }
+    .btn-print {
+      background: #2c3e50;
+      margin-left: auto;
+    }
+    .btn-export {
+      background: #27ae60;
+    }
+    .btn-export:hover {
+      background: #219653;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+      overflow-x: auto;
+      display: block;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 12px;
+      text-align: left;
+    }
+    th {
+      background: #0b2e4f;
+      color: white;
+    }
+    @media (max-width: 768px) {
+      .summary-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .filter-bar {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .btn-print, .btn-export {
+        margin-left: 0;
+      }
+      table {
+        font-size: 0.8rem;
+      }
+      th, td {
+        padding: 8px;
+      }
+    }
+    /* Print styles - A4 */
+    @media print {
+      body {
+        background: white;
+        padding: 0;
+        margin: 0;
+      }
+      .container {
+        max-width: 100%;
+        margin: 0;
+        padding: 0;
+        box-shadow: none;
+        border-radius: 0;
+      }
+      .filter-bar, .btn-print, .btn-export {
+        display: none;
+      }
+      .report-header {
+        margin-bottom: 20px;
+        border-bottom: 2px solid #000;
+      }
+      .summary-grid {
+        page-break-inside: avoid;
+      }
+      table {
+        page-break-inside: avoid;
+      }
+      @page {
+        size: A4;
+        margin: 1.5cm;
+      }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="report-header">
+    <img src="images/logo.webp" alt="Logo KWP3T">
+    <div>
+      <h1><i class="fas fa-chart-line"></i> Laporan Kas KWP3T</h1>
+      <p>Perumahan Pondok Payung Teduh – Laporan transparansi keuangan</p>
+    </div>
+  </div>
+
+  <!-- Summary -->
+  <div class="summary-grid">
+    <div class="summary-card">
+      <h3>Saldo Awal Periode</h3>
+      <div class="amount" id="saldoAwal">-</div>
+    </div>
+    <div class="summary-card">
+      <h3>Total Pemasukan</h3>
+      <div class="amount" id="totalPemasukan">-</div>
+    </div>
+    <div class="summary-card">
+      <h3>Total Pengeluaran</h3>
+      <div class="amount" id="totalPengeluaran">-</div>
+    </div>
+    <div class="summary-card">
+      <h3>Saldo Akhir Periode</h3>
+      <div class="amount" id="saldoAkhir">-</div>
+    </div>
+  </div>
+
+  <div class="filter-bar">
+    <div class="filter-group">
+      <label>Tanggal Mulai</label>
+      <input type="date" id="startDate">
+    </div>
+    <div class="filter-group">
+      <label>Tanggal Akhir</label>
+      <input type="date" id="endDate">
+    </div>
+    <button id="filterBtn">Filter</button>
+    <button id="resetBtn">Reset</button>
+    <button id="printBtn" class="btn-print"><i class="fas fa-print"></i> Cetak Laporan</button>
+    <button id="exportBtn" class="btn-export"><i class="fas fa-download"></i> Ekspor CSV</button>
+  </div>
+
+  <div style="overflow-x: auto;">
+    <table id="kasTable">
+      <thead>
+        <tr><th>Tanggal</th><th>Keterangan</th><th>Pemasukan</th><th>Pengeluaran</th><th>Saldo</th><th>Sumber</th></tr>
+      </thead>
+      <tbody></tbody>
+     </table>
+  </div>
+</div>
+
+<script type="module">
+  import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
+  const supabaseUrl = 'https://wuargtxulaquxpziuzho.supabase.co'
+  const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind1YXJndHh1bGFxdXhweml1emhvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1MjMxNTYsImV4cCI6MjA5MDA5OTE1Nn0.EcVFAGh3ZgTDs8Paz9O_8MpkliKPF0vI7cAuuIsvb2U'
+  const supabase = createClient(supabaseUrl, supabaseKey)
+
+  function formatRupiah(angka) {
+    if (angka === null || isNaN(angka)) angka = 0;
+    return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka);
+  }
+  function formatDate(iso) {
+    return new Date(iso).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' });
+  }
+
+  let allData = []; // menyimpan data asli tanpa filter
+
+  async function loadKas(start = null, end = null) {
+    let query = supabase.from('transaksi_kas').select('*').order('tanggal', { ascending: true }); // ascending untuk urutan waktu
+    if (start) query = query.gte('tanggal', start);
+    if (end) query = query.lte('tanggal', end);
+    const { data, error } = await query;
+    if (error) console.error(error);
+    else {
+      allData = data || [];
+      updateSummary(allData);
+      renderTable(allData);
+    }
+  }
+
+  function updateSummary(data) {
+    if (!data || data.length === 0) {
+      document.getElementById('saldoAwal').innerText = formatRupiah(0);
+      document.getElementById('totalPemasukan').innerText = formatRupiah(0);
+      document.getElementById('totalPengeluaran').innerText = formatRupiah(0);
+      document.getElementById('saldoAkhir').innerText = formatRupiah(0);
+      return;
+    }
+    // Saldo awal: data pertama (urutan ascending)
+    const saldoAwal = data[0].saldo - (data[0].pemasukan - data[0].pengeluaran);
+    // Alternatif: bisa ambil dari saldo transaksi pertama dikurangi pemasukan/pengeluaran transaksi itu, atau lebih sederhana: saldo transaksi pertama? Sebenarnya saldo pada transaksi pertama adalah saldo setelah transaksi itu. Jadi saldo awal periode adalah saldo sebelum transaksi pertama. Kita hitung dengan: saldoAwal = data[0].saldo - data[0].pemasukan + data[0].pengeluaran
+    const saldoAwalVal = data[0].saldo - data[0].pemasukan + data[0].pengeluaran;
+    const totalPemasukan = data.reduce((sum, row) => sum + (row.pemasukan || 0), 0);
+    const totalPengeluaran = data.reduce((sum, row) => sum + (row.pengeluaran || 0), 0);
+    const saldoAkhir = data[data.length - 1].saldo;
+
+    document.getElementById('saldoAwal').innerText = formatRupiah(saldoAwalVal);
+    document.getElementById('totalPemasukan').innerText = formatRupiah(totalPemasukan);
+    document.getElementById('totalPengeluaran').innerText = formatRupiah(totalPengeluaran);
+    document.getElementById('saldoAkhir').innerText = formatRupiah(saldoAkhir);
+  }
+
+  function renderTable(data) {
+    const tbody = document.querySelector('#kasTable tbody');
+    tbody.innerHTML = '';
+    data.forEach(row => {
+      const tr = tbody.insertRow();
+      tr.insertCell(0).innerText = formatDate(row.tanggal);
+      tr.insertCell(1).innerText = row.keterangan;
+      tr.insertCell(2).innerText = row.pemasukan ? formatRupiah(row.pemasukan) : '-';
+      tr.insertCell(3).innerText = row.pengeluaran ? formatRupiah(row.pengeluaran) : '-';
+      tr.insertCell(4).innerText = formatRupiah(row.saldo);
+      tr.insertCell(5).innerText = row.sumber || '-';
+    });
+  }
+
+  async function exportCSV() {
+    const { data, error } = await supabase.from('transaksi_kas').select('*').order('tanggal', { ascending: true });
+    if (error) return alert('Gagal mengambil data');
+    const headers = ['tanggal','keterangan','pemasukan','pengeluaran','saldo','jenis','sumber'];
+    const rows = data.map(row => headers.map(h => {
+      let val = row[h];
+      if (h === 'tanggal') val = new Date(val).toLocaleString('id-ID');
+      if (typeof val === 'number') val = val.toString();
+      if (typeof val === 'string' && (val.includes(',') || val.includes('"'))) val = `"${val.replace(/"/g, '""')}"`;
+      return val || '';
+    }).join(','));
+    const csv = [headers.join(','), ...rows].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.href = url;
+    link.download = `laporan_kas_${new Date().toISOString().slice(0,10)}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+  }
+
+  function printReport() {
+    window.print();
+  }
+
+  document.getElementById('filterBtn').addEventListener('click', () => {
+    const start = document.getElementById('startDate').value;
+    const end = document.getElementById('endDate').value;
+    loadKas(start, end);
+  });
+  document.getElementById('resetBtn').addEventListener('click', () => {
+    document.getElementById('startDate').value = '';
+    document.getElementById('endDate').value = '';
+    loadKas();
+  });
+  document.getElementById('exportBtn').addEventListener('click', exportCSV);
+  document.getElementById('printBtn').addEventListener('click', printReport);
+  loadKas();
+</script>
+</body>
+</html>
