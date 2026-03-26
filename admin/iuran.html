@@ -8,6 +8,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <style>
+    /* style sama seperti sebelumnya, tidak diubah */
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       font-family: 'Inter', sans-serif;
@@ -70,7 +71,7 @@
       margin-bottom: 8px;
       font-weight: 600;
     }
-    input, select, datalist {
+    input, select {
       width: 100%;
       padding: 12px;
       border: 1px solid #ccc;
@@ -114,9 +115,6 @@
       border-radius: 8px;
       cursor: pointer;
       transition: background 0.2s;
-    }
-    .unpaid-item:hover {
-      background: #f1f5f9;
     }
     .unpaid-item.selected {
       background: #e6f0ff;
@@ -169,7 +167,6 @@
           <p><strong>Iuran per Bulan:</strong> <span id="iuranPerBulan"></span></p>
           <p><strong>Status Rumah:</strong> <span id="statusRumah"></span></p>
         </div>
-
         <div class="form-group">
           <label>Pilih Bulan yang Akan Dibayar</label>
           <div id="unpaidMonthsList" class="unpaid-list"></div>
@@ -198,30 +195,33 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
+    console.log("Script loaded");
+
     const SUPABASE_URL = 'https://wuargtxulaquxpziuzho.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind1YXJndHh1bGFxdXhweml1emhvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1MjMxNTYsImV4cCI6MjA5MDA5OTE1Nn0.EcVFAGh3ZgTDs8Paz9O_8MpkliKPF0vI7cAuuIsvb2U';
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    console.log("Supabase client created");
 
     let selectedHouse = null;
     let selectedMonth = null;
     let currentIuran = 0;
 
+    // Cek login
     (async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) window.location.href = 'login.html';
+      else console.log("User logged in:", user.email);
     })();
 
+    // Load daftar rumah untuk datalist
     async function loadHouseList() {
-      try {
-        const { data, error } = await supabase
-          .from('warga')
-          .select('no_rumah')
-          .order('no_rumah');
-        if (error) {
-          console.error('Error loading house list:', error);
-          alert('Gagal memuat daftar rumah. Periksa koneksi atau RLS.');
-          return;
-        }
+      console.log("Loading house list...");
+      const { data, error } = await supabase
+        .from('warga')
+        .select('no_rumah')
+        .order('no_rumah');
+      if (error) console.error("Error loading houses:", error);
+      else {
         const datalist = document.getElementById('houseList');
         datalist.innerHTML = '';
         data.forEach(house => {
@@ -229,123 +229,126 @@
           option.value = house.no_rumah;
           datalist.appendChild(option);
         });
-      } catch (err) {
-        console.error('Unexpected error:', err);
+        console.log("House list loaded, count:", data.length);
       }
     }
     loadHouseList();
 
     async function checkHouse(noRumah) {
-      console.log('Checking house:', noRumah);
+      console.log("Checking house:", noRumah);
       if (!noRumah) {
         alert('Masukkan nomor rumah terlebih dahulu.');
         return;
       }
-      try {
-        const { data: warga, error: wargaError } = await supabase
-          .from('warga')
-          .select('no_rumah, nama_pemilik, iuran_per_bulan, kondisi_terakhir')
-          .eq('no_rumah', noRumah)
-          .maybeSingle(); // menggunakan maybeSingle agar tidak error jika tidak ada
-        if (wargaError) {
-          console.error('Error fetching warga:', wargaError);
-          alert('Gagal mengambil data rumah: ' + wargaError.message);
-          return;
+      // Ambil data warga
+      const { data: warga, error: wargaError } = await supabase
+        .from('warga')
+        .select('no_rumah, nama_pemilik, iuran_per_bulan, kondisi_terakhir')
+        .eq('no_rumah', noRumah)
+        .single();
+      if (wargaError) {
+        console.error("Error fetching warga:", wargaError);
+        alert(`Nomor rumah ${noRumah} tidak ditemukan. Error: ${wargaError.message}`);
+        return;
+      }
+      if (!warga) {
+        alert(`Nomor rumah ${noRumah} tidak ditemukan.`);
+        return;
+      }
+      console.log("Warga found:", warga);
+      selectedHouse = warga;
+      currentIuran = warga.iuran_per_bulan;
+
+      // Tampilkan info rumah
+      document.getElementById('namaPemilik').innerText = warga.nama_pemilik;
+      document.getElementById('iuranPerBulan').innerText = formatRupiah(warga.iuran_per_bulan);
+      document.getElementById('statusRumah').innerText = warga.kondisi_terakhir;
+      document.getElementById('houseInfo').style.display = 'block';
+
+      if (warga.kondisi_terakhir === 'Dibebaskan') {
+        document.getElementById('unpaidMonthsList').innerHTML = '';
+        document.getElementById('noUnpaidMessage').style.display = 'block';
+        document.getElementById('paymentForm').style.display = 'none';
+        return;
+      }
+
+      // Ambil pembayaran yang sudah ada
+      const { data: payments, error: payError } = await supabase
+        .from('transaksi_iuran')
+        .select('bulan')
+        .eq('no_rumah', noRumah);
+      if (payError) console.error("Error fetching payments:", payError);
+      const paidSet = new Set();
+      payments?.forEach(p => {
+        const date = new Date(p.bulan);
+        paidSet.add(`${date.getFullYear()}-${date.getMonth()+1}`);
+      });
+      console.log("Paid months for", noRumah, Array.from(paidSet));
+
+      const startDate = new Date(2025, 10, 1);
+      const now = new Date();
+      const endYear = now.getFullYear();
+      const endMonth = now.getMonth() + 1;
+
+      const unpaidMonths = [];
+      let year = startDate.getFullYear();
+      let month = startDate.getMonth() + 1;
+      while (year < endYear || (year === endYear && month <= endMonth)) {
+        const key = `${year}-${month}`;
+        if (!paidSet.has(key)) {
+          unpaidMonths.push({ year, month });
         }
-        if (!warga) {
-          alert(`Nomor rumah ${noRumah} tidak ditemukan.`);
-          return;
-        }
-        selectedHouse = warga;
-        currentIuran = warga.iuran_per_bulan;
+        month++;
+        if (month > 12) { month = 1; year++; }
+      }
+      console.log("Unpaid months:", unpaidMonths);
 
-        document.getElementById('namaPemilik').innerText = warga.nama_pemilik;
-        document.getElementById('iuranPerBulan').innerText = formatRupiah(warga.iuran_per_bulan);
-        document.getElementById('statusRumah').innerText = warga.kondisi_terakhir;
-        document.getElementById('houseInfo').style.display = 'block';
-
-        if (warga.kondisi_terakhir === 'Dibebaskan') {
-          document.getElementById('unpaidMonthsList').innerHTML = '';
-          document.getElementById('noUnpaidMessage').style.display = 'block';
-          document.getElementById('paymentForm').style.display = 'none';
-          return;
-        }
-
-        const { data: payments, error: payError } = await supabase
-          .from('transaksi_iuran')
-          .select('bulan')
-          .eq('no_rumah', noRumah);
-        if (payError) {
-          console.error('Error fetching payments:', payError);
-          alert('Gagal mengambil data pembayaran: ' + payError.message);
-          return;
-        }
-
-        const paidSet = new Set();
-        payments?.forEach(p => {
-          const date = new Date(p.bulan);
-          paidSet.add(`${date.getFullYear()}-${date.getMonth()+1}`);
-        });
-
-        const startDate = new Date(2025, 10, 1);
-        const now = new Date();
-        const endYear = now.getFullYear();
-        const endMonth = now.getMonth() + 1;
-
-        const unpaidMonths = [];
-        let year = startDate.getFullYear();
-        let month = startDate.getMonth() + 1;
-        while (year < endYear || (year === endYear && month <= endMonth)) {
-          const key = `${year}-${month}`;
-          if (!paidSet.has(key)) {
-            unpaidMonths.push({ year, month });
-          }
-          month++;
-          if (month > 12) { month = 1; year++; }
-        }
-
-        const container = document.getElementById('unpaidMonthsList');
-        const noUnpaidDiv = document.getElementById('noUnpaidMessage');
-        if (unpaidMonths.length === 0) {
-          container.innerHTML = '';
-          noUnpaidDiv.style.display = 'block';
-          document.getElementById('paymentForm').style.display = 'none';
-        } else {
-          noUnpaidDiv.style.display = 'none';
-          container.innerHTML = '';
-          unpaidMonths.forEach(um => {
-            const monthName = `${um.month}/${um.year}`;
-            const itemDiv = document.createElement('div');
-            itemDiv.className = 'unpaid-item';
-            itemDiv.dataset.year = um.year;
-            itemDiv.dataset.month = um.month;
-            itemDiv.innerHTML = `
-              <input type="radio" name="monthRadio" value="${um.year}-${um.month}" id="month_${um.year}_${um.month}">
-              <label for="month_${um.year}_${um.month}">${monthName} - ${formatRupiah(currentIuran)}</label>
-            `;
-            itemDiv.addEventListener('click', (e) => {
-              const radio = itemDiv.querySelector('input[type="radio"]');
-              if (radio) radio.checked = true;
-              selectedMonth = { year: um.year, month: um.month };
-              document.getElementById('paymentForm').style.display = 'block';
-              document.querySelectorAll('.unpaid-item').forEach(i => i.classList.remove('selected'));
-              itemDiv.classList.add('selected');
-            });
-            container.appendChild(itemDiv);
+      const container = document.getElementById('unpaidMonthsList');
+      const noUnpaidDiv = document.getElementById('noUnpaidMessage');
+      if (unpaidMonths.length === 0) {
+        container.innerHTML = '';
+        noUnpaidDiv.style.display = 'block';
+        document.getElementById('paymentForm').style.display = 'none';
+      } else {
+        noUnpaidDiv.style.display = 'none';
+        container.innerHTML = '';
+        unpaidMonths.forEach(um => {
+          const monthName = `${um.month}/${um.year}`;
+          const itemDiv = document.createElement('div');
+          itemDiv.className = 'unpaid-item';
+          itemDiv.dataset.year = um.year;
+          itemDiv.dataset.month = um.month;
+          itemDiv.innerHTML = `
+            <input type="radio" name="monthRadio" value="${um.year}-${um.month}" id="month_${um.year}_${um.month}">
+            <label for="month_${um.year}_${um.month}">${monthName} - ${formatRupiah(currentIuran)}</label>
+          `;
+          itemDiv.addEventListener('click', (e) => {
+            const radio = itemDiv.querySelector('input[type="radio"]');
+            if (radio) radio.checked = true;
+            selectedMonth = { year: um.year, month: um.month };
+            document.getElementById('paymentForm').style.display = 'block';
+            document.querySelectorAll('.unpaid-item').forEach(i => i.classList.remove('selected'));
+            itemDiv.classList.add('selected');
           });
-          selectedMonth = null;
-          document.getElementById('paymentForm').style.display = 'none';
-        }
-      } catch (err) {
-        console.error('Unexpected error in checkHouse:', err);
-        alert('Terjadi kesalahan: ' + err.message);
+          container.appendChild(itemDiv);
+        });
+        selectedMonth = null;
+        document.getElementById('paymentForm').style.display = 'none';
       }
     }
 
-    document.getElementById('checkHouseBtn').addEventListener('click', () => {
-      const noRumah = document.getElementById('searchHouse').value.trim();
-      checkHouse(noRumah);
-    });
+    // Event listener tombol Cek Rumah
+    const checkBtn = document.getElementById('checkHouseBtn');
+    if (checkBtn) {
+      checkBtn.addEventListener('click', () => {
+        const noRumah = document.getElementById('searchHouse').value.trim();
+        checkHouse(noRumah);
+      });
+      console.log("Check button listener attached");
+    } else {
+      console.error("Check button not found!");
+    }
+
     document.getElementById('searchHouse').addEventListener('keypress', (e) => {
       if (e.key === 'Enter') {
         e.preventDefault();
@@ -354,15 +357,10 @@
     });
 
     document.getElementById('submitPaymentBtn').addEventListener('click', async () => {
-      if (!selectedHouse) {
-        alert('Silakan cek rumah terlebih dahulu.');
+      if (!selectedHouse || !selectedMonth) {
+        alert('Pilih rumah dan bulan yang akan dibayar terlebih dahulu.');
         return;
       }
-      if (!selectedMonth) {
-        alert('Pilih bulan yang akan dibayar.');
-        return;
-      }
-
       const metode = document.getElementById('metode').value;
       const file = document.getElementById('buktiFile').files[0];
       const bulanDate = new Date(selectedMonth.year, selectedMonth.month - 1, 1);
