@@ -62,7 +62,7 @@
       border-radius: 16px;
       padding: 20px;
       text-align: center;
-      border-left: 5px solid var(--accent, #f59e0b);
+      border-left: 5px solid #f59e0b;
     }
     .summary-card h3 {
       font-size: 0.9rem;
@@ -135,6 +135,37 @@
       background: #0b2e4f;
       color: white;
     }
+    /* Signature section */
+    .signature-section {
+      margin-top: 40px;
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 30px;
+      page-break-inside: avoid;
+    }
+    .signature-item {
+      flex: 1;
+      text-align: center;
+    }
+    .signature-item p {
+      margin: 8px 0;
+    }
+    .signature-line {
+      margin-top: 40px;
+      border-top: 1px solid #ccc;
+      width: 80%;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .footer {
+      text-align: center;
+      margin-top: 40px;
+      font-size: 0.8rem;
+      color: #64748b;
+      border-top: 1px solid #eef2f8;
+      padding-top: 20px;
+    }
     @media (max-width: 768px) {
       .summary-grid {
         grid-template-columns: repeat(2, 1fr);
@@ -151,6 +182,10 @@
       }
       th, td {
         padding: 8px;
+      }
+      .signature-section {
+        flex-direction: column;
+        align-items: center;
       }
     }
     /* Print styles - A4 */
@@ -174,10 +209,7 @@
         margin-bottom: 20px;
         border-bottom: 2px solid #000;
       }
-      .summary-grid {
-        page-break-inside: avoid;
-      }
-      table {
+      .summary-grid, table, .signature-section, .footer {
         page-break-inside: avoid;
       }
       @page {
@@ -200,7 +232,7 @@
   <!-- Summary -->
   <div class="summary-grid">
     <div class="summary-card">
-      <h3>Saldo Awal Periode</h3>
+      <h3>Saldo Awal (Saldo Awal)</h3>
       <div class="amount" id="saldoAwal">-</div>
     </div>
     <div class="summary-card">
@@ -212,7 +244,7 @@
       <div class="amount" id="totalPengeluaran">-</div>
     </div>
     <div class="summary-card">
-      <h3>Saldo Akhir Periode</h3>
+      <h3>Saldo Akhir</h3>
       <div class="amount" id="saldoAkhir">-</div>
     </div>
   </div>
@@ -235,10 +267,33 @@
   <div style="overflow-x: auto;">
     <table id="kasTable">
       <thead>
-        <tr><th>Tanggal</th><th>Keterangan</th><th>Pemasukan</th><th>Pengeluaran</th><th>Saldo</th><th>Sumber</th></tr>
+        <tr><th>Tanggal</th><th>Keterangan</th><th>Pemasukan</th><th>Pengeluaran</th><th>Saldo</th><th>Sumber</th>`
       </thead>
       <tbody></tbody>
-     </table>
+    </table>
+  </div>
+
+  <!-- Tanda Tangan -->
+  <div class="signature-section">
+    <div class="signature-item">
+      <p>Direkap oleh,</p>
+      <div class="signature-line"></div>
+      <p><strong>Bendahara Didiek Fahrizal</strong></p>
+    </div>
+    <div class="signature-item">
+      <p>Dilaporkan Oleh,</p>
+      <div class="signature-line"></div>
+      <p><strong>Sekretaris Supriyetno</strong></p>
+    </div>
+    <div class="signature-item">
+      <p>Diketahui oleh,</p>
+      <div class="signature-line"></div>
+      <p><strong>Ketua Ramli Munthe</strong></p>
+    </div>
+  </div>
+
+  <div class="footer">
+    Sistem KWP3T v3.2026 | Design by Yetno
   </div>
 </div>
 
@@ -248,6 +303,8 @@
   const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind1YXJndHh1bGFxdXhweml1emhvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1MjMxNTYsImV4cCI6MjA5MDA5OTE1Nn0.EcVFAGh3ZgTDs8Paz9O_8MpkliKPF0vI7cAuuIsvb2U'
   const supabase = createClient(supabaseUrl, supabaseKey)
 
+  let saldoAwalGlobal = 0; // nilai dari sumber 'Saldo Awal'
+
   function formatRupiah(angka) {
     if (angka === null || isNaN(angka)) angka = 0;
     return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka);
@@ -256,38 +313,40 @@
     return new Date(iso).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' });
   }
 
-  let allData = []; // menyimpan data asli tanpa filter
+  async function fetchSaldoAwal() {
+    const { data, error } = await supabase
+      .from('transaksi_kas')
+      .select('saldo')
+      .eq('sumber', 'Saldo Awal')
+      .limit(1);
+    if (error) console.error(error);
+    if (data && data.length > 0) {
+      saldoAwalGlobal = data[0].saldo;
+    } else {
+      saldoAwalGlobal = 0;
+    }
+  }
 
   async function loadKas(start = null, end = null) {
-    let query = supabase.from('transaksi_kas').select('*').order('tanggal', { ascending: true }); // ascending untuk urutan waktu
+    let query = supabase.from('transaksi_kas').select('*').order('tanggal', { ascending: true });
     if (start) query = query.gte('tanggal', start);
     if (end) query = query.lte('tanggal', end);
     const { data, error } = await query;
     if (error) console.error(error);
     else {
-      allData = data || [];
-      updateSummary(allData);
-      renderTable(allData);
+      const filteredData = data || [];
+      updateSummary(filteredData);
+      renderTable(filteredData);
     }
   }
 
   function updateSummary(data) {
-    if (!data || data.length === 0) {
-      document.getElementById('saldoAwal').innerText = formatRupiah(0);
-      document.getElementById('totalPemasukan').innerText = formatRupiah(0);
-      document.getElementById('totalPengeluaran').innerText = formatRupiah(0);
-      document.getElementById('saldoAkhir').innerText = formatRupiah(0);
-      return;
-    }
-    // Saldo awal: data pertama (urutan ascending)
-    const saldoAwal = data[0].saldo - (data[0].pemasukan - data[0].pengeluaran);
-    // Alternatif: bisa ambil dari saldo transaksi pertama dikurangi pemasukan/pengeluaran transaksi itu, atau lebih sederhana: saldo transaksi pertama? Sebenarnya saldo pada transaksi pertama adalah saldo setelah transaksi itu. Jadi saldo awal periode adalah saldo sebelum transaksi pertama. Kita hitung dengan: saldoAwal = data[0].saldo - data[0].pemasukan + data[0].pengeluaran
-    const saldoAwalVal = data[0].saldo - data[0].pemasukan + data[0].pengeluaran;
+    // total pemasukan dan pengeluaran dari data yang ditampilkan
     const totalPemasukan = data.reduce((sum, row) => sum + (row.pemasukan || 0), 0);
     const totalPengeluaran = data.reduce((sum, row) => sum + (row.pengeluaran || 0), 0);
-    const saldoAkhir = data[data.length - 1].saldo;
+    const saldoAkhir = saldoAwalGlobal + totalPemasukan - totalPengeluaran;
 
-    document.getElementById('saldoAwal').innerText = formatRupiah(saldoAwalVal);
+    document.getElementById('saldoAwal').innerText = formatRupiah(saldoAwalGlobal);
     document.getElementById('totalPemasukan').innerText = formatRupiah(totalPemasukan);
     document.getElementById('totalPengeluaran').innerText = formatRupiah(totalPengeluaran);
     document.getElementById('saldoAkhir').innerText = formatRupiah(saldoAkhir);
@@ -332,6 +391,10 @@
     window.print();
   }
 
+  // Inisialisasi: ambil saldo awal lalu load data awal
+  await fetchSaldoAwal();
+  loadKas();
+
   document.getElementById('filterBtn').addEventListener('click', () => {
     const start = document.getElementById('startDate').value;
     const end = document.getElementById('endDate').value;
@@ -344,7 +407,6 @@
   });
   document.getElementById('exportBtn').addEventListener('click', exportCSV);
   document.getElementById('printBtn').addEventListener('click', printReport);
-  loadKas();
 </script>
 </body>
 </html>
