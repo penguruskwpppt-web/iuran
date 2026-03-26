@@ -2,11 +2,10 @@ import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js
 
 // Ganti dengan kredensial Supabase Anda
 const supabaseUrl = 'https://wuargtxulaquxpziuzho.supabase.co'
-const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind1YXJndHh1bGFxdXhweml1emhvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1MjMxNTYsImV4cCI6MjA5MDA5OTE1Nn0.EcVFAGh3ZgTDs8Paz9O_8MpkliKPF0vI7cAuuIsvb2U'
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind1YXJndHh1bGFxdXhweml1emhvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1MjMxNTYsImV4cCI6MjA5MDA5OTE1Nn0.EcVFAGh3ZgTDs8Paz9O_8MpkliKPF0vI7cAuuIsvb2U'
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+export const supabase = createClient(supabaseUrl, supabaseKey)
 
-// Fungsi untuk mengecek sesi login, redirect jika belum login
 export async function requireAuth() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) {
@@ -15,7 +14,6 @@ export async function requireAuth() {
   return user
 }
 
-// Fungsi untuk mengambil profil user (role)
 export async function getUserProfile(userId) {
   const { data, error } = await supabase
     .from('profiles')
@@ -25,10 +23,9 @@ export async function getUserProfile(userId) {
   if (error) throw error
   return data
 }
-// Di bagian bawah app.js, setelah fungsi yang sudah ada
 
 export async function checkAdmin() {
-  const user = await requireAuth() // akan redirect jika belum login
+  const user = await requireAuth()
   const { data: profile, error } = await supabase
     .from('profiles')
     .select('role')
@@ -41,4 +38,3 @@ export async function checkAdmin() {
   }
   return true
 }
-
