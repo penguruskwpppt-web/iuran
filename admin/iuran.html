@@ -2,117 +2,228 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Bayar Iuran - Iuran Warga</title>
-  <link rel="stylesheet" href="style.css">
-  <link rel="icon" href="images/logo_192.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title>Bayar Iuran - KWP3T Admin</title>
+  <link rel="icon" href="../images/logo.webp" type="image/webp">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #f4f4f4;
+    }
+    .navbar {
+      background: #0b2e4f;
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .nav-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: white;
+      font-weight: bold;
+      font-size: 1.2rem;
+    }
+    .nav-brand img { width: 40px; border-radius: 50%; }
+    .nav-links {
+      display: flex;
+      gap: 15px;
+      flex-wrap: wrap;
+    }
+    .nav-links a {
+      color: white;
+      text-decoration: none;
+      padding: 5px 10px;
+      border-radius: 4px;
+      transition: background 0.3s;
+    }
+    .nav-links a:hover, .nav-links a.active {
+      background: #1e4f7a;
+    }
+    .container {
+      max-width: 800px;
+      margin: 20px auto;
+      padding: 0 20px;
+    }
+    h1 {
+      margin-bottom: 20px;
+      color: #0b2e4f;
+    }
+    .form-card {
+      background: white;
+      border-radius: 20px;
+      padding: 24px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+    .form-group {
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+    input, select {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #ccc;
+      border-radius: 12px;
+      font-size: 1rem;
+    }
+    button {
+      background: #0b2e4f;
+      color: white;
+      border: none;
+      padding: 12px;
+      border-radius: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      width: 100%;
+      transition: 0.2s;
+    }
+    button:hover {
+      background: #1e4f7a;
+    }
+    .info {
+      margin-top: 20px;
+      padding: 12px;
+      background: #e2e8f0;
+      border-radius: 12px;
+      text-align: center;
+    }
+    @media (max-width: 768px) {
+      .navbar { flex-direction: column; align-items: stretch; }
+      .nav-links { justify-content: center; }
+      .form-card { padding: 16px; }
+    }
+  </style>
 </head>
 <body>
   <nav class="navbar">
     <div class="nav-brand">
-      <img src="images/logo_192.png" alt="Logo" width="40">
-      <span>Iuran Warga</span>
+      <img src="../images/logo.webp" alt="Logo">
+      <span>Admin KWP3T</span>
     </div>
     <div class="nav-links">
-      <a href="dashboard.html">Dashboard</a>
+      <a href="admin.html">Dashboard</a>
       <a href="warga.html">Data Warga</a>
       <a href="iuran.html" class="active">Bayar Iuran</a>
       <a href="laporan.html">Laporan Kas</a>
-      <a href="admin.html">Admin Panel</a>
       <a href="#" id="logoutBtn">Logout</a>
     </div>
   </nav>
 
   <div class="container">
     <h1>Pembayaran Iuran Bulanan</h1>
-    <form id="iuranForm">
-      <label>Pilih Rumah:</label>
-      <select id="no_rumah" required></select>
-
-      <label>Bulan (YYYY-MM):</label>
-      <input type="month" id="bulan" required>
-
-      <label>Jumlah Iuran (Rp):</label>
-      <input type="number" id="jumlah" required>
-
-      <label>Metode Pembayaran:</label>
-      <select id="metode">
-        <option value="Tunai">Tunai</option>
-        <option value="Transfer">Transfer</option>
-      </select>
-
-      <label>Bukti Transfer (opsional):</label>
-      <input type="file" id="buktiFile" accept="image/*">
-
-      <button type="submit">Simpan Pembayaran</button>
-    </form>
-    <div id="result"></div>
+    <div class="form-card">
+      <form id="iuranForm">
+        <div class="form-group">
+          <label>Pilih Rumah</label>
+          <select id="no_rumah" required></select>
+        </div>
+        <div class="form-group">
+          <label>Bulan (YYYY-MM)</label>
+          <input type="month" id="bulan" required>
+        </div>
+        <div class="form-group">
+          <label>Jumlah Iuran (Rp)</label>
+          <input type="number" id="jumlah" required>
+        </div>
+        <div class="form-group">
+          <label>Metode Pembayaran</label>
+          <select id="metode">
+            <option value="Tunai">Tunai</option>
+            <option value="Transfer">Transfer</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Bukti Transfer (opsional)</label>
+          <input type="file" id="buktiFile" accept="image/*">
+        </div>
+        <button type="submit">Simpan Pembayaran</button>
+      </form>
+      <div id="result" class="info"></div>
+    </div>
   </div>
 
-  <script type="module">
-    import { supabase, requireAuth } from './js/app.js'
-    import { formatRupiah } from './js/utils.js'
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const SUPABASE_URL = 'https://wuargtxulaquxpziuzho.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind1YXJndHh1bGFxdXhweml1emhvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1MjMxNTYsImV4cCI6MjA5MDA5OTE1Nn0.EcVFAGh3ZgTDs8Paz9O_8MpkliKPF0vI7cAuuIsvb2U';
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    await requireAuth()
+    // Cek login
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) window.location.href = 'login.html';
+    })();
+
+    function formatRupiah(angka) {
+      return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka || 0);
+    }
 
     async function loadWarga() {
       const { data, error } = await supabase
         .from('warga')
         .select('no_rumah, nama_pemilik, iuran_per_bulan')
         .eq('kondisi_terakhir', 'Berpenghuni')
-        .gt('iuran_per_bulan', 0)
-      if (error) console.error(error)
+        .gt('iuran_per_bulan', 0);
+      if (error) console.error(error);
       else {
-        const select = document.getElementById('no_rumah')
-        select.innerHTML = '<option value="">-- Pilih Rumah --</option>'
+        const select = document.getElementById('no_rumah');
+        select.innerHTML = '<option value="">-- Pilih Rumah --</option>';
         data.forEach(w => {
-          const option = document.createElement('option')
-          option.value = w.no_rumah
-          option.textContent = `${w.no_rumah} - ${w.nama_pemilik} (${formatRupiah(w.iuran_per_bulan)})`
-          option.setAttribute('data-iuran', w.iuran_per_bulan)
-          select.appendChild(option)
-        })
+          const option = document.createElement('option');
+          option.value = w.no_rumah;
+          option.textContent = `${w.no_rumah} - ${w.nama_pemilik} (${formatRupiah(w.iuran_per_bulan)})`;
+          option.setAttribute('data-iuran', w.iuran_per_bulan);
+          select.appendChild(option);
+        });
       }
     }
 
     document.getElementById('no_rumah').addEventListener('change', (e) => {
-      const selected = e.target.selectedOptions[0]
-      const iuran = selected.getAttribute('data-iuran')
-      if (iuran) document.getElementById('jumlah').value = iuran
-    })
+      const selected = e.target.selectedOptions[0];
+      const iuran = selected.getAttribute('data-iuran');
+      if (iuran) document.getElementById('jumlah').value = iuran;
+    });
 
     document.getElementById('iuranForm').addEventListener('submit', async (e) => {
-      e.preventDefault()
-      const no_rumah = document.getElementById('no_rumah').value
-      const bulanStr = document.getElementById('bulan').value
-      const bulan = new Date(bulanStr + '-01')
-      const jumlah = parseInt(document.getElementById('jumlah').value)
-      const metode = document.getElementById('metode').value
-      const fileInput = document.getElementById('buktiFile')
-      const file = fileInput.files[0]
+      e.preventDefault();
+      const no_rumah = document.getElementById('no_rumah').value;
+      const bulanStr = document.getElementById('bulan').value;
+      const bulan = new Date(bulanStr + '-01');
+      const jumlah = parseInt(document.getElementById('jumlah').value);
+      const metode = document.getElementById('metode').value;
+      const file = document.getElementById('buktiFile').files[0];
 
       if (!no_rumah || !bulanStr || !jumlah) {
-        alert('Harap lengkapi data')
-        return
+        alert('Harap lengkapi data');
+        return;
       }
 
-      let buktiUrl = null
+      let buktiUrl = null;
       if (file) {
-        const fileExt = file.name.split('.').pop()
-        const fileName = `${no_rumah}_${bulanStr}_${Date.now()}.${fileExt}`
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${no_rumah}_${bulanStr}_${Date.now()}.${fileExt}`;
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from('bukti-iuran')
-          .upload(fileName, file)
+          .upload(fileName, file);
         if (uploadError) {
-          alert('Gagal upload bukti: ' + uploadError.message)
-          return
+          alert('Gagal upload bukti: ' + uploadError.message);
+          return;
         }
-        const { data: urlData } = supabase.storage.from('bukti-iuran').getPublicUrl(fileName)
-        buktiUrl = urlData.publicUrl
+        const { data: urlData } = supabase.storage.from('bukti-iuran').getPublicUrl(fileName);
+        buktiUrl = urlData.publicUrl;
       }
 
-      // Insert ke transaksi_iuran
-      const kasId = `IU-${new Date().toISOString().slice(0,10).replace(/-/g,'')}-${Date.now().toString().slice(-6)}`
+      const kasId = `IU-${new Date().toISOString().slice(0,10).replace(/-/g,'')}-${Date.now().toString().slice(-6)}`;
       const { data: iuranData, error: iuranError } = await supabase
         .from('transaksi_iuran')
         .insert([{
@@ -123,22 +234,20 @@
           metode,
           bukti_tf: buktiUrl
         }])
-        .select()
+        .select();
       if (iuranError) {
-        alert('Gagal simpan iuran: ' + iuranError.message)
-        return
+        alert('Gagal simpan iuran: ' + iuranError.message);
+        return;
       }
 
-      // Ambil saldo terakhir
+      // Update transaksi_kas
       const { data: lastSaldo } = await supabase
         .from('transaksi_kas')
         .select('saldo')
         .order('tanggal', { ascending: false })
-        .limit(1)
-      let saldo = lastSaldo?.[0]?.saldo || 0
-      const newSaldo = saldo + jumlah
-
-      // Insert ke transaksi_kas
+        .limit(1);
+      let saldo = lastSaldo?.[0]?.saldo || 0;
+      const newSaldo = saldo + jumlah;
       const { error: kasError } = await supabase
         .from('transaksi_kas')
         .insert([{
@@ -149,24 +258,24 @@
           saldo: newSaldo,
           jenis: 'Pemasukan',
           sumber: 'Iuran Warga'
-        }])
+        }]);
       if (kasError) {
-        alert('Gagal update kas: ' + kasError.message)
-        return
+        alert('Gagal update kas: ' + kasError.message);
+        return;
       }
 
-      alert('Pembayaran iuran berhasil disimpan!')
-      document.getElementById('iuranForm').reset()
-      loadWarga()
-    })
+      alert('Pembayaran iuran berhasil disimpan!');
+      document.getElementById('iuranForm').reset();
+      loadWarga();
+    });
 
-    loadWarga()
+    loadWarga();
 
     document.getElementById('logoutBtn').addEventListener('click', async (e) => {
-      e.preventDefault()
-      await supabase.auth.signOut()
-      window.location.href = 'login.html'
-    })
+      e.preventDefault();
+      await supabase.auth.signOut();
+      window.location.href = 'login.html';
+    });
   </script>
 </body>
 </html>
