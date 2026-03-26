@@ -694,6 +694,8 @@
       <div class="stat-box"><div class="stat-icon"><i class="fas fa-arrow-up"></i></div><div class="stat-number" id="totalPemasukan">-</div><div class="stat-label">Total Pemasukan</div></div>
       <div class="stat-box"><div class="stat-icon"><i class="fas fa-arrow-down"></i></div><div class="stat-number" id="totalPengeluaran">-</div><div class="stat-label">Total Pengeluaran</div></div>
       <div class="stat-box"><div class="stat-icon"><i class="fas fa-calendar-alt"></i></div><div class="stat-number" id="iuranBulanIni">-</div><div class="stat-label">Iuran Bulan Ini</div></div>
+      <div class="stat-box"><div class="stat-icon"><i class="fas fa-clock"></i></div> <div class="stat-number" id="totalTunggakan">-</div>  <div class="stat-label">Total Tunggakan</div>
+</div>
     </div>
   </div>
 </section>
@@ -792,54 +794,83 @@
 
   // ==================== DASHBOARD STATISTIK ====================
   async function loadDashboard() {
-    try {
-      // Saldo kas terakhir
-      const { data: lastKas, error: errSaldo } = await supabase
-        .from('transaksi_kas')
-        .select('saldo')
-        .order('tanggal', { ascending: false })
-        .limit(1)
-      const saldo = lastKas && lastKas.length > 0 ? lastKas[0].saldo : 0
-      document.getElementById('saldoKas').innerText = formatRupiah(saldo)
+  try {
+    // 1. Saldo kas terakhir
+    const { data: lastKas, error: errSaldo } = await supabase
+      .from('transaksi_kas')
+      .select('saldo')
+      .order('tanggal', { ascending: false })
+      .limit(1);
+    const saldo = lastKas && lastKas.length > 0 ? lastKas[0].saldo : 0;
+    document.getElementById('saldoKas').innerText = formatRupiah(saldo);
 
-      // Total pemasukan (semua)
-      const { data: allPemasukan, error: errPem } = await supabase
-        .from('transaksi_kas')
-        .select('pemasukan')
-        .eq('jenis', 'Pemasukan')
-      const totalPem = allPemasukan?.reduce((sum, t) => sum + t.pemasukan, 0) || 0
-      document.getElementById('totalPemasukan').innerText = formatRupiah(totalPem)
+    // 2. Total pemasukan (semua)
+    const { data: allPemasukan } = await supabase
+      .from('transaksi_kas')
+      .select('pemasukan')
+      .eq('jenis', 'Pemasukan');
+    const totalPem = allPemasukan?.reduce((sum, t) => sum + t.pemasukan, 0) || 0;
+    document.getElementById('totalPemasukan').innerText = formatRupiah(totalPem);
 
-      // Total pengeluaran
-      const { data: allPengeluaran, error: errPeng } = await supabase
-        .from('transaksi_kas')
-        .select('pengeluaran')
-        .eq('jenis', 'Pengeluaran')
-      const totalPeng = allPengeluaran?.reduce((sum, t) => sum + t.pengeluaran, 0) || 0
-      document.getElementById('totalPengeluaran').innerText = formatRupiah(totalPeng)
+    // 3. Total pengeluaran
+    const { data: allPengeluaran } = await supabase
+      .from('transaksi_kas')
+      .select('pengeluaran')
+      .eq('jenis', 'Pengeluaran');
+    const totalPeng = allPengeluaran?.reduce((sum, t) => sum + t.pengeluaran, 0) || 0;
+    document.getElementById('totalPengeluaran').innerText = formatRupiah(totalPeng);
 
-      // Iuran bulan ini (dari transaksi_kas)
-      const now = new Date()
-      const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).toISOString()
-      const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString()
-      const { data: iuranBulanIni, error: errIuran } = await supabase
-        .from('transaksi_kas')
-        .select('pemasukan')
-        .eq('jenis', 'Pemasukan')
-        .eq('sumber', 'Iuran Warga')
-        .gte('tanggal', firstDay)
-        .lte('tanggal', lastDay)
-      const totalIuranBulanIni = iuranBulanIni?.reduce((sum, t) => sum + t.pemasukan, 0) || 0
-      document.getElementById('iuranBulanIni').innerText = formatRupiah(totalIuranBulanIni)
+    // 4. TOTAL TUNGGAKAN (periode Nov 2025 – bulan berjalan)
+    // Ambil semua warga aktif (Berpenghuni & Kosong)
+    const { data: wargaList } = await supabase
+      .from('warga')
+      .select('no_rumah, kondisi_terakhir, iuran_per_bulan')
+      .in('kondisi_terakhir', ['Berpenghuni', 'Kosong']);
 
-    } catch (err) {
-      console.error('Gagal memuat dashboard:', err)
-      document.getElementById('saldoKas').innerText = 'Error'
-      document.getElementById('totalPemasukan').innerText = 'Error'
-      document.getElementById('totalPengeluaran').innerText = 'Error'
-      document.getElementById('iuranBulanIni').innerText = 'Error'
+    // Ambil semua pembayaran iuran
+    const { data: allPayments } = await supabase
+      .from('transaksi_iuran')
+      .select('no_rumah, bulan');
+
+    // Map pembayaran: { 'no_rumah|year-month': true }
+    const paidMap = new Map();
+    allPayments?.forEach(p => {
+      const date = new Date(p.bulan);
+      const key = `${p.no_rumah}|${date.getFullYear()}-${date.getMonth()+1}`;
+      paidMap.set(key, true);
+    });
+
+    // Periode: Nov 2025 s/d bulan berjalan (inclusive)
+    const startDate = new Date(2025, 10, 1); // November 2025
+    const now = new Date();
+    const endYear = now.getFullYear();
+    const endMonth = now.getMonth() + 1;
+
+    let totalTunggakan = 0;
+    for (const w of wargaList) {
+      const iuran = w.iuran_per_bulan;
+      if (iuran === 0) continue; // tidak mungkin, tapi amankan
+      let year = startDate.getFullYear();
+      let month = startDate.getMonth() + 1;
+      while (year < endYear || (year === endYear && month <= endMonth)) {
+        const key = `${w.no_rumah}|${year}-${month}`;
+        if (!paidMap.has(key)) {
+          totalTunggakan += iuran;
+        }
+        month++;
+        if (month > 12) { month = 1; year++; }
+      }
     }
+    document.getElementById('totalTunggakan').innerText = formatRupiah(totalTunggakan);
+
+  } catch (err) {
+    console.error('Gagal memuat dashboard:', err);
+    document.getElementById('saldoKas').innerText = 'Error';
+    document.getElementById('totalPemasukan').innerText = 'Error';
+    document.getElementById('totalPengeluaran').innerText = 'Error';
+    document.getElementById('totalTunggakan').innerText = 'Error';
   }
+}
 
   // ==================== CEK TUNGGAKAN PER RUMAH ====================
  async function cekTunggakanByRumah() {
