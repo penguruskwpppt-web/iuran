@@ -2,39 +2,207 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
   <title>Admin Panel - KWP3T</title>
   <link rel="icon" href="../images/logo.webp" type="image/webp">
-  <link rel="stylesheet" href="../style.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <style>
-    /* Tambahan gaya khusus admin jika diperlukan */
-    .btn-logout {
-      background: #e74c3c;
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background: #f4f4f4;
+      padding: 0;
+    }
+    /* Navbar */
+    .navbar {
+      background: #0b2e4f;
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .nav-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: white;
+      font-weight: bold;
+      font-size: 1.2rem;
+    }
+    .nav-brand img {
+      width: 40px;
+      border-radius: 50%;
+    }
+    .nav-links {
+      display: flex;
+      gap: 15px;
+      flex-wrap: wrap;
+    }
+    .nav-links a {
+      color: white;
+      text-decoration: none;
+      padding: 5px 10px;
+      border-radius: 4px;
+      transition: background 0.3s;
+    }
+    .nav-links a:hover, .nav-links a.active {
+      background: #1e4f7a;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 20px auto;
+      padding: 0 20px;
+    }
+    h1 {
+      margin-bottom: 20px;
+      color: #0b2e4f;
+    }
+    .tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      border-bottom: 1px solid #ddd;
+      padding-bottom: 10px;
+      flex-wrap: wrap;
+    }
+    .tab-btn {
+      padding: 8px 16px;
+      background: #f0f0f0;
+      border: none;
+      cursor: pointer;
+      border-radius: 4px;
+      transition: 0.2s;
+    }
+    .tab-btn.active {
+      background: #0b2e4f;
       color: white;
     }
-    .btn-logout:hover {
-      background: #c0392b;
+    .tab-content {
+      display: none;
+    }
+    .tab-content.active {
+      display: block;
+    }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+      margin-top: 20px;
+    }
+    .card {
+      background: white;
+      padding: 20px;
+      border-radius: 16px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+      text-align: center;
+      transition: transform 0.2s;
+    }
+    .card:hover {
+      transform: translateY(-5px);
+    }
+    .card h3 {
+      font-size: 1rem;
+      color: #64748b;
+      margin-bottom: 8px;
+    }
+    .card p {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: #0b2e4f;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      margin: 20px 0;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    th, td {
+      border: 1px solid #e2e8f0;
+      padding: 12px;
+      text-align: left;
+    }
+    th {
+      background: #0b2e4f;
+      color: white;
+    }
+    .btn-primary, .btn-secondary {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: 0.2s;
+    }
+    .btn-primary {
+      background: #0b2e4f;
+      color: white;
+    }
+    .btn-primary:hover {
+      background: #1e4f7a;
+    }
+    .btn-secondary {
+      background: #64748b;
+      color: white;
+    }
+    .btn-secondary:hover {
+      background: #475569;
     }
     .btn-save-role {
       background: #27ae60;
       color: white;
-      padding: 4px 8px;
-      font-size: 0.8rem;
+      padding: 4px 12px;
       border: none;
-      border-radius: 4px;
+      border-radius: 6px;
       cursor: pointer;
     }
     .btn-save-role:hover {
       background: #2ecc71;
+    }
+    select {
+      padding: 6px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+    .info {
+      margin-top: 20px;
+      font-size: 0.85rem;
+      color: #64748b;
+    }
+    @media (max-width: 768px) {
+      .navbar {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .nav-links {
+        justify-content: center;
+      }
+      .container {
+        padding: 0 16px;
+      }
+      .stats-grid {
+        grid-template-columns: 1fr;
+      }
+      table {
+        font-size: 0.85rem;
+      }
+      th, td {
+        padding: 8px;
+      }
+      .tabs {
+        justify-content: center;
+      }
     }
   </style>
 </head>
 <body>
   <nav class="navbar">
     <div class="nav-brand">
-      <img src="../images/logo.webp" alt="Logo" width="40">
+      <img src="../images/logo.webp" alt="Logo">
       <span>Admin KWP3T</span>
     </div>
     <div class="nav-links">
@@ -63,9 +231,9 @@
             <tr><th>Email</th><th>Role</th><th>Aksi</th>
           </thead>
           <tbody></tbody>
-        </table>
+         </table>
       </div>
-      <p><small>Catatan: Hanya admin yang bisa mengubah role.</small></p>
+      <p class="info">Catatan: Hanya admin yang bisa mengubah role.</p>
     </div>
 
     <!-- Tab Statistik Lengkap -->
@@ -86,12 +254,11 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
-    // ========== KONFIGURASI SUPABASE ==========
     const SUPABASE_URL = 'https://wuargtxulaquxpziuzho.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind1YXJndHh1bGFxdXhweml1emhvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1MjMxNTYsImV4cCI6MjA5MDA5OTE1Nn0.EcVFAGh3ZgTDs8Paz9O_8MpkliKPF0vI7cAuuIsvb2U';
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // ========== CEK AUTENTIKASI DAN ROLE ADMIN ==========
+    // Cek autentikasi dan role admin
     async function checkAdmin() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
@@ -111,13 +278,12 @@
       return true;
     }
 
-    // ========== FUNGSI PEMBANTU ==========
     function formatRupiah(angka) {
       if (angka === null || isNaN(angka)) angka = 0;
       return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka);
     }
 
-    // ========== MANAJEMEN USER ==========
+    // Manajemen User
     async function loadUsers() {
       const { data: profiles, error } = await supabase
         .from('profiles')
@@ -164,7 +330,7 @@
       }
     }
 
-    // ========== STATISTIK LENGKAP ==========
+    // Statistik Lengkap
     async function loadStats() {
       const statsDiv = document.getElementById('stats-data');
       statsDiv.innerHTML = '<p>Memuat data...</p>';
@@ -211,7 +377,7 @@
       }
     }
 
-    // ========== EKSPOR CSV ==========
+    // Ekspor CSV
     async function exportToCSV(tableName, columns, filename) {
       try {
         let data;
@@ -249,7 +415,7 @@
       }
     }
 
-    // ========== INISIALISASI ==========
+    // Inisialisasi
     (async () => {
       const isAdmin = await checkAdmin();
       if (!isAdmin) return;
@@ -257,7 +423,6 @@
       await loadUsers();
       await loadStats();
 
-      // Tab switching
       const tabs = document.querySelectorAll('.tab-btn');
       const contents = document.querySelectorAll('.tab-content');
       tabs.forEach(btn => {
@@ -272,12 +437,10 @@
         });
       });
 
-      // Export buttons
       document.getElementById('export-warga').onclick = () => exportToCSV('warga', ['no_rumah','nama_pemilik','no_hp_pemilik','status_kepemilikan','kondisi_terakhir','iuran_per_bulan','koordinator','created_at','updated_at'], 'data_warga.csv');
       document.getElementById('export-transaksi').onclick = () => exportToCSV('transaksi_iuran', ['kas_id','no_rumah','bulan','jumlah','metode','bukti_tf','created_at'], 'transaksi_iuran.csv');
       document.getElementById('export-kas').onclick = () => exportToCSV('transaksi_kas', ['kas_id','tanggal','keterangan','pemasukan','pengeluaran','saldo','jenis','sumber'], 'transaksi_kas.csv');
 
-      // Logout
       document.getElementById('logoutBtn').addEventListener('click', async (e) => {
         e.preventDefault();
         await supabase.auth.signOut();
