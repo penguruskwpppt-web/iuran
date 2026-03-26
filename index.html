@@ -10,6 +10,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <style>
+    /* semua CSS sama seperti sebelumnya, tidak diubah */
     :root {
       --primary: #0b2e4f;
       --accent: #f59e0b;
@@ -696,9 +697,11 @@
   <div class="container">
     <h2 class="title">Ringkasan Keuangan Terkini</h2>
     <div id="dashboardContent" class="dashboard-stats">
-      <div class="stat-box"><div class="stat-icon"><i class="fas fa-wallet"></i></div><div class="stat-number" id="saldoKas">-</div><div class="stat-label">Saldo Kas</div></div>
+      <!-- Baris 1: Pemasukan, Pengeluaran, Saldo -->
       <div class="stat-box"><div class="stat-icon"><i class="fas fa-arrow-up"></i></div><div class="stat-number" id="totalPemasukan">-</div><div class="stat-label">Total Pemasukan</div></div>
       <div class="stat-box"><div class="stat-icon"><i class="fas fa-arrow-down"></i></div><div class="stat-number" id="totalPengeluaran">-</div><div class="stat-label">Total Pengeluaran</div></div>
+      <div class="stat-box"><div class="stat-icon"><i class="fas fa-wallet"></i></div><div class="stat-number" id="saldoKas">-</div><div class="stat-label">Saldo Kas</div></div>
+      <!-- Baris 2: Iuran Bulan Ini, Total Tunggakan (akan turun ke baris kedua dan terpusat) -->
       <div class="stat-box"><div class="stat-icon"><i class="fas fa-calendar-alt"></i></div><div class="stat-number" id="iuranBulanIni">-</div><div class="stat-label">Iuran Bulan Ini</div></div>
       <div class="stat-box"><div class="stat-icon"><i class="fas fa-clock"></i></div><div class="stat-number" id="totalTunggakan">-</div><div class="stat-label">Total Tunggakan</div></div>
     </div>
@@ -786,22 +789,19 @@
   import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
 
   // ==================== KONFIGURASI SUPABASE ====================
-  // GANTI dengan URL dan anon key dari project Supabase Anda
   const supabaseUrl = 'https://wuargtxulaquxpziuzho.supabase.co'
   const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind1YXJndHh1bGFxdXhweml1emhvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1MjMxNTYsImV4cCI6MjA5MDA5OTE1Nn0.EcVFAGh3ZgTDs8Paz9O_8MpkliKPF0vI7cAuuIsvb2U'
   const supabase = createClient(supabaseUrl, supabaseKey)
 
-  // ==================== FUNGSI PEMBANTU ====================
   function formatRupiah(angka) {
     if (angka === null || isNaN(angka)) angka = 0
     return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka)
   }
 
-  // ==================== DASHBOARD STATISTIK ====================
   async function loadDashboard() {
     try {
       // 1. Saldo kas terakhir
-      const { data: lastKas, error: errSaldo } = await supabase
+      const { data: lastKas } = await supabase
         .from('transaksi_kas')
         .select('saldo')
         .order('tanggal', { ascending: false })
@@ -809,7 +809,7 @@
       const saldo = lastKas && lastKas.length > 0 ? lastKas[0].saldo : 0;
       document.getElementById('saldoKas').innerText = formatRupiah(saldo);
 
-      // 2. Total pemasukan (semua)
+      // 2. Total pemasukan
       const { data: allPemasukan } = await supabase
         .from('transaksi_kas')
         .select('pemasukan')
@@ -825,7 +825,7 @@
       const totalPeng = allPengeluaran?.reduce((sum, t) => sum + t.pengeluaran, 0) || 0;
       document.getElementById('totalPengeluaran').innerText = formatRupiah(totalPeng);
 
-      // 4. IURAN BULAN INI (dari transaksi_kas)
+      // 4. Iuran bulan ini
       const now = new Date();
       const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
       const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString();
@@ -839,19 +839,16 @@
       const totalIuranBulanIni = iuranBulanIni?.reduce((sum, t) => sum + t.pemasukan, 0) || 0;
       document.getElementById('iuranBulanIni').innerText = formatRupiah(totalIuranBulanIni);
 
-      // 5. TOTAL TUNGGAKAN (periode Nov 2025 – bulan berjalan)
-      // Ambil semua warga aktif (Berpenghuni & Kosong)
+      // 5. Total tunggakan
       const { data: wargaList } = await supabase
         .from('warga')
-        .select('no_rumah, kondisi_terakhir, iuran_per_bulan')
+        .select('no_rumah, iuran_per_bulan')
         .in('kondisi_terakhir', ['Berpenghuni', 'Kosong']);
 
-      // Ambil semua pembayaran iuran
       const { data: allPayments } = await supabase
         .from('transaksi_iuran')
         .select('no_rumah, bulan');
 
-      // Map pembayaran: { 'no_rumah|year-month': true }
       const paidMap = new Map();
       allPayments?.forEach(p => {
         const date = new Date(p.bulan);
@@ -859,8 +856,7 @@
         paidMap.set(key, true);
       });
 
-      // Periode: Nov 2025 s/d bulan berjalan (inclusive)
-      const startDate = new Date(2025, 10, 1); // November 2025
+      const startDate = new Date(2025, 10, 1);
       const endYear = now.getFullYear();
       const endMonth = now.getMonth() + 1;
 
@@ -883,21 +879,17 @@
 
     } catch (err) {
       console.error('Gagal memuat dashboard:', err);
-      document.getElementById('saldoKas').innerText = 'Error';
-      document.getElementById('totalPemasukan').innerText = 'Error';
-      document.getElementById('totalPengeluaran').innerText = 'Error';
-      document.getElementById('iuranBulanIni').innerText = 'Error';
-      document.getElementById('totalTunggakan').innerText = 'Error';
+      ['saldoKas', 'totalPemasukan', 'totalPengeluaran', 'iuranBulanIni', 'totalTunggakan'].forEach(id => {
+        document.getElementById(id).innerText = 'Error';
+      });
     }
   }
 
-  // ==================== CEK TUNGGAKAN PER RUMAH ====================
   async function cekTunggakanByRumah() {
     const noRumah = prompt("Masukkan nomor rumah yang ingin dicek tunggakannya:", "")
     if (!noRumah) return
 
     try {
-      // 1. Ambil data warga
       const { data: warga, error: errWarga } = await supabase
         .from('warga')
         .select('nama_pemilik, kondisi_terakhir, iuran_per_bulan')
@@ -908,42 +900,37 @@
         return
       }
 
-      const statusRumah = warga.kondisi_terakhir
-      if (statusRumah === 'Dibebaskan') {
+      if (warga.kondisi_terakhir === 'Dibebaskan') {
         alert(`🏠 Rumah ${noRumah} (${warga.nama_pemilik})\n\nStatus: DIBEBASKAN\nAnda tidak dikenakan iuran.`)
         return
       }
 
-      // 2. Ambil semua iuran yang sudah dibayar untuk rumah ini
-      const { data: payments, error: errPay } = await supabase
+      const { data: payments } = await supabase
         .from('transaksi_iuran')
-        .select('bulan, jumlah')
+        .select('bulan')
         .eq('no_rumah', noRumah)
         .order('bulan', { ascending: true })
 
       const paidMonths = new Set()
       payments?.forEach(p => {
         const date = new Date(p.bulan)
-        const key = `${date.getFullYear()}-${date.getMonth()+1}`
-        paidMonths.add(key)
+        paidMonths.add(`${date.getFullYear()}-${date.getMonth()+1}`)
       })
 
-      // 3. Tentukan periode perhitungan: 1 November 2025 sampai bulan berjalan
-      const startDate = new Date(2025, 10, 1) // November 2025 (bulan ke-10 dalam JS)
-      const currentDate = new Date()
-      const currentYear = currentDate.getFullYear()
-      const currentMonth = currentDate.getMonth() + 1
+      const startDate = new Date(2025, 10, 1)
+      const now = new Date()
+      const endYear = now.getFullYear()
+      const endMonth = now.getMonth() + 1
 
       const months = []
       let year = startDate.getFullYear()
       let month = startDate.getMonth() + 1
-      while (year < currentYear || (year === currentYear && month <= currentMonth)) {
+      while (year < endYear || (year === endYear && month <= endMonth)) {
         months.push({ year, month })
         month++
         if (month > 12) { month = 1; year++ }
       }
 
-      // 4. Hitung tunggakan
       const iuranPerBulan = warga.iuran_per_bulan
       const tunggakan = []
       let totalNominal = 0
@@ -955,13 +942,8 @@
         }
       })
 
-      // 5. Tampilkan hasil
       let pesan = `🏠 Rumah ${noRumah} (${warga.nama_pemilik})\n`
-      if (statusRumah === 'Kosong') {
-        pesan += `Status: KOSONG (iuran Rp ${formatRupiah(iuranPerBulan)}/bln)\n\n`
-      } else {
-        pesan += `Status: BERPENGHUNI (iuran Rp ${formatRupiah(iuranPerBulan)}/bln)\n\n`
-      }
+      pesan += `Status: ${warga.kondisi_terakhir === 'Kosong' ? 'KOSONG' : 'BERPENGHUNI'} (iuran Rp ${formatRupiah(iuranPerBulan)}/bln)\n\n`
       if (tunggakan.length === 0) {
         pesan += `✅ *Tidak Ada Tunggakan* (Periode Nov 2025 – ${bulanSekarang()})\nTerima kasih telah membayar iuran tepat waktu. 🙏`
       } else {
@@ -979,16 +961,13 @@
     }
   }
 
-  // Fungsi bantu untuk menampilkan bulan sekarang dalam format teks
   function bulanSekarang() {
     const now = new Date()
     return now.toLocaleString('id-ID', { month: 'long', year: 'numeric' })
   }
 
-  // ==================== LAPORAN KAS (AMBIL DARI SETTINGS) ====================
   async function openLaporanKas() {
     try {
-      // Ambil URL laporan terbaru dari tabel settings (pastikan tabel ini ada)
       const { data: setting, error } = await supabase
         .from('settings')
         .select('value')
@@ -1005,7 +984,6 @@
     }
   }
 
-  // ==================== DOWNLOAD RESI (BUKTI TRANSFER) ====================
   async function downloadResi() {
     const noRumah = prompt("Masukkan nomor rumah:", "")
     if (!noRumah) return
@@ -1051,11 +1029,9 @@
     }
   }
 
-  // ==================== INISIALISASI ====================
   document.addEventListener('DOMContentLoaded', () => {
     loadDashboard()
 
-    // Event listener untuk tombol-tombol
     document.getElementById('btnLaporanKas').addEventListener('click', (e) => {
       e.preventDefault()
       openLaporanKas()
@@ -1069,7 +1045,6 @@
       downloadResi()
     })
 
-    // Modal pembayaran
     const paymentModal = document.getElementById('paymentModal')
     const btnInfo = document.getElementById('btnInfoPembayaran')
     const closePayment = document.querySelector('#paymentModal .close-modal')
@@ -1080,18 +1055,15 @@
     closePayment.addEventListener('click', () => { paymentModal.style.display = 'none' })
     window.addEventListener('click', (e) => { if (e.target === paymentModal) paymentModal.style.display = 'none' })
 
-    // Modal resi
     const resiModal = document.getElementById('resiModal')
     const closeResi = document.getElementById('closeResiModal')
     closeResi.addEventListener('click', () => { resiModal.style.display = 'none' })
     window.addEventListener('click', (e) => { if (e.target === resiModal) resiModal.style.display = 'none' })
 
-    // Menu mobile
     const menuToggle = document.getElementById('menuToggle')
     const navLinks = document.getElementById('navLinks')
     menuToggle.addEventListener('click', () => navLinks.classList.toggle('active'))
 
-    // FAQ
     document.querySelectorAll('.faq-question').forEach(q => {
       q.addEventListener('click', () => {
         const item = q.parentElement
