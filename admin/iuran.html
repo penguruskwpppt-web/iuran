@@ -195,10 +195,9 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
     (function() {
-      // Hindari konflik global dengan menggunakan IIFE
       const SUPABASE_URL = 'https://wuargtxulaquxpziuzho.supabase.co';
       const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind1YXJndHh1bGFxdXhweml1emhvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1MjMxNTYsImV4cCI6MjA5MDA5OTE1Nn0.EcVFAGh3ZgTDs8Paz9O_8MpkliKPF0vI7cAuuIsvb2U';
-      const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
       let selectedHouse = null;
       let selectedMonth = null;
@@ -206,13 +205,12 @@
 
       // Cek login
       (async () => {
-        const { data: { user } } = await supabaseClient.auth.getUser();
+        const { data: { user } } = await supabase.auth.getUser();
         if (!user) window.location.href = 'login.html';
-        else console.log("User logged in:", user.email);
       })();
 
       async function loadHouseList() {
-        const { data, error } = await supabaseClient
+        const { data, error } = await supabase
           .from('warga')
           .select('no_rumah')
           .order('no_rumah');
@@ -234,7 +232,7 @@
           alert('Masukkan nomor rumah terlebih dahulu.');
           return;
         }
-        const { data: warga, error: wargaError } = await supabaseClient
+        const { data: warga, error: wargaError } = await supabase
           .from('warga')
           .select('no_rumah, nama_pemilik, iuran_per_bulan, kondisi_terakhir')
           .eq('no_rumah', noRumah)
@@ -258,7 +256,7 @@
           return;
         }
 
-        const { data: payments } = await supabaseClient
+        const { data: payments } = await supabase
           .from('transaksi_iuran')
           .select('bulan')
           .eq('no_rumah', noRumah);
@@ -320,7 +318,10 @@
         checkHouse(noRumah);
       });
       document.getElementById('searchHouse').addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') checkHouse(e.target.value.trim());
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          checkHouse(e.target.value.trim());
+        }
       });
 
       document.getElementById('submitPaymentBtn').addEventListener('click', async () => {
@@ -338,19 +339,19 @@
         if (file) {
           const fileExt = file.name.split('.').pop();
           const fileName = `${selectedHouse.no_rumah}_${bulanStr}_${Date.now()}.${fileExt}`;
-          const { error: uploadError } = await supabaseClient.storage
+          const { error: uploadError } = await supabase.storage
             .from('bukti-iuran')
             .upload(fileName, file);
           if (uploadError) {
             alert('Gagal upload bukti: ' + uploadError.message);
             return;
           }
-          const { data: urlData } = supabaseClient.storage.from('bukti-iuran').getPublicUrl(fileName);
+          const { data: urlData } = supabase.storage.from('bukti-iuran').getPublicUrl(fileName);
           buktiUrl = urlData.publicUrl;
         }
 
         const kasId = `IU-${new Date().toISOString().slice(0,10).replace(/-/g,'')}-${Date.now().toString().slice(-6)}`;
-        const { error: iuranError } = await supabaseClient
+        const { error: iuranError } = await supabase
           .from('transaksi_iuran')
           .insert([{
             kas_id: kasId,
@@ -365,14 +366,14 @@
           return;
         }
 
-        const { data: lastSaldo } = await supabaseClient
+        const { data: lastSaldo } = await supabase
           .from('transaksi_kas')
           .select('saldo')
           .order('tanggal', { ascending: false })
           .limit(1);
         let saldo = lastSaldo?.[0]?.saldo || 0;
         const newSaldo = saldo + jumlah;
-        const { error: kasError } = await supabaseClient
+        const { error: kasError } = await supabase
           .from('transaksi_kas')
           .insert([{
             kas_id: kasId,
@@ -404,7 +405,7 @@
 
       document.getElementById('logoutBtn').addEventListener('click', async (e) => {
         e.preventDefault();
-        await supabaseClient.auth.signOut();
+        await supabase.auth.signOut();
         window.location.href = 'login.html';
       });
     })();
