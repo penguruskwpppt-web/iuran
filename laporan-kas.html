@@ -26,7 +26,6 @@
       padding: 24px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     }
-    /* Header laporan */
     .report-header {
       display: flex;
       align-items: center;
@@ -50,7 +49,6 @@
       color: #64748b;
       margin-top: 5px;
     }
-    /* Summary cards */
     .summary-grid {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
@@ -119,7 +117,6 @@
     .btn-export:hover {
       background: #219653;
     }
-    /* Tabel dengan font lebih kecil */
     table {
       width: 100%;
       border-collapse: collapse;
@@ -138,7 +135,6 @@
       color: white;
       font-weight: 600;
     }
-    /* Signature section */
     .signature-section {
       margin-top: 40px;
       display: flex;
@@ -196,7 +192,6 @@
         align-items: center;
       }
     }
-    /* Print styles - A4 */
     @media print {
       body {
         background: white;
@@ -237,7 +232,6 @@
     </div>
   </div>
 
-  <!-- Summary -->
   <div class="summary-grid">
     <div class="summary-card">
       <h3>Saldo Awal (Saldo Awal)</h3>
@@ -275,13 +269,12 @@
   <div style="overflow-x: auto;">
     <table id="kasTable">
       <thead>
-        <tr><th>Tanggal</th><th>Keterangan</th><th>Pemasukan</th><th>Pengeluaran</th><th>Saldo</th><th>Sumber</th>`
+        <tr><th>Tanggal</th><th>Keterangan</th><th>Pemasukan</th><th>Pengeluaran</th><th>Saldo</th><th>Sumber</th>
       </thead>
       <tbody></tbody>
     </table>
   </div>
 
-  <!-- Tanda Tangan -->
   <div class="signature-section">
     <div class="signature-item">
       <div class="title">Direkap oleh,</div>
@@ -321,9 +314,13 @@
     return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka);
   }
 
-  // Tanggal hanya menampilkan tanggal, bulan, tahun (tanpa jam)
-  function formatDateOnly(iso) {
-    return new Date(iso).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' });
+  // Format tanggal pendek: 1 Nov 2026
+  function formatShortDate(iso) {
+    const date = new Date(iso);
+    const day = date.getDate();
+    const month = date.toLocaleString('id-ID', { month: 'short' });
+    const year = date.getFullYear();
+    return `${day} ${month} ${year}`;
   }
 
   async function fetchSaldoAwal() {
@@ -354,10 +351,8 @@
   }
 
   function updateSummary(data) {
-    // Total pemasukan dan pengeluaran dari data yang ditampilkan
     const totalPemasukan = data.reduce((sum, row) => sum + (row.pemasukan || 0), 0);
     const totalPengeluaran = data.reduce((sum, row) => sum + (row.pengeluaran || 0), 0);
-    // Saldo Akhir diambil dari saldo baris terakhir data yang ditampilkan
     const saldoAkhir = data.length > 0 ? data[data.length - 1].saldo : 0;
 
     document.getElementById('saldoAwal').innerText = formatRupiah(saldoAwalGlobal);
@@ -371,7 +366,7 @@
     tbody.innerHTML = '';
     data.forEach(row => {
       const tr = tbody.insertRow();
-      tr.insertCell(0).innerText = formatDateOnly(row.tanggal);
+      tr.insertCell(0).innerText = formatShortDate(row.tanggal);
       tr.insertCell(1).innerText = row.keterangan;
       tr.insertCell(2).innerText = row.pemasukan ? formatRupiah(row.pemasukan) : '-';
       tr.insertCell(3).innerText = row.pengeluaran ? formatRupiah(row.pengeluaran) : '-';
@@ -386,7 +381,7 @@
     const headers = ['tanggal','keterangan','pemasukan','pengeluaran','saldo','jenis','sumber'];
     const rows = data.map(row => headers.map(h => {
       let val = row[h];
-      if (h === 'tanggal') val = new Date(val).toLocaleDateString('id-ID');
+      if (h === 'tanggal') val = formatShortDate(row.tanggal);
       if (typeof val === 'number') val = val.toString();
       if (typeof val === 'string' && (val.includes(',') || val.includes('"'))) val = `"${val.replace(/"/g, '""')}"`;
       return val || '';
@@ -405,7 +400,6 @@
     window.print();
   }
 
-  // Inisialisasi
   await fetchSaldoAwal();
   loadKas();
 
