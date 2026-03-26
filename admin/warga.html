@@ -168,11 +168,10 @@
           <tr><th>No Rumah</th><th>Nama Pemilik</th><th>No HP</th><th>Status</th><th>Kondisi</th><th>Iuran/Bulan</th><th>Koordinator</th><th>Aksi</th>
         </thead>
         <tbody></tbody>
-       </table>
+      </table>
     </div>
   </div>
 
-  <!-- Modal Form Warga -->
   <div id="modalWarga" class="modal">
     <div class="modal-content">
       <h2 id="modalTitle">Tambah Warga</h2>
@@ -194,7 +193,7 @@
         <input type="text" id="koordinator" placeholder="Koordinator">
         <div class="modal-buttons">
           <button type="submit" class="btn-primary">Simpan</button>
-          <button type="button" id="closeModal" class="btn-secondary" style="background:#ccc;">Batal</button>
+          <button type="button" id="closeModal" style="background:#ccc;">Batal</button>
         </div>
       </form>
     </div>
@@ -202,131 +201,133 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
-    const SUPABASE_URL = 'https://wuargtxulaquxpziuzho.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind1YXJndHh1bGFxdXhweml1emhvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1MjMxNTYsImV4cCI6MjA5MDA5OTE1Nn0.EcVFAGh3ZgTDs8Paz9O_8MpkliKPF0vI7cAuuIsvb2U';
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    (function() {
+      const SUPABASE_URL = 'https://wuargtxulaquxpziuzho.supabase.co';
+      const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind1YXJndHh1bGFxdXhweml1emhvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1MjMxNTYsImV4cCI6MjA5MDA5OTE1Nn0.EcVFAGh3ZgTDs8Paz9O_8MpkliKPF0vI7cAuuIsvb2U';
+      const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    let currentEdit = null;
+      let currentEdit = null;
 
-    // Cek login
-    (async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) window.location.href = 'login.html';
-    })();
+      // Cek login
+      (async () => {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) window.location.href = 'login.html';
+      })();
 
-    function formatRupiah(angka) {
-      return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka || 0);
-    }
-
-    async function loadWarga() {
-      const { data, error } = await supabase.from('warga').select('*').order('no_rumah');
-      if (error) console.error(error);
-      else renderTable(data);
-    }
-
-    function renderTable(wargaList) {
-      const tbody = document.querySelector('#wargaTable tbody');
-      tbody.innerHTML = '';
-      wargaList.forEach(w => {
-        const row = tbody.insertRow();
-        row.insertCell(0).innerText = w.no_rumah;
-        row.insertCell(1).innerText = w.nama_pemilik;
-        row.insertCell(2).innerText = w.no_hp_pemilik || '-';
-        row.insertCell(3).innerText = w.status_kepemilikan;
-        row.insertCell(4).innerText = w.kondisi_terakhir;
-        row.insertCell(5).innerText = formatRupiah(w.iuran_per_bulan);
-        row.insertCell(6).innerText = w.koordinator || '-';
-        const actionCell = row.insertCell(7);
-        const editBtn = document.createElement('button');
-        editBtn.innerText = 'Edit';
-        editBtn.className = 'btn-edit';
-        editBtn.onclick = () => openModal(w);
-        const deleteBtn = document.createElement('button');
-        deleteBtn.innerText = 'Hapus';
-        deleteBtn.className = 'btn-delete';
-        deleteBtn.onclick = () => deleteWarga(w.no_rumah);
-        actionCell.appendChild(editBtn);
-        actionCell.appendChild(deleteBtn);
-      });
-    }
-
-    function openModal(warga = null) {
-      const modal = document.getElementById('modalWarga');
-      document.getElementById('modalTitle').innerText = warga ? 'Edit Warga' : 'Tambah Warga';
-      if (warga) {
-        document.getElementById('no_rumah_old').value = warga.no_rumah;
-        document.getElementById('no_rumah').value = warga.no_rumah;
-        document.getElementById('no_rumah').disabled = true;
-        document.getElementById('nama_pemilik').value = warga.nama_pemilik;
-        document.getElementById('no_hp_pemilik').value = warga.no_hp_pemilik || '';
-        document.getElementById('status_kepemilikan').value = warga.status_kepemilikan;
-        document.getElementById('kondisi_terakhir').value = warga.kondisi_terakhir;
-        document.getElementById('iuran_per_bulan').value = warga.iuran_per_bulan;
-        document.getElementById('koordinator').value = warga.koordinator || '';
-        currentEdit = warga.no_rumah;
-      } else {
-        document.getElementById('no_rumah_old').value = '';
-        document.getElementById('no_rumah').disabled = false;
-        document.getElementById('no_rumah').value = '';
-        document.getElementById('nama_pemilik').value = '';
-        document.getElementById('no_hp_pemilik').value = '';
-        document.getElementById('status_kepemilikan').value = 'Milik Sendiri';
-        document.getElementById('kondisi_terakhir').value = 'Berpenghuni';
-        document.getElementById('iuran_per_bulan').value = '75000';
-        document.getElementById('koordinator').value = '';
-        currentEdit = null;
+      function formatRupiah(angka) {
+        return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka || 0);
       }
-      modal.style.display = 'flex';
-    }
 
-    document.getElementById('closeModal').onclick = () => {
-      document.getElementById('modalWarga').style.display = 'none';
-    };
-
-    document.getElementById('wargaForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const data = {
-        no_rumah: document.getElementById('no_rumah').value,
-        nama_pemilik: document.getElementById('nama_pemilik').value,
-        no_hp_pemilik: document.getElementById('no_hp_pemilik').value || null,
-        status_kepemilikan: document.getElementById('status_kepemilikan').value,
-        kondisi_terakhir: document.getElementById('kondisi_terakhir').value,
-        iuran_per_bulan: parseInt(document.getElementById('iuran_per_bulan').value),
-        koordinator: document.getElementById('koordinator').value || null,
-        updated_at: new Date()
-      };
-      let error;
-      if (currentEdit) {
-        const { error: updateError } = await supabase.from('warga').update(data).eq('no_rumah', currentEdit);
-        error = updateError;
-      } else {
-        data.created_at = new Date();
-        const { error: insertError } = await supabase.from('warga').insert([data]);
-        error = insertError;
+      async function loadWarga() {
+        const { data, error } = await supabase.from('warga').select('*').order('no_rumah');
+        if (error) console.error(error);
+        else renderTable(data);
       }
-      if (error) alert('Gagal menyimpan: ' + error.message);
-      else {
+
+      function renderTable(wargaList) {
+        const tbody = document.querySelector('#wargaTable tbody');
+        tbody.innerHTML = '';
+        wargaList.forEach(w => {
+          const row = tbody.insertRow();
+          row.insertCell(0).innerText = w.no_rumah;
+          row.insertCell(1).innerText = w.nama_pemilik;
+          row.insertCell(2).innerText = w.no_hp_pemilik || '-';
+          row.insertCell(3).innerText = w.status_kepemilikan;
+          row.insertCell(4).innerText = w.kondisi_terakhir;
+          row.insertCell(5).innerText = formatRupiah(w.iuran_per_bulan);
+          row.insertCell(6).innerText = w.koordinator || '-';
+          const actionCell = row.insertCell(7);
+          const editBtn = document.createElement('button');
+          editBtn.innerText = 'Edit';
+          editBtn.className = 'btn-edit';
+          editBtn.onclick = () => openModal(w);
+          const deleteBtn = document.createElement('button');
+          deleteBtn.innerText = 'Hapus';
+          deleteBtn.className = 'btn-delete';
+          deleteBtn.onclick = () => deleteWarga(w.no_rumah);
+          actionCell.appendChild(editBtn);
+          actionCell.appendChild(deleteBtn);
+        });
+      }
+
+      function openModal(warga = null) {
+        const modal = document.getElementById('modalWarga');
+        document.getElementById('modalTitle').innerText = warga ? 'Edit Warga' : 'Tambah Warga';
+        if (warga) {
+          document.getElementById('no_rumah_old').value = warga.no_rumah;
+          document.getElementById('no_rumah').value = warga.no_rumah;
+          document.getElementById('no_rumah').disabled = true;
+          document.getElementById('nama_pemilik').value = warga.nama_pemilik;
+          document.getElementById('no_hp_pemilik').value = warga.no_hp_pemilik || '';
+          document.getElementById('status_kepemilikan').value = warga.status_kepemilikan;
+          document.getElementById('kondisi_terakhir').value = warga.kondisi_terakhir;
+          document.getElementById('iuran_per_bulan').value = warga.iuran_per_bulan;
+          document.getElementById('koordinator').value = warga.koordinator || '';
+          currentEdit = warga.no_rumah;
+        } else {
+          document.getElementById('no_rumah_old').value = '';
+          document.getElementById('no_rumah').disabled = false;
+          document.getElementById('no_rumah').value = '';
+          document.getElementById('nama_pemilik').value = '';
+          document.getElementById('no_hp_pemilik').value = '';
+          document.getElementById('status_kepemilikan').value = 'Milik Sendiri';
+          document.getElementById('kondisi_terakhir').value = 'Berpenghuni';
+          document.getElementById('iuran_per_bulan').value = '75000';
+          document.getElementById('koordinator').value = '';
+          currentEdit = null;
+        }
+        modal.style.display = 'flex';
+      }
+
+      document.getElementById('closeModal').onclick = () => {
         document.getElementById('modalWarga').style.display = 'none';
-        loadWarga();
+      };
+
+      document.getElementById('wargaForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const data = {
+          no_rumah: document.getElementById('no_rumah').value,
+          nama_pemilik: document.getElementById('nama_pemilik').value,
+          no_hp_pemilik: document.getElementById('no_hp_pemilik').value || null,
+          status_kepemilikan: document.getElementById('status_kepemilikan').value,
+          kondisi_terakhir: document.getElementById('kondisi_terakhir').value,
+          iuran_per_bulan: parseInt(document.getElementById('iuran_per_bulan').value),
+          koordinator: document.getElementById('koordinator').value || null,
+          updated_at: new Date()
+        };
+        let error;
+        if (currentEdit) {
+          const { error: updateError } = await supabase.from('warga').update(data).eq('no_rumah', currentEdit);
+          error = updateError;
+        } else {
+          data.created_at = new Date();
+          const { error: insertError } = await supabase.from('warga').insert([data]);
+          error = insertError;
+        }
+        if (error) alert('Gagal menyimpan: ' + error.message);
+        else {
+          document.getElementById('modalWarga').style.display = 'none';
+          loadWarga();
+        }
+      });
+
+      async function deleteWarga(no_rumah) {
+        if (confirm(`Yakin hapus rumah ${no_rumah}?`)) {
+          const { error } = await supabase.from('warga').delete().eq('no_rumah', no_rumah);
+          if (error) alert('Gagal hapus: ' + error.message);
+          else loadWarga();
+        }
       }
-    });
 
-    async function deleteWarga(no_rumah) {
-      if (confirm(`Yakin hapus rumah ${no_rumah}?`)) {
-        const { error } = await supabase.from('warga').delete().eq('no_rumah', no_rumah);
-        if (error) alert('Gagal hapus: ' + error.message);
-        else loadWarga();
-      }
-    }
+      document.getElementById('btnTambahWarga').onclick = () => openModal();
+      loadWarga();
 
-    document.getElementById('btnTambahWarga').onclick = () => openModal();
-    loadWarga();
-
-    document.getElementById('logoutBtn').addEventListener('click', async (e) => {
-      e.preventDefault();
-      await supabase.auth.signOut();
-      window.location.href = 'login.html';
-    });
+      document.getElementById('logoutBtn').addEventListener('click', async (e) => {
+        e.preventDefault();
+        await supabase.auth.signOut();
+        window.location.href = 'login.html';
+      });
+    })();
   </script>
 </body>
 </html>
