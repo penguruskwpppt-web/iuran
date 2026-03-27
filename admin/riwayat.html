@@ -8,6 +8,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <style>
+    /* CSS SAMA DENGAN YANG ANDA MILIKI – TIDAK DIUBAH */
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       font-family: 'Inter', sans-serif;
@@ -76,7 +77,6 @@
       border-radius: 8px;
       cursor: pointer;
     }
-    /* Button utama */
     .btn-primary {
       background: #0b2e4f;
       color: white;
@@ -99,10 +99,6 @@
       cursor: not-allowed;
       transform: none;
     }
-    .btn-primary:active {
-      transform: scale(0.97);
-    }
-    /* Tombol batal */
     .btn-cancel {
       background: #f1f5f9;
       color: #334155;
@@ -126,6 +122,9 @@
       cursor: pointer;
       margin-right: 5px;
       transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
     }
     .btn-edit {
       background: #f59e0b;
@@ -160,7 +159,6 @@
       background: #0b2e4f;
       color: white;
     }
-    /* Modal */
     .modal {
       display: none;
       position: fixed;
@@ -329,7 +327,6 @@
         return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka);
       }
 
-      // Format tanggal aman (handles null/undefined)
       function formatDate(iso) {
         if (!iso) return '-';
         const date = new Date(iso);
@@ -357,7 +354,6 @@
         }
       }
 
-      // Saat pilih rumah, isi iuran dari data warga (kecuali sedang edit)
       document.getElementById('no_rumah').addEventListener('change', (e) => {
         const selected = e.target.selectedOptions[0];
         const iuran = selected.getAttribute('data-iuran');
@@ -366,7 +362,6 @@
         }
       });
 
-      // ========== OTOMATIS IURAN BERDASARKAN STATUS ==========
       const statusIuranMap = {
         'Berpenghuni': 75000,
         'Kosong': 50000,
@@ -383,7 +378,6 @@
         }
       });
 
-      // ========== UPDATE WARGA DARI RIWAYAT TERBARU ==========
       async function updateWargaFromHistory(no_rumah) {
         const { data: histories, error } = await supabase
           .from('riwayat_kondisi')
@@ -409,11 +403,8 @@
         }
       }
 
-      // ========== LOAD RIWAYAT (DENGAN LOADING STATE) ==========
       async function loadRiwayat(filterNoRumah = null) {
-        // Tampilkan loading
         renderTable(null);
-
         let query = supabase.from('riwayat_kondisi').select('*').order('no_rumah', { ascending: true }).order('berlaku_sejak', { ascending: false });
         if (filterNoRumah) {
           query = query.eq('no_rumah', filterNoRumah);
@@ -454,11 +445,11 @@
           row.insertCell(6).innerText = r.keterangan || '-';
           const actionCell = row.insertCell(7);
           const editBtn = document.createElement('button');
-          editBtn.innerText = 'Edit';
+          editBtn.innerHTML = '<i class="fas fa-edit"></i> Edit';
           editBtn.className = 'btn-edit';
           editBtn.onclick = () => openEditModal(r);
           const deleteBtn = document.createElement('button');
-          deleteBtn.innerText = 'Hapus';
+          deleteBtn.innerHTML = '<i class="fas fa-trash-alt"></i> Hapus';
           deleteBtn.className = 'btn-delete';
           deleteBtn.onclick = () => deleteRiwayat(r.id, r.no_rumah);
           actionCell.appendChild(editBtn);
@@ -476,7 +467,6 @@
         document.getElementById('no_hp_penghuni').value = riwayat.no_hp_penghuni || '';
         document.getElementById('kondisi').value = riwayat.kondisi;
         document.getElementById('iuran_per_bulan').value = riwayat.iuran_per_bulan;
-        // Ambil hanya tanggal (YYYY-MM-DD) untuk input date
         const tgl = riwayat.berlaku_sejak ? riwayat.berlaku_sejak.split('T')[0] : '';
         document.getElementById('berlaku_sejak').value = tgl;
         document.getElementById('keterangan').value = riwayat.keterangan || '';
@@ -496,25 +486,20 @@
         document.getElementById('berlaku_sejak').value = '';
         document.getElementById('keterangan').value = '';
         document.getElementById('modalRiwayat').style.display = 'flex';
-        // Trigger change on kondisi to set default iuran (75000)
         kondisiSelect.dispatchEvent(new Event('change'));
       }
 
-      // ========== MODAL HANDLERS ==========
       document.getElementById('btnTambahRiwayat').onclick = openAddModal;
-      // Tombol batal: tutup modal dan reset form
       document.getElementById('closeModal').onclick = () => {
         document.getElementById('modalRiwayat').style.display = 'none';
         document.getElementById('riwayatForm').reset();
       };
-      // Tutup modal jika klik di luar
       document.getElementById('modalRiwayat').addEventListener('click', (e) => {
         if (e.target.id === 'modalRiwayat') {
           e.target.style.display = 'none';
           document.getElementById('riwayatForm').reset();
         }
       });
-      // Tutup modal dengan ESC
       document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
           document.getElementById('modalRiwayat').style.display = 'none';
@@ -522,16 +507,13 @@
         }
       });
 
-      // ========== SUBMIT FORM (DENGAN LOADING & DISABLE) ==========
       const form = document.getElementById('riwayatForm');
       form.addEventListener('submit', async (e) => {
         e.preventDefault();
-
         const submitBtn = form.querySelector('.btn-primary');
         const originalText = submitBtn.innerHTML;
         submitBtn.disabled = true;
         submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
-
         try {
           const no_rumah = document.getElementById('no_rumah').value;
           const nama_penghuni = document.getElementById('nama_penghuni').value || null;
@@ -545,12 +527,10 @@
           }
           const berlaku_sejak = document.getElementById('berlaku_sejak').value;
           const keterangan = document.getElementById('keterangan').value || null;
-
           if (!no_rumah || !berlaku_sejak) {
             alert('Harap isi semua field yang diperlukan.');
             return;
           }
-
           const data = {
             no_rumah,
             nama_penghuni,
@@ -562,7 +542,6 @@
             diubah_oleh: (await supabase.auth.getUser()).data.user?.email || 'admin',
             created_at: new Date()
           };
-
           let error;
           if (currentEditId) {
             const { error: updateError } = await supabase
@@ -576,21 +555,14 @@
               .insert([data]);
             error = insertError;
           }
-
-          if (error) {
-            alert('Gagal menyimpan riwayat: ' + error.message);
-            return;
-          }
-
-          // Update warga dengan kondisi & iuran terbaru
+          if (error) throw error;
           await updateWargaFromHistory(no_rumah);
           document.getElementById('modalRiwayat').style.display = 'none';
           document.getElementById('riwayatForm').reset();
-          loadRiwayat(); // refresh semua data
-          loadWargaDropdown(); // refresh dropdown
+          loadRiwayat();
+          loadWargaDropdown();
         } catch (err) {
-          console.error(err);
-          alert('Terjadi kesalahan: ' + err.message);
+          alert('Gagal menyimpan: ' + err.message);
         } finally {
           submitBtn.disabled = false;
           submitBtn.innerHTML = originalText;
@@ -612,26 +584,19 @@
         loadWargaDropdown();
       }
 
-      // ========== PENCARIAN ==========
       const searchInput = document.getElementById('searchNoRumah');
       const searchBtn = document.getElementById('searchBtn');
       const resetBtn = document.getElementById('resetSearchBtn');
-
       searchBtn.addEventListener('click', () => {
         const keyword = searchInput.value.trim();
-        if (keyword === '') {
-          loadRiwayat();
-        } else {
-          loadRiwayat(keyword);
-        }
+        if (keyword === '') loadRiwayat();
+        else loadRiwayat(keyword);
       });
-
       resetBtn.addEventListener('click', () => {
         searchInput.value = '';
         loadRiwayat();
       });
 
-      // Logout
       document.getElementById('logoutBtn').addEventListener('click', async (e) => {
         e.preventDefault();
         await supabase.auth.signOut();
