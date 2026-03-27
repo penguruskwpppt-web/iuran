@@ -336,6 +336,7 @@
           <button type="submit" class="btn-primary">Simpan Pengeluaran</button>
         </form>
       </div>
+
       <div class="form-card">
         <h3>📋 Riwayat Transaksi Non-Iuran Terbaru</h3>
         <div style="overflow-x: auto;">
@@ -343,7 +344,8 @@
             <thead>
               <tr><th>Tanggal</th><th>Jenis</th><th>Keterangan</th><th>Jumlah</th><th>Aksi</th>
             </thead>
-            <tbody></tbody>     
+            <tbody></tbody>
+          </table>
         </div>
       </div>
     </div>
@@ -377,7 +379,8 @@
           <thead>
             <tr><th>Tanggal</th><th>Jenis</th><th>Keterangan</th><th>Pemasukan</th><th>Pengeluaran</th><th>Saldo</th><th>Aksi</th>
           </thead>
-          <tbody></tbody>      
+          <tbody></tbody>
+        </table>
       </div>
       <p class="info">⚠️ <strong>Peringatan:</strong> Menghapus transaksi akan <strong>mengubah data historis</strong> tetapi <strong>tidak akan mengoreksi saldo secara otomatis</strong>. Setelah hapus, periksa kembali saldo kas dan gunakan fitur <strong>Pemasukan Lain / Pengeluaran Lain</strong> untuk menambahkan koreksi manual jika diperlukan.</p>
     </div>
@@ -388,7 +391,8 @@
       <div style="overflow-x: auto;">
         <table id="users-table">
           <thead> <th>Email</th><th>Role</th><th>Aksi</th> </thead>
-          <tbody></tbody>        
+          <tbody></tbody>
+        </table>
       </div>
       <p class="info">Catatan: Hanya admin yang bisa mengubah role.</p>
     </div>
@@ -515,7 +519,7 @@
             const { data: kasData } = await supabase.from('transaksi_kas').select('kas_id, tanggal, keterangan, pemasukan, pengeluaran, saldo, jenis, sumber').order('tanggal', { ascending: false });
             data = kasData;
           } else throw new Error('Tabel tidak dikenal');
-          if (!data || data.length === 0) { alert('Tidak ada data'); return; }
+          if (!data || data.length === 0) { alert('Tidak ada数据'); return; }
           const headers = columns.join(',');
           const rows = data.map(row => columns.map(col => {
             let val = row[col];
@@ -652,7 +656,6 @@
           document.getElementById('kategori_pemasukan_manual_group').style.display = 'none';
           loadNonIuranTransactions();
           loadStats();
-          // Refresh kelola transaksi jika tab aktif
           const activeTab = document.querySelector('.tab-btn.active')?.dataset.tab;
           if (activeTab === 'manageTransactions') {
             const filterJenis = document.getElementById('filterJenis').value;
@@ -739,6 +742,14 @@
         const tbody = document.querySelector('#nonIuranTable tbody');
         if (!tbody) return;
         tbody.innerHTML = '';
+        if (!data || data.length === 0) {
+          const row = tbody.insertRow();
+          const cell = row.insertCell(0);
+          cell.colSpan = 5;
+          cell.innerText = 'Tidak ada transaksi non-iuran.';
+          cell.style.textAlign = 'center';
+          return;
+        }
         data.forEach(t => {
           const row = tbody.insertRow();
           const tanggal = formatDate(t.tanggal);
