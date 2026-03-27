@@ -228,7 +228,7 @@
         <div id="manualMonthInput" style="display: none;">
           <div class="form-group" style="margin-top: 12px;">
             <label>Pilih Bulan</label>
-            <input type="month" id="manualMonth">
+            <select id="manualMonthSelect"></select>
           </div>
         </div>
 
@@ -238,10 +238,10 @@
           <div style="overflow-x: auto;">
             <table id="riwayatIuranTable" class="history-table">
               <thead>
-                <tr><th>Bulan</th><th>Jumlah</th><th>Metode</th><th>Bukti</th><th>Tanggal Bayar</th>+
+                <tr><th>Bulan</th><th>Jumlah</th><th>Metode</th><th>Bukti</th><th>Tanggal Bayar</th>
               </thead>
               <tbody></tbody>
-             </table>
+            </table>
           </div>
         </div>
       </div>
@@ -276,6 +276,7 @@
       let currentOccupantName = '';
       let currentOccupantPhone = '';
       let unpaidMonthsData = [];
+      let paidSet = new Set(); // untuk menyimpan bulan yang sudah dibayar dalam format 'YYYY-MM'
 
       // Cek login dan role
       (async () => {
@@ -379,6 +380,29 @@
         });
       }
 
+      // Isi dropdown untuk manual month dengan bulan yang belum dibayar (dari Nov 2025 sampai bulan berjalan)
+      function fillManualMonthOptions(paidSet) {
+        const select = document.getElementById('manualMonthSelect');
+        select.innerHTML = '<option value="">-- Pilih Bulan --</option>';
+        const startDate = new Date(2025, 10, 1);
+        const now = new Date();
+        const endYear = now.getFullYear();
+        const endMonth = now.getMonth() + 1;
+        let year = startDate.getFullYear();
+        let month = startDate.getMonth() + 1;
+        while (year < endYear || (year === endYear && month <= endMonth)) {
+          const key = `${year}-${String(month).padStart(2,'0')}`;
+          if (!paidSet.has(key)) {
+            const option = document.createElement('option');
+            option.value = key;
+            option.textContent = `${month}/${year}`;
+            select.appendChild(option);
+          }
+          month++;
+          if (month > 12) { month = 1; year++; }
+        }
+      }
+
       async function checkHouse(noRumah) {
         if (!noRumah) {
           alert('Masukkan nomor rumah terlebih dahulu.');
@@ -438,10 +462,11 @@
           .from('transaksi_iuran')
           .select('bulan')
           .eq('no_rumah', noRumah);
-        const paidSet = new Set();
+        paidSet.clear();
         payments?.forEach(p => {
           const date = new Date(p.bulan);
-          paidSet.add(`${date.getFullYear()}-${date.getMonth()+1}`);
+          const key = `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}`;
+          paidSet.add(key);
         });
 
         const startDate = new Date(2025, 10, 1);
@@ -453,7 +478,7 @@
         let year = startDate.getFullYear();
         let month = startDate.getMonth() + 1;
         while (year < endYear || (year === endYear && month <= endMonth)) {
-          const key = `${year}-${month}`;
+          const key = `${year}-${String(month).padStart(2,'0')}`;
           if (!paidSet.has(key)) unpaidMonthsData.push({ year, month });
           month++;
           if (month > 12) { month = 1; year++; }
@@ -473,16 +498,20 @@
           container.innerHTML = '';
           unpaidMonthsData.forEach(um => {
             const monthName = `${um.month}/${um.year}`;
+            const key = `${um.year}-${String(um.month).padStart(2,'0')}`;
             const itemDiv = document.createElement('div');
             itemDiv.className = 'unpaid-item';
             itemDiv.innerHTML = `
-              <input type="checkbox" name="monthCheckbox" value="${um.year}-${um.month}" id="month_${um.year}_${um.month}">
+              <input type="checkbox" name="monthCheckbox" value="${key}" id="month_${um.year}_${um.month}">
               <label for="month_${um.year}_${um.month}">${monthName} - ${formatRupiah(currentIuran)}</label>
             `;
             container.appendChild(itemDiv);
           });
           document.getElementById('paymentForm').style.display = 'none';
         }
+
+        // Isi dropdown untuk manual month dengan bulan yang belum dibayar
+        fillManualMonthOptions(paidSet);
       }
 
       // Select all months
@@ -519,7 +548,7 @@
         }
       });
 
-      // Proses pembayaran dengan pengecekan duplikat
+      // Proses pembayaran dengan pengecekan duplikat menggunakan string tanggal
       document.getElementById('submitPaymentBtn').addEventListener('click', async () => {
         if (!selectedHouse) {
           alert('Silakan cek rumah terlebih dahulu.');
@@ -530,13 +559,13 @@
         let selectedMonths = [];
 
         if (manualChecked) {
-          const manualMonthVal = document.getElementById('manualMonth').value;
-          if (!manualMonthVal) {
+          const manualVal = document.getElementById('manualMonthSelect').value;
+          if (!manualVal) {
             alert('Pilih bulan yang akan dibayar.');
             return;
           }
-          const [year, month] = manualMonthVal.split('-');
-          selectedMonths = [{ year: parseInt(year), month: parseInt(month) }];
+          const [year, month] = manualVal.split('-');
+          selectedMonths.push({ year: parseInt(year), month: parseInt(month) });
         } else {
           const checkboxes = document.querySelectorAll('#unpaidMonthsList input[type="checkbox"]:checked');
           if (checkboxes.length === 0) {
@@ -552,7 +581,6 @@
         const metode = document.getElementById('metode').value;
         const file = document.getElementById('buktiFile').files[0];
 
-        // Upload bukti hanya sekali
         let buktiUrl = null;
         if (file) {
           const fileExt = file.name.split('.').pop();
@@ -572,15 +600,14 @@
         let skippedCount = 0;
 
         for (const monthToPay of selectedMonths) {
-          const bulanDate = new Date(monthToPay.year, monthToPay.month - 1, 1);
-          const bulanStr = `${monthToPay.year}-${String(monthToPay.month).padStart(2,'0')}`;
+          const bulanStr = `${monthToPay.year}-${String(monthToPay.month).padStart(2,'0')}-01`;
 
-          // Cek apakah bulan sudah dibayar sebelumnya
+          // Cek apakah bulan sudah dibayar (menggunakan string tanggal)
           const { data: existing, error: checkError } = await supabase
             .from('transaksi_iuran')
             .select('created_at')
             .eq('no_rumah', selectedHouse.no_rumah)
-            .eq('bulan', bulanDate.toISOString())
+            .eq('bulan', bulanStr)
             .maybeSingle();
 
           if (checkError) {
@@ -590,7 +617,7 @@
 
           if (existing) {
             const paidDate = new Date(existing.created_at).toLocaleDateString('id-ID');
-            alert(`⚠️ Iuran bulan ${bulanStr} sudah lunas pada tanggal ${paidDate}. Tidak perlu dibayar lagi.`);
+            alert(`⚠️ Iuran bulan ${bulanStr} sudah lunas pada tanggal ${paidDate}.`);
             skippedCount++;
             continue;
           }
@@ -603,7 +630,7 @@
             .insert([{
               kas_id: kasId,
               no_rumah: selectedHouse.no_rumah,
-              bulan: bulanDate.toISOString(),
+              bulan: bulanStr,
               jumlah,
               metode,
               bukti_tf: buktiUrl
@@ -626,7 +653,7 @@
             .insert([{
               kas_id: kasId,
               tanggal: new Date(),
-              keterangan: `Iuran ${selectedHouse.no_rumah} - ${currentOccupantName} bulan ${bulanStr}`,
+              keterangan: `Iuran ${selectedHouse.no_rumah} - ${currentOccupantName} bulan ${bulanStr.slice(0,7)}`,
               pemasukan: jumlah,
               saldo: newSaldo,
               jenis: 'Pemasukan',
@@ -634,7 +661,6 @@
             }]);
           if (kasError) {
             alert(`Gagal update kas untuk bulan ${bulanStr}: ${kasError.message}`);
-            // Rollback iuran? Lebih baik batalkan seluruh proses? Kita lanjut tapi peringatan.
             continue;
           }
           successCount++;
