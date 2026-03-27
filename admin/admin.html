@@ -246,9 +246,9 @@
     <div class="nav-links">
       <a href="admin.html" class="active">Dashboard</a>
       <a href="warga.html">Data Warga</a>
+	  <a href="riwayat.html">Riwayat Rumah</a>
       <a href="iuran.html">Bayar Iuran</a>
-      <a href="laporan.html">Laporan Kas</a>
-      <a href="riwayat.html">Riwayat Rumah</a>
+      <a href="laporan.html">Laporan Kas</a>      
       <a href="#" id="logoutBtn">Logout</a>
     </div>
   </nav>
@@ -260,6 +260,7 @@
       <button class="tab-btn" data-tab="backup">Backup Data</button>
       <button class="tab-btn" data-tab="nonIuran">Transaksi Non-Iuran</button>
       <button class="tab-btn" data-tab="manageTransactions">Kelola Transaksi</button>
+      <button class="tab-btn" data-tab="tunggakan">Laporan Tunggakan</button>
     </div>
 
     <!-- Statistik Lengkap -->
@@ -344,8 +345,7 @@
             <thead>
               <tr><th>Tanggal</th><th>Jenis</th><th>Keterangan</th><th>Jumlah</th><th>Aksi</th>
             </thead>
-            <tbody></tbody>
-          </table>
+            <tbody></tbody>          
         </div>
       </div>
     </div>
@@ -379,10 +379,40 @@
           <thead>
             <tr><th>Tanggal</th><th>Jenis</th><th>Keterangan</th><th>Pemasukan</th><th>Pengeluaran</th><th>Saldo</th><th>Aksi</th>
           </thead>
-          <tbody></tbody>
-        </table>
+          <tbody></tbody>        
       </div>
       <p class="info">⚠️ <strong>Peringatan:</strong> Menghapus transaksi akan <strong>mengubah data historis</strong> tetapi <strong>tidak akan mengoreksi saldo secara otomatis</strong>. Setelah hapus, periksa kembali saldo kas dan gunakan fitur <strong>Pemasukan Lain / Pengeluaran Lain</strong> untuk menambahkan koreksi manual jika diperlukan.</p>
+    </div>
+
+    <!-- Laporan Tunggakan -->
+    <div id="tab-tunggakan" class="tab-content">
+      <h2>Laporan Tunggakan Iuran</h2>
+      <div class="filter-bar">
+        <div class="filter-group">
+          <label>Bulan Mulai</label>
+          <input type="month" id="tunggakanStartMonth">
+        </div>
+        <div class="filter-group">
+          <label>Bulan Akhir</label>
+          <input type="month" id="tunggakanEndMonth">
+        </div>
+        <div class="filter-group">
+          <label>Koordinator Lorong</label>
+          <select id="tunggakanKoordinator">
+            <option value="all">Semua Koordinator</option>
+          </select>
+        </div>
+        <button id="filterTunggakanBtn" class="btn-primary">Tampilkan</button>
+        <button id="resetTunggakanBtn" class="btn-secondary">Reset</button>
+      </div>
+      <div style="overflow-x: auto;">
+        <table id="tunggakanTable">
+          <thead>
+            <tr><th>No Rumah</th><th>Penghuni</th><th>Iuran/bln</th><th>Koordinator</th><th>Bulan Tunggakan</th><th>Total Tunggakan</th>
+          </thead>
+          <tbody></tbody>        
+      </div>
+      <p class="info">Catatan: Tunggakan dihitung untuk bulan yang belum dibayar dalam rentang yang dipilih. Penghuni diambil dari riwayat terbaru yang berlaku pada bulan akhir rentang.</p>
     </div>
 
     <!-- Manajemen User (hanya untuk admin) -->
@@ -392,7 +422,7 @@
         <table id="users-table">
           <thead> <th>Email</th><th>Role</th><th>Aksi</th> </thead>
           <tbody></tbody>
-        </table>
+        
       </div>
       <p class="info">Catatan: Hanya admin yang bisa mengubah role.</p>
     </div>
@@ -446,6 +476,7 @@
         initDashboard();
         initNonIuran();
         initManageTransactions();
+        initLaporanTunggakan();
       })();
 
       // ========== FUNGSI PEMBANTU ==========
@@ -519,7 +550,7 @@
             const { data: kasData } = await supabase.from('transaksi_kas').select('kas_id, tanggal, keterangan, pemasukan, pengeluaran, saldo, jenis, sumber').order('tanggal', { ascending: false });
             data = kasData;
           } else throw new Error('Tabel tidak dikenal');
-          if (!data || data.length === 0) { alert('Tidak ada数据'); return; }
+          if (!data || data.length === 0) { alert('Tidak ada data'); return; }
           const headers = columns.join(',');
           const rows = data.map(row => columns.map(col => {
             let val = row[col];
@@ -727,85 +758,78 @@
       }
 
       async function loadNonIuranTransactions() {
-  try {
-    // Ambil semua transaksi pengeluaran (apapun sumbernya)
-    const { data: pengeluaran, error: err1 } = await supabase
-      .from('transaksi_kas')
-      .select('kas_id, tanggal, keterangan, pemasukan, pengeluaran, sumber')
-      .eq('jenis', 'Pengeluaran')
-      .order('tanggal', { ascending: false })
-      .limit(20);
+        const { data: pengeluaran, error: err1 } = await supabase
+          .from('transaksi_kas')
+          .select('kas_id, tanggal, keterangan, pemasukan, pengeluaran, sumber')
+          .eq('jenis', 'Pengeluaran')
+          .order('tanggal', { ascending: false })
+          .limit(20);
 
-    // Ambil transaksi pemasukan yang bukan iuran warga
-    const { data: pemasukan, error: err2 } = await supabase
-      .from('transaksi_kas')
-      .select('kas_id, tanggal, keterangan, pemasukan, pengeluaran, sumber')
-      .eq('jenis', 'Pemasukan')
-      .neq('sumber', 'Iuran Warga')
-      .order('tanggal', { ascending: false })
-      .limit(20);
+        const { data: pemasukan, error: err2 } = await supabase
+          .from('transaksi_kas')
+          .select('kas_id, tanggal, keterangan, pemasukan, pengeluaran, sumber')
+          .eq('jenis', 'Pemasukan')
+          .neq('sumber', 'Iuran Warga')
+          .order('tanggal', { ascending: false })
+          .limit(20);
 
-    if (err1 || err2) {
-      console.error('Error fetching non-iuran transactions:', err1, err2);
-      return;
-    }
-
-    // Gabungkan, urutkan berdasarkan tanggal, ambil 20 terbaru
-    const all = [...(pengeluaran || []), ...(pemasukan || [])];
-    all.sort((a, b) => new Date(b.tanggal) - new Date(a.tanggal));
-    const latest = all.slice(0, 20);
-
-    const tbody = document.querySelector('#nonIuranTable tbody');
-    if (!tbody) return;
-    tbody.innerHTML = '';
-    if (latest.length === 0) {
-      const row = tbody.insertRow();
-      const cell = row.insertCell(0);
-      cell.colSpan = 5;
-      cell.innerText = 'Tidak ada transaksi non-iuran.';
-      cell.style.textAlign = 'center';
-      return;
-    }
-    latest.forEach(t => {
-      const row = tbody.insertRow();
-      const tanggal = formatDate(t.tanggal);
-      const jenis = t.pemasukan ? 'Pemasukan' : 'Pengeluaran';
-      const jumlah = t.pemasukan ? t.pemasukan : t.pengeluaran;
-      row.insertCell(0).innerText = tanggal;
-      row.insertCell(1).innerText = jenis;
-      row.insertCell(2).innerText = t.keterangan;
-      row.insertCell(3).innerText = formatRupiah(jumlah);
-      const actionCell = row.insertCell(4);
-      const delBtn = document.createElement('button');
-      delBtn.innerText = 'Hapus';
-      delBtn.className = 'btn-delete btn-sm';
-      delBtn.onclick = async () => {
-        if (confirm('Hapus transaksi ini? Saldo tidak akan otomatis dikembalikan. Pastikan Anda membuat koreksi manual jika perlu.')) {
-          const { error: delError } = await supabase
-            .from('transaksi_kas')
-            .delete()
-            .eq('kas_id', t.kas_id);
-          if (delError) alert('Gagal hapus: ' + delError.message);
-          else {
-            alert('Transaksi dihapus');
-            loadNonIuranTransactions();
-            loadStats();
-            const activeTab = document.querySelector('.tab-btn.active')?.dataset.tab;
-            if (activeTab === 'manageTransactions') {
-              const filterJenis = document.getElementById('filterJenis').value;
-              const startDate = document.getElementById('filterStartDate').value;
-              const endDate = document.getElementById('filterEndDate').value;
-              loadAllTransactions(filterJenis, startDate, endDate);
-            }
-          }
+        if (err1 || err2) {
+          console.error('Error fetching non-iuran transactions:', err1, err2);
+          return;
         }
-      };
-      actionCell.appendChild(delBtn);
-    });
-  } catch (err) {
-    console.error(err);
-  }
-}
+
+        const all = [...(pengeluaran || []), ...(pemasukan || [])];
+        all.sort((a, b) => new Date(b.tanggal) - new Date(a.tanggal));
+        const latest = all.slice(0, 20);
+
+        const tbody = document.querySelector('#nonIuranTable tbody');
+        if (!tbody) return;
+        tbody.innerHTML = '';
+        if (latest.length === 0) {
+          const row = tbody.insertRow();
+          const cell = row.insertCell(0);
+          cell.colSpan = 5;
+          cell.innerText = 'Tidak ada transaksi non-iuran.';
+          cell.style.textAlign = 'center';
+          return;
+        }
+        latest.forEach(t => {
+          const row = tbody.insertRow();
+          const tanggal = formatDate(t.tanggal);
+          const jenis = t.pemasukan ? 'Pemasukan' : 'Pengeluaran';
+          const jumlah = t.pemasukan ? t.pemasukan : t.pengeluaran;
+          row.insertCell(0).innerText = tanggal;
+          row.insertCell(1).innerText = jenis;
+          row.insertCell(2).innerText = t.keterangan;
+          row.insertCell(3).innerText = formatRupiah(jumlah);
+          const actionCell = row.insertCell(4);
+          const delBtn = document.createElement('button');
+          delBtn.innerText = 'Hapus';
+          delBtn.className = 'btn-delete btn-sm';
+          delBtn.onclick = async () => {
+            if (confirm('Hapus transaksi ini? Saldo tidak akan otomatis dikembalikan. Pastikan Anda membuat koreksi manual jika perlu.')) {
+              const { error: delError } = await supabase
+                .from('transaksi_kas')
+                .delete()
+                .eq('kas_id', t.kas_id);
+              if (delError) alert('Gagal hapus: ' + delError.message);
+              else {
+                alert('Transaksi dihapus');
+                loadNonIuranTransactions();
+                loadStats();
+                const activeTab = document.querySelector('.tab-btn.active')?.dataset.tab;
+                if (activeTab === 'manageTransactions') {
+                  const filterJenis = document.getElementById('filterJenis').value;
+                  const startDate = document.getElementById('filterStartDate').value;
+                  const endDate = document.getElementById('filterEndDate').value;
+                  loadAllTransactions(filterJenis, startDate, endDate);
+                }
+              }
+            }
+          };
+          actionCell.appendChild(delBtn);
+        });
+      }
 
       // ========== KELOLA SEMUA TRANSAKSI ==========
       async function loadAllTransactions(filterJenis = 'all', startDate = null, endDate = null) {
@@ -900,6 +924,181 @@
         load(); // initial load
       }
 
+      // ========== LAPORAN TUNGGAKAN ==========
+      async function loadKoordinatorOptions() {
+        const { data, error } = await supabase
+          .from('warga')
+          .select('koordinator')
+          .not('koordinator', 'is', null)
+          .order('koordinator');
+        if (error) {
+          console.error(error);
+          return;
+        }
+        const unique = [...new Map(data.map(item => [item.koordinator, item])).values()];
+        const select = document.getElementById('tunggakanKoordinator');
+        unique.forEach(k => {
+          const opt = document.createElement('option');
+          opt.value = k.koordinator;
+          opt.textContent = k.koordinator;
+          select.appendChild(opt);
+        });
+      }
+
+      async function getCurrentOccupantAtDate(noRumah, date) {
+        const dateStr = date.toISOString().split('T')[0];
+        const { data, error } = await supabase
+          .from('riwayat_kondisi')
+          .select('nama_penghuni')
+          .eq('no_rumah', noRumah)
+          .lte('berlaku_sejak', dateStr)
+          .order('berlaku_sejak', { ascending: false })
+          .limit(1);
+        if (error) return null;
+        return data && data.length > 0 ? data[0].nama_penghuni : null;
+      }
+
+      async function generateTunggakanReport(startMonth, endMonth, koordinatorFilter) {
+        if (!startMonth || !endMonth) {
+          alert('Pilih rentang bulan terlebih dahulu.');
+          return;
+        }
+
+        // Konversi month input (YYYY-MM) ke tanggal mulai dan akhir bulan
+        const [startYear, startMon] = startMonth.split('-').map(Number);
+        const [endYear, endMon] = endMonth.split('-').map(Number);
+        const startDate = new Date(startYear, startMon - 1, 1);
+        const endDate = new Date(endYear, endMon, 0); // akhir bulan
+
+        // Ambil semua rumah aktif (kondisi != Dibebaskan? tapi tunggakan tetap bisa untuk kosong? kita ambil semua)
+        let query = supabase.from('warga').select('no_rumah, iuran_per_bulan, koordinator');
+        if (koordinatorFilter !== 'all') {
+          query = query.eq('koordinator', koordinatorFilter);
+        }
+        const { data: wargaList, error: wargaError } = await query;
+        if (wargaError) {
+          console.error(wargaError);
+          alert('Gagal mengambil data warga');
+          return;
+        }
+
+        // Ambil semua pembayaran iuran dalam rentang
+        const { data: payments, error: payError } = await supabase
+          .from('transaksi_iuran')
+          .select('no_rumah, bulan')
+          .gte('bulan', startDate.toISOString())
+          .lte('bulan', endDate.toISOString());
+        if (payError) {
+          console.error(payError);
+          alert('Gagal mengambil data pembayaran');
+          return;
+        }
+
+        // Buat map pembayaran per rumah
+        const paidMap = new Map();
+        payments?.forEach(p => {
+          const date = new Date(p.bulan);
+          const key = `${p.no_rumah}|${date.getFullYear()}-${date.getMonth()+1}`;
+          paidMap.set(key, true);
+        });
+
+        // Loop setiap rumah, hitung bulan dalam rentang yang belum dibayar
+        const reportData = [];
+        let currentDate = new Date(startDate);
+        while (currentDate <= endDate) {
+          const year = currentDate.getFullYear();
+          const month = currentDate.getMonth() + 1;
+          const monthKey = `${year}-${month}`;
+          // Untuk setiap rumah, cek apakah sudah dibayar
+          wargaList.forEach(w => {
+            const key = `${w.no_rumah}|${monthKey}`;
+            if (!paidMap.has(key)) {
+              // Cari entry rumah di reportData
+              let entry = reportData.find(r => r.no_rumah === w.no_rumah);
+              if (!entry) {
+                entry = {
+                  no_rumah: w.no_rumah,
+                  iuran: w.iuran_per_bulan,
+                  koordinator: w.koordinator,
+                  months: [],
+                  total: 0
+                };
+                reportData.push(entry);
+              }
+              entry.months.push(monthKey);
+              entry.total += w.iuran_per_bulan;
+            }
+          });
+          // Majukan bulan
+          currentDate.setMonth(currentDate.getMonth() + 1);
+        }
+
+        // Ambil nama penghuni terbaru pada akhir periode untuk setiap rumah
+        const endOfPeriod = new Date(endDate);
+        for (let entry of reportData) {
+          const occupant = await getCurrentOccupantAtDate(entry.no_rumah, endOfPeriod);
+          entry.penghuni = occupant || (await supabase.from('warga').select('nama_pemilik').eq('no_rumah', entry.no_rumah).single()).data?.nama_pemilik || '-';
+          // Urutkan bulan
+          entry.months.sort();
+          entry.monthsDisplay = entry.months.map(m => {
+            const [y, mo] = m.split('-');
+            return `${mo}/${y}`;
+          }).join(', ');
+        }
+
+        // Urutkan berdasarkan nomor rumah
+        reportData.sort((a,b) => a.no_rumah.localeCompare(b.no_rumah));
+
+        // Tampilkan di tabel
+        const tbody = document.querySelector('#tunggakanTable tbody');
+        tbody.innerHTML = '';
+        if (reportData.length === 0) {
+          const row = tbody.insertRow();
+          const cell = row.insertCell(0);
+          cell.colSpan = 6;
+          cell.innerText = 'Tidak ada tunggakan dalam rentang yang dipilih.';
+          cell.style.textAlign = 'center';
+          return;
+        }
+        reportData.forEach(r => {
+          const row = tbody.insertRow();
+          row.insertCell(0).innerText = r.no_rumah;
+          row.insertCell(1).innerText = r.penghuni;
+          row.insertCell(2).innerText = formatRupiah(r.iuran);
+          row.insertCell(3).innerText = r.koordinator || '-';
+          row.insertCell(4).innerText = r.monthsDisplay;
+          row.insertCell(5).innerText = formatRupiah(r.total);
+        });
+      }
+
+      function initLaporanTunggakan() {
+        loadKoordinatorOptions();
+        const startInput = document.getElementById('tunggakanStartMonth');
+        const endInput = document.getElementById('tunggakanEndMonth');
+        const koordSelect = document.getElementById('tunggakanKoordinator');
+        const filterBtn = document.getElementById('filterTunggakanBtn');
+        const resetBtn = document.getElementById('resetTunggakanBtn');
+
+        // Set default bulan (misal: mulai Nov 2025 sampai bulan berjalan)
+        const now = new Date();
+        const defaultStart = '2025-11';
+        const defaultEnd = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+        startInput.value = defaultStart;
+        endInput.value = defaultEnd;
+
+        const loadReport = () => {
+          generateTunggakanReport(startInput.value, endInput.value, koordSelect.value);
+        };
+        filterBtn.addEventListener('click', loadReport);
+        resetBtn.addEventListener('click', () => {
+          startInput.value = defaultStart;
+          endInput.value = defaultEnd;
+          koordSelect.value = 'all';
+          loadReport();
+        });
+        loadReport(); // tampilkan awal
+      }
+
       // ========== INISIALISASI DASHBOARD ==========
       async function initDashboard() {
         await loadStats();
@@ -922,6 +1121,12 @@
               const startDate = document.getElementById('filterStartDate').value;
               const endDate = document.getElementById('filterEndDate').value;
               loadAllTransactions(filterJenis, startDate, endDate);
+            }
+            if (tabId === 'tunggakan') {
+              const start = document.getElementById('tunggakanStartMonth').value;
+              const end = document.getElementById('tunggakanEndMonth').value;
+              const koord = document.getElementById('tunggakanKoordinator').value;
+              generateTunggakanReport(start, end, koord);
             }
           });
         });
