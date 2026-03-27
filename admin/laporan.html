@@ -198,39 +198,52 @@
       margin-bottom: 10px;
     }
     .signature-section {
-      display: flex;
-      justify-content: space-between;
-      margin-top: 40px;
-      padding-top: 20px;
-      border-top: 1px solid #ddd;
-      gap: 30px;
-      flex-wrap: wrap;
-    }
-    .signature-item {
-      flex: 1;
-      text-align: center;
-      min-width: 150px;
-    }
-    .signature-item .title {
-      font-size: 0.8rem;
-      color: #666;
-      margin-bottom: 12px;
-    }
-    .signature-item .role {
-      font-weight: 600;
-      margin-bottom: 20px;
-      font-size: 0.9rem;
-    }
-    .signature-item .signature-line {
-      border-bottom: 1px solid #000;
-      width: 80%;
-      margin: 0 auto 8px auto;
-    }
-    .signature-item .signature-name {
-      font-size: 0.8rem;
-      color: #333;
-      font-weight: 500;
-    }
+  display: flex;
+  justify-content: space-between;
+  margin-top: 40px;
+  padding-top: 20px;
+  border-top: 1px solid #ddd;
+  gap: 30px;
+  flex-wrap: wrap;
+}
+
+.signature-item {
+  flex: 1;
+  text-align: center;
+  min-width: 150px;
+}
+
+.signature-item .title {
+  font-size: 0.8rem;
+  color: #666;
+  margin-bottom: 6px; /* lebih rapat */
+}
+
+.signature-item .role {
+  font-weight: 600;
+  margin-bottom: 8px; /* lebih rapat */
+  font-size: 0.9rem;
+}
+
+/* Space tanda tangan (SEMUA) */
+.signature-item .signature-space {
+  height: 70px;
+}
+
+/* Garis tanda tangan */
+.signature-item .signature-line {
+  border-bottom: 1px solid #000;
+  width: 80%;
+  margin: 0 auto 8px auto;
+}
+
+/* Nama */
+.signature-item .signature-name {
+  font-size: 0.8rem;
+  color: #333;
+  font-weight: 500;
+}
+
     .footer {
       margin-top: 20px;
       text-align: center;
@@ -318,28 +331,35 @@
       </div>
 
       <div class="signature-section">
-        <div class="signature-item">
-          <div class="title">Direkap oleh,</div>
-          <div class="role">Bendahara</div>
-          <div class="signature-line"></div>
-          <div class="signature-name">Didiek Fahrizal</div>
-        </div>
-        <div class="signature-item">
-          <div class="title">Dilaporkan Oleh,</div>
-          <div class="role">Sekretaris</div>
-          <div class="signature-line"></div>
-          <div class="signature-name">Supriyetno</div>
-        </div>
-        <div class="signature-item">
-          <div class="title">Diketahui oleh,</div>
-          <div class="role">Ketua</div>
-          <div class="signature-line"></div>
-          <div class="signature-name">Ramli Munthe</div>
-        </div>
-      </div>
+
+  <div class="signature-item">
+    <div class="title">Direkap oleh,</div>
+    <div class="role">Bendahara</div>
+    <div class="signature-space"></div>
+    <div class="signature-line"></div>
+    <div class="signature-name">Didiek Fahrizal</div>
+  </div>
+
+  <div class="signature-item">
+    <div class="title">Dilaporkan Oleh,</div>
+    <div class="role">Sekretaris</div>
+    <div class="signature-space"></div>
+    <div class="signature-line"></div>
+    <div class="signature-name">Supriyetno</div>
+  </div>
+
+  <div class="signature-item">
+    <div class="title">Diketahui oleh,</div>
+    <div class="role">Ketua</div>
+    <div class="signature-space"></div>
+    <div class="signature-line"></div>
+    <div class="signature-name">Ramli Munthe</div>
+  </div>
+
+</div>
 
       <div class="footer" id="footer">
-        Sistem KWP3T v3.2026 | Design by Yetno | <span id="printTimestamp"></span>
+        Sistem KWP3T v3.2026 | Design by Yetno  <span id="printTimestamp"></span>
       </div>
     </div>
 
