@@ -76,32 +76,48 @@
       border-radius: 8px;
       cursor: pointer;
     }
+    /* Button utama */
     .btn-primary {
       background: #0b2e4f;
       color: white;
       border: none;
-      padding: 10px 20px;
+      padding: 10px 18px;
       border-radius: 8px;
       cursor: pointer;
       font-weight: 600;
-      margin-bottom: 20px;
-      transition: 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
     }
     .btn-primary:hover {
       background: #1e4f7a;
+      transform: translateY(-1px);
     }
+    .btn-primary:disabled {
+      background: #94a3b8;
+      cursor: not-allowed;
+      transform: none;
+    }
+    .btn-primary:active {
+      transform: scale(0.97);
+    }
+    /* Tombol batal */
     .btn-cancel {
-      background: #95a5a6;
-      color: white;
-      border: none;
-      padding: 10px 20px;
+      background: #f1f5f9;
+      color: #334155;
+      border: 1px solid #cbd5f5;
+      padding: 10px 18px;
       border-radius: 8px;
       cursor: pointer;
-      font-weight: 600;
-      transition: 0.2s;
+      font-weight: 500;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
     }
     .btn-cancel:hover {
-      background: #7f8c8d;
+      background: #e2e8f0;
     }
     .btn-edit, .btn-delete {
       padding: 6px 12px;
@@ -109,14 +125,23 @@
       border-radius: 6px;
       cursor: pointer;
       margin-right: 5px;
+      transition: all 0.2s;
     }
     .btn-edit {
       background: #f59e0b;
       color: white;
     }
+    .btn-edit:hover {
+      background: #e67e22;
+      transform: translateY(-1px);
+    }
     .btn-delete {
       background: #e74c3c;
       color: white;
+    }
+    .btn-delete:hover {
+      background: #c0392b;
+      transform: translateY(-1px);
     }
     table {
       width: 100%;
@@ -135,6 +160,7 @@
       background: #0b2e4f;
       color: white;
     }
+    /* Modal */
     .modal {
       display: none;
       position: fixed;
@@ -153,9 +179,11 @@
       width: 90%;
       padding: 20px;
       border-radius: 16px;
+      box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
     }
     .modal-content h2 {
       margin-bottom: 20px;
+      font-size: 1.5rem;
     }
     .modal-content input, .modal-content select, .modal-content textarea {
       width: 100%;
@@ -167,9 +195,20 @@
     }
     .modal-buttons {
       display: flex;
-      gap: 10px;
       justify-content: flex-end;
-      margin-top: 20px;
+      gap: 12px;
+      margin-top: 25px;
+      flex-wrap: wrap;
+    }
+    @media (max-width: 500px) {
+      .modal-buttons {
+        flex-direction: column;
+      }
+      .btn-primary,
+      .btn-cancel {
+        width: 100%;
+        justify-content: center;
+      }
     }
     @media (max-width: 768px) {
       .navbar { flex-direction: column; align-items: stretch; }
@@ -211,7 +250,8 @@
         <thead>
           <tr><th>No Rumah</th><th>Nama Penghuni</th><th>No HP Penghuni</th><th>Status</th><th>Iuran/Bulan</th><th>Berlaku Sejak</th><th>Keterangan</th><th>Aksi</th>
         </thead>
-        <tbody></tbody>      
+        <tbody></tbody>
+      </table>
     </div>
   </div>
 
@@ -240,8 +280,8 @@
         <label>Keterangan (opsional)</label>
         <textarea id="keterangan" rows="2" placeholder="Misal: Pindah penghuni, perubahan status, dll."></textarea>
         <div class="modal-buttons">
-          <button type="submit" class="btn-primary">Simpan</button>
-          <button type="button" id="closeModal" class="btn-cancel">Batal</button>
+          <button type="submit" class="btn-primary"><i class="fas fa-save"></i> Simpan</button>
+          <button type="button" id="closeModal" class="btn-cancel"><i class="fas fa-times"></i> Batal</button>
         </div>
       </form>
     </div>
@@ -255,9 +295,8 @@
       const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
       let currentEditId = null;
-      let allRiwayat = [];
 
-      // Cek login dan role
+      // ========== CEK LOGIN & ROLE ==========
       (async () => {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) {
@@ -290,8 +329,12 @@
         return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka);
       }
 
+      // Format tanggal aman (handles null/undefined)
       function formatDate(iso) {
-        return new Date(iso).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' });
+        if (!iso) return '-';
+        const date = new Date(iso);
+        if (isNaN(date.getTime())) return '-';
+        return date.toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' });
       }
 
       // ========== DROPDOWN WARGA ==========
@@ -314,11 +357,13 @@
         }
       }
 
-      // Saat pilih rumah, isi iuran dari data warga
+      // Saat pilih rumah, isi iuran dari data warga (kecuali sedang edit)
       document.getElementById('no_rumah').addEventListener('change', (e) => {
         const selected = e.target.selectedOptions[0];
         const iuran = selected.getAttribute('data-iuran');
-        if (iuran) document.getElementById('iuran_per_bulan').value = iuran;
+        if (iuran && !currentEditId) {
+          document.getElementById('iuran_per_bulan').value = iuran;
+        }
       });
 
       // ========== OTOMATIS IURAN BERDASARKAN STATUS ==========
@@ -364,8 +409,11 @@
         }
       }
 
-      // ========== LOAD RIWAYAT (DENGAN FILTER) ==========
+      // ========== LOAD RIWAYAT (DENGAN LOADING STATE) ==========
       async function loadRiwayat(filterNoRumah = null) {
+        // Tampilkan loading
+        renderTable(null);
+
         let query = supabase.from('riwayat_kondisi').select('*').order('no_rumah', { ascending: true }).order('berlaku_sejak', { ascending: false });
         if (filterNoRumah) {
           query = query.eq('no_rumah', filterNoRumah);
@@ -374,14 +422,18 @@
         if (error) {
           console.error(error);
           alert('Gagal memuat riwayat');
+          renderTable([]);
           return;
         }
-        allRiwayat = data || [];
-        renderTable(allRiwayat);
+        renderTable(data || []);
       }
 
       function renderTable(riwayat) {
         const tbody = document.querySelector('#riwayatTable tbody');
+        if (riwayat === null) {
+          tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;">Memuat data...</td></tr>';
+          return;
+        }
         tbody.innerHTML = '';
         if (riwayat.length === 0) {
           const row = tbody.insertRow();
@@ -424,7 +476,9 @@
         document.getElementById('no_hp_penghuni').value = riwayat.no_hp_penghuni || '';
         document.getElementById('kondisi').value = riwayat.kondisi;
         document.getElementById('iuran_per_bulan').value = riwayat.iuran_per_bulan;
-        document.getElementById('berlaku_sejak').value = riwayat.berlaku_sejak;
+        // Ambil hanya tanggal (YYYY-MM-DD) untuk input date
+        const tgl = riwayat.berlaku_sejak ? riwayat.berlaku_sejak.split('T')[0] : '';
+        document.getElementById('berlaku_sejak').value = tgl;
         document.getElementById('keterangan').value = riwayat.keterangan || '';
         document.getElementById('modalRiwayat').style.display = 'flex';
       }
@@ -438,7 +492,7 @@
         document.getElementById('nama_penghuni').value = '';
         document.getElementById('no_hp_penghuni').value = '';
         document.getElementById('kondisi').value = 'Berpenghuni';
-        document.getElementById('iuran_per_bulan').value = ''; // akan diisi otomatis oleh listener status (default Berpenghuni -> 75000)
+        document.getElementById('iuran_per_bulan').value = '';
         document.getElementById('berlaku_sejak').value = '';
         document.getElementById('keterangan').value = '';
         document.getElementById('modalRiwayat').style.display = 'flex';
@@ -446,62 +500,101 @@
         kondisiSelect.dispatchEvent(new Event('change'));
       }
 
+      // ========== MODAL HANDLERS ==========
       document.getElementById('btnTambahRiwayat').onclick = openAddModal;
+      // Tombol batal: tutup modal dan reset form
       document.getElementById('closeModal').onclick = () => {
         document.getElementById('modalRiwayat').style.display = 'none';
+        document.getElementById('riwayatForm').reset();
       };
+      // Tutup modal jika klik di luar
+      document.getElementById('modalRiwayat').addEventListener('click', (e) => {
+        if (e.target.id === 'modalRiwayat') {
+          e.target.style.display = 'none';
+          document.getElementById('riwayatForm').reset();
+        }
+      });
+      // Tutup modal dengan ESC
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          document.getElementById('modalRiwayat').style.display = 'none';
+          document.getElementById('riwayatForm').reset();
+        }
+      });
 
-      document.getElementById('riwayatForm').addEventListener('submit', async (e) => {
+      // ========== SUBMIT FORM (DENGAN LOADING & DISABLE) ==========
+      const form = document.getElementById('riwayatForm');
+      form.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const no_rumah = document.getElementById('no_rumah').value;
-        const nama_penghuni = document.getElementById('nama_penghuni').value || null;
-        const no_hp_penghuni = document.getElementById('no_hp_penghuni').value || null;
-        const kondisi = document.getElementById('kondisi').value;
-        const iuran_per_bulan = parseInt(document.getElementById('iuran_per_bulan').value);
-        const berlaku_sejak = document.getElementById('berlaku_sejak').value;
-        const keterangan = document.getElementById('keterangan').value || null;
 
-        if (!no_rumah || !berlaku_sejak || isNaN(iuran_per_bulan)) {
-          alert('Harap isi semua field yang diperlukan.');
-          return;
+        const submitBtn = form.querySelector('.btn-primary');
+        const originalText = submitBtn.innerHTML;
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
+
+        try {
+          const no_rumah = document.getElementById('no_rumah').value;
+          const nama_penghuni = document.getElementById('nama_penghuni').value || null;
+          const no_hp_penghuni = document.getElementById('no_hp_penghuni').value || null;
+          const kondisi = document.getElementById('kondisi').value;
+          let iuran_per_bulan = parseInt(document.getElementById('iuran_per_bulan').value);
+          if (isNaN(iuran_per_bulan)) iuran_per_bulan = 0;
+          if (iuran_per_bulan < 0) {
+            alert('Iuran tidak boleh negatif');
+            return;
+          }
+          const berlaku_sejak = document.getElementById('berlaku_sejak').value;
+          const keterangan = document.getElementById('keterangan').value || null;
+
+          if (!no_rumah || !berlaku_sejak) {
+            alert('Harap isi semua field yang diperlukan.');
+            return;
+          }
+
+          const data = {
+            no_rumah,
+            nama_penghuni,
+            no_hp_penghuni,
+            kondisi,
+            iuran_per_bulan,
+            berlaku_sejak,
+            keterangan,
+            diubah_oleh: (await supabase.auth.getUser()).data.user?.email || 'admin',
+            created_at: new Date()
+          };
+
+          let error;
+          if (currentEditId) {
+            const { error: updateError } = await supabase
+              .from('riwayat_kondisi')
+              .update(data)
+              .eq('id', currentEditId);
+            error = updateError;
+          } else {
+            const { error: insertError } = await supabase
+              .from('riwayat_kondisi')
+              .insert([data]);
+            error = insertError;
+          }
+
+          if (error) {
+            alert('Gagal menyimpan riwayat: ' + error.message);
+            return;
+          }
+
+          // Update warga dengan kondisi & iuran terbaru
+          await updateWargaFromHistory(no_rumah);
+          document.getElementById('modalRiwayat').style.display = 'none';
+          document.getElementById('riwayatForm').reset();
+          loadRiwayat(); // refresh semua data
+          loadWargaDropdown(); // refresh dropdown
+        } catch (err) {
+          console.error(err);
+          alert('Terjadi kesalahan: ' + err.message);
+        } finally {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = originalText;
         }
-
-        const data = {
-          no_rumah,
-          nama_penghuni,
-          no_hp_penghuni,
-          kondisi,
-          iuran_per_bulan,
-          berlaku_sejak,
-          keterangan,
-          diubah_oleh: (await supabase.auth.getUser()).data.user?.email || 'admin',
-          created_at: new Date()
-        };
-
-        let error;
-        if (currentEditId) {
-          const { error: updateError } = await supabase
-            .from('riwayat_kondisi')
-            .update(data)
-            .eq('id', currentEditId);
-          error = updateError;
-        } else {
-          const { error: insertError } = await supabase
-            .from('riwayat_kondisi')
-            .insert([data]);
-          error = insertError;
-        }
-
-        if (error) {
-          alert('Gagal menyimpan riwayat: ' + error.message);
-          return;
-        }
-
-        // Update warga dengan kondisi & iuran terbaru (tanpa mengubah nama pemilik)
-        await updateWargaFromHistory(no_rumah);
-        document.getElementById('modalRiwayat').style.display = 'none';
-        loadRiwayat(); // refresh semua data (tanpa filter)
-        loadWargaDropdown(); // refresh dropdown karena iuran warga mungkin berubah
       });
 
       async function deleteRiwayat(id, no_rumah) {
