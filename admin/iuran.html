@@ -276,7 +276,9 @@
       let currentOccupantName = '';
       let currentOccupantPhone = '';
       let paidSet = new Set();
+      let rumahRiwayat = []; // menyimpan riwayat rumah untuk perhitungan status per bulan
 
+      // Cek login dan role
       (async () => {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) {
@@ -402,6 +404,7 @@
           alert('Masukkan nomor rumah terlebih dahulu.');
           return;
         }
+        // Ambil data warga (pemilik)
         const { data: warga, error: wargaError } = await supabase
           .from('warga')
           .select('*')
@@ -413,6 +416,7 @@
         }
         selectedHouse = warga;
 
+        // Ambil riwayat terbaru (penghuni) yang berlaku saat ini
         const occupant = await getCurrentOccupant(noRumah);
         selectedOccupant = occupant;
 
@@ -447,6 +451,36 @@
           return;
         }
 
+        // Ambil semua riwayat kondisi untuk rumah ini (untuk menentukan status per bulan)
+        const { data: histories, error: histError } = await supabase
+          .from('riwayat_kondisi')
+          .select('berlaku_sejak, kondisi, iuran_per_bulan')
+          .eq('no_rumah', noRumah)
+          .order('berlaku_sejak', { ascending: true });
+        if (histError) {
+          console.error('Gagal mengambil riwayat kondisi:', histError);
+        }
+        rumahRiwayat = histories || [];
+
+        // Fungsi untuk mendapatkan status pada tanggal tertentu
+        function getStatusAtDate(targetDateStr) {
+          let latest = null;
+          for (let h of rumahRiwayat) {
+            const berlakuStr = new Date(h.berlaku_sejak).toISOString().split('T')[0];
+            if (berlakuStr <= targetDateStr) {
+              if (!latest || berlakuStr > latest.berlakuStr) {
+                latest = { berlakuStr, kondisi: h.kondisi, iuran: h.iuran_per_bulan };
+              }
+            }
+          }
+          if (latest) {
+            return { kondisi: latest.kondisi, iuran: latest.iuran };
+          }
+          // default ke data warga saat ini
+          return { kondisi: status, iuran: iuran };
+        }
+
+        // Ambil pembayaran yang sudah ada
         const { data: payments } = await supabase
           .from('transaksi_iuran')
           .select('bulan')
@@ -471,13 +505,23 @@
         let hasUnpaid = false;
         while (year < endYear || (year === endYear && month <= endMonth)) {
           const dateStr = `${year}-${String(month).padStart(2,'0')}-01`;
-          if (!paidSet.has(dateStr)) {
+          const targetDateStr = dateStr;
+          const { kondisi: statusBulan, iuran: iuranBulan } = getStatusAtDate(targetDateStr);
+          if (statusBulan === 'Dibebaskan' || iuranBulan === 0) {
+            // Bulan ini tidak perlu dibayar, lewati
+            month++;
+            if (month > 12) { month = 1; year++; }
+            continue;
+          }
+
+          const isPaid = paidSet.has(dateStr);
+          if (!isPaid && iuranBulan > 0) {
             hasUnpaid = true;
             const itemDiv = document.createElement('div');
             itemDiv.className = 'unpaid-item';
             itemDiv.innerHTML = `
               <input type="checkbox" name="monthCheckbox" value="${dateStr}" id="month_${year}_${month}">
-              <label for="month_${year}_${month}">${month}/${year} - ${formatRupiah(currentIuran)}</label>
+              <label for="month_${year}_${month}">${month}/${year} - ${formatRupiah(iuranBulan)}</label>
             `;
             container.appendChild(itemDiv);
           }
@@ -597,8 +641,26 @@
             continue;
           }
 
-          const jumlah = currentIuran;
-          const kasId = `IU-${new Date().toISOString().slice(0,10).replace(/-/g,'')}-${Date.now().toString().slice(-6)}-${bulanStr.slice(5,7)}`;
+          // Tentukan jumlah iuran yang harus dibayar berdasarkan riwayat pada bulan tersebut
+          const year = parseInt(bulanStr.slice(0,4));
+          const month = parseInt(bulanStr.slice(5,7));
+          const targetDateStr = bulanStr;
+          const statusInfo = (() => {
+            let latest = null;
+            for (let h of rumahRiwayat) {
+              const berlakuStr = new Date(h.berlaku_sejak).toISOString().split('T')[0];
+              if (berlakuStr <= targetDateStr) {
+                if (!latest || berlakuStr > latest.berlakuStr) {
+                  latest = { berlakuStr, iuran: h.iuran_per_bulan };
+                }
+              }
+            }
+            if (latest) return { iuran: latest.iuran };
+            return { iuran: currentIuran };
+          })();
+
+          const jumlah = statusInfo.iuran;
+          const kasId = `IU-${new Date().toISOString().slice(0,10).replace(/-/g,'')}-${Date.now().toString().slice(-6)}-${month}`;
 
           const { error: iuranError } = await supabase
             .from('transaksi_iuran')
