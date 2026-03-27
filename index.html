@@ -303,34 +303,33 @@
       font-weight: 500;
     }
 
-    /* Gallery – 3 columns */
-    .gallery-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 24px;
-    }
-    .gallery-item {
-      border-radius: 20px;
-      overflow: hidden;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-      transition: transform 0.2s;
-    }
-    .gallery-item:hover {
-      transform: translateY(-5px);
-    }
-    .gallery-item img {
-      width: 100%;
-      height: 200px;
-      object-fit: cover;
-      display: block;
-    }
-    .gallery-caption {
-      padding: 12px;
-      background: white;
-      text-align: center;
-      font-weight: 500;
-    }
-
+   /* Gallery – 3 columns */
+.gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+.gallery-item {
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  transition: transform 0.2s;
+}
+.gallery-item:hover {
+  transform: translateY(-5px);
+}
+.gallery-item img {
+  width: 100%;
+  aspect-ratio: 3 / 2;   /* Mengganti height:200px dengan proporsi 3:2 (600:400) */
+  object-fit: cover;
+  display: block;
+}
+.gallery-caption {
+  padding: 12px;
+  background: white;
+  text-align: center;
+  font-weight: 500;
+}
     /* Announcements */
     .announcement-list {
       display: flex;
@@ -498,25 +497,19 @@
       align-items: center;
       flex-wrap: wrap;
       gap: 8px;
+      text-align: left;
     }
     .resi-name {
       font-weight: 500;
       word-break: break-word;
       flex: 1;
     }
-    .resi-download {
-      background: var(--primary);
-      color: white;
-      padding: 6px 12px;
-      border-radius: 30px;
-      text-decoration: none;
-      font-size: 0.8rem;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-    }
-    .resi-download:hover {
-      background: #0a2f44;
+    .payment-date {
+      color: #27ae60;
+      font-size: 0.85rem;
+      font-weight: 500;
+      min-width: 150px;
+      text-align: right;
     }
 
     /* Mobile adjustments */
@@ -542,6 +535,8 @@
       .stat-number { font-size: 1.5rem; }
       .logo img { width: 55px; height: 55px; }
       .logo h1 { font-size: 1.6rem; }
+      .resi-item { flex-direction: column; align-items: flex-start; }
+      .payment-date { text-align: left; }
     }
   </style>
 </head>
@@ -603,7 +598,7 @@
   </div>
 </div>
 
-<!-- Modal Riwayat Pembayaran -->
+<!-- Modal Riwayat Pembayaran (diperbaiki) -->
 <div id="historyModal" class="modal">
   <div class="modal-content">
     <span class="close-modal" id="closeHistoryModal">&times;</span>
@@ -685,26 +680,45 @@
     <h2 class="title">Galeri Kegiatan</h2>
     <div class="gallery-grid">
       <div class="gallery-item">
-        <img src="https://placehold.co/600x400/eef2f8/f59e0b?text=Rapat+Warga" alt="Rapat Warga">
-        <div class="gallery-caption">Rapat Warga</div>
+        <img 
+          src="https://drive.google.com/uc?export=view&id=1E2rF3gzlPYCmekPb2Mne9dQ1je1dhoLc" 
+          alt="Pembagian THR" 
+          width="600" 
+          height="400"
+          loading="lazy"
+        >
+        <div class="gallery-caption">Pembagian THR</div>
       </div>
       <div class="gallery-item">
-        <img src="https://placehold.co/600x400/eef2f8/f59e0b?text=Gotong+Royong" alt="Gotong Royong">
+        <img 
+          src="https://drive.google.com/uc?export=view&id=1z8gcQ2eT7n4fynLXWRIif7h6jUc9hkI2" 
+          alt="Gotong Royong" 
+          width="600" 
+          height="400"
+          loading="lazy"
+        >
         <div class="gallery-caption">Gotong Royong</div>
       </div>
       <div class="gallery-item">
-        <img src="https://placehold.co/600x400/eef2f8/f59e0b?text=HUT+RI" alt="HUT RI">
-        <div class="gallery-caption">HUT RI</div>
+        <img 
+          src="https://drive.google.com/uc?export=view&id=1mLcg_95bTQ8BzIhSVQtzM8YUzT15BlKG" 
+          alt="Pemindahan Tiang" 
+          width="600" 
+          height="400"
+          loading="lazy"
+        >
+        <div class="gallery-caption">Pemindahan Tiang</div>
       </div>
     </div>
   </div>
 </section>
 
+
 <section id="pengumuman">
   <div class="container">
     <h2 class="title">Pengumuman Terbaru</h2>
     <div class="announcement-list">
-      <div class="announcement"><h4>📢 Rapat Warga Bulan Maret 2026</h4><div class="announcement-date">15 Maret 2026 | 19.00 WIB</div><p>Rapat akan membahas laporan keuangan Februari dan persiapan kegiatan HUT RI. Tempat: Aula Komplek.</p></div>
+      <div class="announcement"><h4>📢 Rapat Warga Bulan Maret 2026</h4><div class="announcement-date">15 Maret 2026 | 19.00 WIB</div><p>Rapat akan membahas laporan keuangan Februari dan persiapan kegiatan HUT RI.</p></div>
       <div class="announcement"><h4>📢 Jadwal Gotong Royong</h4><div class="announcement-date">10 Maret 2026</div><p>Gotong royong pembersihan lingkungan akan dilaksanakan pada hari Minggu, 15 Maret 2026 pukul 07.00 WIB. Seluruh warga diharapkan hadir.</p></div>
       <div class="announcement"><h4>📢 Rapat Koordinasi Komplek</h4><div class="announcement-date">5 Maret 2026</div><p>Rapat koordinasi perawatan jalan dan lampu lingkungan akan diadakan pada 20 Maret 2026. Undangan sudah dibagikan ke perwakilan lorong.</p></div>
     </div>
@@ -767,6 +781,15 @@
   function formatRupiah(angka) {
     if (angka === null || isNaN(angka)) angka = 0
     return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka)
+  }
+
+  function formatTanggalLunas(iso) {
+    if (!iso) return ''
+    const date = new Date(iso)
+    const day = date.getDate().toString().padStart(2, '0')
+    const month = date.toLocaleString('id-ID', { month: 'long' })
+    const year = date.getFullYear()
+    return `Lunas: ${day} ${month} ${year}`
   }
 
   async function loadDashboard() {
@@ -855,7 +878,8 @@
       }
       let pesan = `🏠 Rumah ${noRumah} (${warga.nama_pemilik})\nStatus: ${warga.kondisi_terakhir === 'Kosong' ? 'KOSONG' : 'BERPENGHUNI'} (iuran Rp ${formatRupiah(warga.iuran_per_bulan)}/bln)\n\n`;
       if (tunggakan.length === 0) {
-        pesan += `✅ Tidak Ada Tunggakan (Periode Nov 2025 – ${bulanSekarang()})\nTerima kasih telah membayar iuran tepat waktu. 🙏`;
+        const bulanSekarang = new Date().toLocaleString('id-ID', { month: 'long', year: 'numeric' });
+        pesan += `✅ Tidak Ada Tunggakan (Periode Nov 2025 – ${bulanSekarang})\nTerima kasih telah membayar iuran tepat waktu. 🙏`;
       } else {
         pesan += `⚠️ Tunggakan ${tunggakan.length} bulan:\n${tunggakan.join(', ')}\nTotal: ${formatRupiah(totalNominal)}\n\n`;
         if (tunggakan.length >= 2) pesan += `⚠️ PERINGATAN! Jika tunggakan >2 bulan, layanan kebersihan akan dihentikan sementara.`;
@@ -863,11 +887,6 @@
       }
       alert(pesan);
     } catch (err) { console.error(err); alert('Gagal memeriksa tunggakan.'); }
-  }
-
-  function bulanSekarang() {
-    const now = new Date();
-    return now.toLocaleString('id-ID', { month: 'long', year: 'numeric' });
   }
 
   function openLaporanKas() {
@@ -880,7 +899,7 @@
     try {
       const { data: payments, error } = await supabase
         .from('transaksi_iuran')
-        .select('bulan, jumlah, metode, bukti_tf')
+        .select('bulan, jumlah, metode, created_at') // tambah created_at
         .eq('no_rumah', noRumah)
         .order('bulan', { ascending: false });
       if (error || !payments || payments.length === 0) {
@@ -895,12 +914,10 @@
         const itemDiv = document.createElement('div');
         itemDiv.className = 'resi-item';
         itemDiv.innerHTML = `
-          <div style="flex:1">
+          <div style="flex:1; text-align:left;">
             <div class="resi-name">${monthName} - ${formatRupiah(p.jumlah)} (${p.metode})</div>
           </div>
-          <div>
-            ${p.bukti_tf ? `<a href="${p.bukti_tf}" class="resi-download" target="_blank"><i class="fas fa-eye"></i> Lihat Bukti</a>` : '<span style="color:gray;">Tidak ada bukti</span>'}
-          </div>
+          <div class="payment-date">${formatTanggalLunas(p.created_at)}</div>
         `;
         container.appendChild(itemDiv);
       });
