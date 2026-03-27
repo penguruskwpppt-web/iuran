@@ -155,6 +155,17 @@
     .btn-save-role:hover {
       background: #2ecc71;
     }
+    .btn-delete {
+      background: #e74c3c;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 6px 12px;
+      cursor: pointer;
+    }
+    .btn-delete:hover {
+      background: #c0392b;
+    }
     select {
       padding: 6px;
       border-radius: 6px;
@@ -194,12 +205,24 @@
       padding: 6px 12px;
       font-size: 0.8rem;
     }
-    .btn-delete {
-      background: #e74c3c;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
+    .filter-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: flex-end;
+      margin-bottom: 20px;
+      background: white;
+      padding: 16px;
+      border-radius: 16px;
+    }
+    .filter-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .filter-group label {
+      font-weight: 600;
+      font-size: 0.85rem;
     }
     @media (max-width: 768px) {
       .navbar { flex-direction: column; align-items: stretch; }
@@ -209,6 +232,7 @@
       table { font-size: 0.85rem; }
       th, td { padding: 8px; }
       .tabs { justify-content: center; }
+      .filter-bar { flex-direction: column; align-items: stretch; }
     }
   </style>
 </head>
@@ -234,6 +258,7 @@
       <button class="tab-btn active" data-tab="stats">Statistik Lengkap</button>
       <button class="tab-btn" data-tab="backup">Backup Data</button>
       <button class="tab-btn" data-tab="nonIuran">Transaksi Non-Iuran</button>
+      <button class="tab-btn" data-tab="manageTransactions">Kelola Transaksi</button>
     </div>
 
     <div id="tab-stats" class="tab-content active">
@@ -321,13 +346,46 @@
       </div>
     </div>
 
+    <div id="tab-manageTransactions" class="tab-content">
+      <h2>Kelola Semua Transaksi</h2>
+      <div class="filter-bar">
+        <div class="filter-group">
+          <label>Jenis Transaksi</label>
+          <select id="filterJenis">
+            <option value="all">Semua</option>
+            <option value="Iuran Warga">Iuran Warga</option>
+            <option value="Pemasukan Lain">Pemasukan Lain</option>
+            <option value="Pengeluaran Lain">Pengeluaran Lain</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label>Tanggal Mulai</label>
+          <input type="date" id="filterStartDate">
+        </div>
+        <div class="filter-group">
+          <label>Tanggal Akhir</label>
+          <input type="date" id="filterEndDate">
+        </div>
+        <button id="applyFilterBtn" class="btn-primary">Filter</button>
+        <button id="resetFilterBtn" class="btn-secondary">Reset</button>
+      </div>
+      <div style="overflow-x: auto;">
+        <table id="allTransactionsTable">
+          <thead>
+            <tr><th>Tanggal</th><th>Jenis</th><th>Keterangan</th><th>Pemasukan</th><th>Pengeluaran</th><th>Saldo</th><th>Aksi</th>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <p class="info">⚠️ <strong>Peringatan:</strong> Menghapus transaksi akan <strong>mengubah data historis</strong> tetapi <strong>tidak akan mengoreksi saldo secara otomatis</strong>. Setelah hapus, periksa kembali saldo kas dan gunakan fitur <strong>Pemasukan Lain / Pengeluaran Lain</strong> untuk menambahkan koreksi manual jika diperlukan.</p>
+    </div>
+
     <div id="tab-users" class="tab-content" style="display: none;">
       <h2>Daftar User & Role</h2>
       <div style="overflow-x: auto;">
         <table id="users-table">
           <thead> vowel<th>Email</th><th>Role</th><th>Aksi</th> </thead>
-          <tbody></tbody>
-         </table>
+          <tbody></tbody>         
       </div>
       <p class="info">Catatan: Hanya admin yang bisa mengubah role.</p>
     </div>
@@ -380,12 +438,17 @@
 
         initDashboard();
         initNonIuran();
+        initManageTransactions();
       })();
 
       // ========== FUNGSI UMUM ==========
       function formatRupiah(angka) {
         if (angka === null || isNaN(angka)) angka = 0;
         return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka);
+      }
+
+      function formatDate(iso) {
+        return new Date(iso).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' });
       }
 
       // ========== STATISTIK ==========
@@ -521,7 +584,6 @@
       }
 
       // ========== TRANSAKSI NON-IURAN ==========
-      // Fungsi untuk menampilkan input manual jika kategori "Lainnya" dipilih
       function setupCategoryManual(selectId, manualGroupId, manualInputId) {
         const select = document.getElementById(selectId);
         const manualGroup = document.getElementById(manualGroupId);
@@ -556,11 +618,9 @@
           return;
         }
 
-        // Buat keterangan lengkap
         let keterangan = `${kategori}`;
         if (catatan) keterangan += ` - ${catatan}`;
 
-        // Ambil saldo terakhir
         const { data: lastSaldo } = await supabase
           .from('transaksi_kas')
           .select('saldo')
@@ -588,7 +648,8 @@
           document.getElementById('formPemasukanLain').reset();
           document.getElementById('kategori_pemasukan_manual_group').style.display = 'none';
           loadNonIuranTransactions();
-          loadStats(); // refresh statistik
+          loadStats();
+          loadAllTransactions(); // refresh tabel kelola transaksi
         }
       }
 
@@ -642,6 +703,7 @@
           document.getElementById('kategori_pengeluaran_manual_group').style.display = 'none';
           loadNonIuranTransactions();
           loadStats();
+          loadAllTransactions();
         }
       }
 
@@ -662,7 +724,7 @@
         tbody.innerHTML = '';
         data.forEach(t => {
           const row = tbody.insertRow();
-          const tanggal = new Date(t.tanggal).toLocaleDateString('id-ID');
+          const tanggal = formatDate(t.tanggal);
           const jenis = t.pemasukan ? 'Pemasukan' : 'Pengeluaran';
           const jumlah = t.pemasukan ? t.pemasukan : t.pengeluaran;
           row.insertCell(0).innerText = tanggal;
@@ -684,11 +746,91 @@
                 alert('Transaksi dihapus');
                 loadNonIuranTransactions();
                 loadStats();
+                loadAllTransactions();
               }
             }
           };
           actionCell.appendChild(delBtn);
         });
+      }
+
+      // ========== KELOLA SEMUA TRANSAKSI ==========
+      async function loadAllTransactions(filterJenis = 'all', startDate = null, endDate = null) {
+        let query = supabase
+          .from('transaksi_kas')
+          .select('kas_id, tanggal, keterangan, pemasukan, pengeluaran, saldo, sumber, jenis')
+          .order('tanggal', { ascending: false });
+
+        if (filterJenis !== 'all') {
+          if (filterJenis === 'Iuran Warga') {
+            query = query.eq('sumber', 'Iuran Warga');
+          } else if (filterJenis === 'Pemasukan Lain') {
+            query = query.eq('sumber', 'Pemasukan Lain');
+          } else if (filterJenis === 'Pengeluaran Lain') {
+            query = query.eq('sumber', 'Pengeluaran Lain');
+          }
+        }
+        if (startDate) query = query.gte('tanggal', startDate);
+        if (endDate) query = query.lte('tanggal', endDate);
+
+        const { data, error } = await query;
+        if (error) {
+          console.error(error);
+          alert('Gagal memuat transaksi');
+          return;
+        }
+
+        const tbody = document.querySelector('#allTransactionsTable tbody');
+        tbody.innerHTML = '';
+        data.forEach(t => {
+          const row = tbody.insertRow();
+          row.insertCell(0).innerText = formatDate(t.tanggal);
+          row.insertCell(1).innerText = t.sumber || t.jenis;
+          row.insertCell(2).innerText = t.keterangan;
+          row.insertCell(3).innerText = t.pemasukan ? formatRupiah(t.pemasukan) : '-';
+          row.insertCell(4).innerText = t.pengeluaran ? formatRupiah(t.pengeluaran) : '-';
+          row.insertCell(5).innerText = formatRupiah(t.saldo);
+          const actionCell = row.insertCell(6);
+          const delBtn = document.createElement('button');
+          delBtn.innerText = 'Hapus';
+          delBtn.className = 'btn-delete btn-sm';
+          delBtn.onclick = async () => {
+            if (confirm(`Hapus transaksi ini?\n\n⚠️ PERINGATAN: Saldo tidak akan otomatis dikembalikan. Gunakan form Pemasukan/Pengeluaran Lain untuk koreksi manual jika diperlukan.`)) {
+              const { error: delError } = await supabase
+                .from('transaksi_kas')
+                .delete()
+                .eq('kas_id', t.kas_id);
+              if (delError) alert('Gagal hapus: ' + delError.message);
+              else {
+                alert('Transaksi dihapus');
+                loadAllTransactions(filterJenis, startDate, endDate);
+                loadStats();
+                loadNonIuranTransactions();
+              }
+            }
+          };
+          actionCell.appendChild(delBtn);
+        });
+      }
+
+      function initManageTransactions() {
+        const filterJenis = document.getElementById('filterJenis');
+        const startDate = document.getElementById('filterStartDate');
+        const endDate = document.getElementById('filterEndDate');
+        const applyBtn = document.getElementById('applyFilterBtn');
+        const resetBtn = document.getElementById('resetFilterBtn');
+
+        const load = () => {
+          loadAllTransactions(filterJenis.value, startDate.value, endDate.value);
+        };
+        applyBtn.addEventListener('click', load);
+        resetBtn.addEventListener('click', () => {
+          filterJenis.value = 'all';
+          startDate.value = '';
+          endDate.value = '';
+          load();
+        });
+        load();
       }
 
       // ========== INISIALISASI ==========
@@ -707,6 +849,13 @@
             if (tabId === 'users' && userRole === 'admin') loadUsers();
             if (tabId === 'stats') loadStats();
             if (tabId === 'nonIuran') loadNonIuranTransactions();
+            if (tabId === 'manageTransactions') {
+              // refresh filter values when tab opens
+              const filterJenis = document.getElementById('filterJenis').value;
+              const startDate = document.getElementById('filterStartDate').value;
+              const endDate = document.getElementById('filterEndDate').value;
+              loadAllTransactions(filterJenis, startDate, endDate);
+            }
           });
         });
 
@@ -718,7 +867,6 @@
       function initNonIuran() {
         setupCategoryManual('kategori_pemasukan', 'kategori_pemasukan_manual_group', 'kategori_pemasukan_manual');
         setupCategoryManual('kategori_pengeluaran', 'kategori_pengeluaran_manual_group', 'kategori_pengeluaran_manual');
-
         document.getElementById('formPemasukanLain').addEventListener('submit', addPemasukanLain);
         document.getElementById('formPengeluaranLain').addEventListener('submit', addPengeluaranLain);
         loadNonIuranTransactions();
