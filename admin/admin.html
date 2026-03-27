@@ -246,9 +246,9 @@
     <div class="nav-links">
       <a href="admin.html" class="active">Dashboard</a>
       <a href="warga.html">Data Warga</a>
-	  <a href="riwayat.html">Riwayat Rumah</a>
       <a href="iuran.html">Bayar Iuran</a>
-      <a href="laporan.html">Laporan Kas</a>      
+      <a href="laporan.html">Laporan Kas</a>
+      <a href="riwayat.html">Riwayat Rumah</a>
       <a href="#" id="logoutBtn">Logout</a>
     </div>
   </nav>
@@ -345,7 +345,8 @@
             <thead>
               <tr><th>Tanggal</th><th>Jenis</th><th>Keterangan</th><th>Jumlah</th><th>Aksi</th>
             </thead>
-            <tbody></tbody>          
+            <tbody></tbody>
+          寸
         </div>
       </div>
     </div>
@@ -379,7 +380,8 @@
           <thead>
             <tr><th>Tanggal</th><th>Jenis</th><th>Keterangan</th><th>Pemasukan</th><th>Pengeluaran</th><th>Saldo</th><th>Aksi</th>
           </thead>
-          <tbody></tbody>        
+          <tbody></tbody>
+        寸
       </div>
       <p class="info">⚠️ <strong>Peringatan:</strong> Menghapus transaksi akan <strong>mengubah data historis</strong> tetapi <strong>tidak akan mengoreksi saldo secara otomatis</strong>. Setelah hapus, periksa kembali saldo kas dan gunakan fitur <strong>Pemasukan Lain / Pengeluaran Lain</strong> untuk menambahkan koreksi manual jika diperlukan.</p>
     </div>
@@ -410,7 +412,8 @@
           <thead>
             <tr><th>No Rumah</th><th>Penghuni</th><th>Iuran/bln</th><th>Koordinator</th><th>Bulan Tunggakan</th><th>Total Tunggakan</th>
           </thead>
-          <tbody></tbody>        
+          <tbody></tbody>
+        寸
       </div>
       <p class="info">Catatan: Tunggakan dihitung untuk bulan yang belum dibayar dalam rentang yang dipilih. Penghuni diambil dari riwayat terbaru yang berlaku pada bulan akhir rentang.</p>
     </div>
@@ -422,7 +425,7 @@
         <table id="users-table">
           <thead> <th>Email</th><th>Role</th><th>Aksi</th> </thead>
           <tbody></tbody>
-        
+        寸
       </div>
       <p class="info">Catatan: Hanya admin yang bisa mengubah role.</p>
     </div>
@@ -833,6 +836,7 @@
 
       // ========== KELOLA SEMUA TRANSAKSI ==========
       async function loadAllTransactions(filterJenis = 'all', startDate = null, endDate = null) {
+        console.log("loadAllTransactions called", filterJenis, startDate, endDate);
         let query = supabase
           .from('transaksi_kas')
           .select('kas_id, tanggal, keterangan, pemasukan, pengeluaran, saldo, sumber, jenis')
@@ -853,10 +857,11 @@
         const { data, error } = await query;
         if (error) {
           console.error("Error loading transactions:", error);
-          alert('Gagal memuat transaksi');
+          alert('Gagal memuat transaksi: ' + error.message);
           return;
         }
 
+        console.log("Loaded transactions count:", data.length);
         const tbody = document.querySelector('#allTransactionsTable tbody');
         if (!tbody) return;
         tbody.innerHTML = '';
@@ -921,7 +926,8 @@
           endDate.value = '';
           load();
         });
-        load(); // initial load
+        // Load initial data
+        load();
       }
 
       // ========== LAPORAN TUNGGAKAN ==========
@@ -937,6 +943,7 @@
         }
         const unique = [...new Map(data.map(item => [item.koordinator, item])).values()];
         const select = document.getElementById('tunggakanKoordinator');
+        select.innerHTML = '<option value="all">Semua Koordinator</option>';
         unique.forEach(k => {
           const opt = document.createElement('option');
           opt.value = k.koordinator;
@@ -959,18 +966,17 @@
       }
 
       async function generateTunggakanReport(startMonth, endMonth, koordinatorFilter) {
+        console.log("generateTunggakanReport", startMonth, endMonth, koordinatorFilter);
         if (!startMonth || !endMonth) {
           alert('Pilih rentang bulan terlebih dahulu.');
           return;
         }
 
-        // Konversi month input (YYYY-MM) ke tanggal mulai dan akhir bulan
         const [startYear, startMon] = startMonth.split('-').map(Number);
         const [endYear, endMon] = endMonth.split('-').map(Number);
         const startDate = new Date(startYear, startMon - 1, 1);
         const endDate = new Date(endYear, endMon, 0); // akhir bulan
 
-        // Ambil semua rumah aktif (kondisi != Dibebaskan? tapi tunggakan tetap bisa untuk kosong? kita ambil semua)
         let query = supabase.from('warga').select('no_rumah, iuran_per_bulan, koordinator');
         if (koordinatorFilter !== 'all') {
           query = query.eq('koordinator', koordinatorFilter);
@@ -982,7 +988,6 @@
           return;
         }
 
-        // Ambil semua pembayaran iuran dalam rentang
         const { data: payments, error: payError } = await supabase
           .from('transaksi_iuran')
           .select('no_rumah, bulan')
@@ -994,7 +999,6 @@
           return;
         }
 
-        // Buat map pembayaran per rumah
         const paidMap = new Map();
         payments?.forEach(p => {
           const date = new Date(p.bulan);
@@ -1002,18 +1006,15 @@
           paidMap.set(key, true);
         });
 
-        // Loop setiap rumah, hitung bulan dalam rentang yang belum dibayar
         const reportData = [];
         let currentDate = new Date(startDate);
         while (currentDate <= endDate) {
           const year = currentDate.getFullYear();
           const month = currentDate.getMonth() + 1;
           const monthKey = `${year}-${month}`;
-          // Untuk setiap rumah, cek apakah sudah dibayar
           wargaList.forEach(w => {
             const key = `${w.no_rumah}|${monthKey}`;
-            if (!paidMap.has(key)) {
-              // Cari entry rumah di reportData
+            if (!paidMap.has(key) && w.iuran_per_bulan > 0) {
               let entry = reportData.find(r => r.no_rumah === w.no_rumah);
               if (!entry) {
                 entry = {
@@ -1029,16 +1030,17 @@
               entry.total += w.iuran_per_bulan;
             }
           });
-          // Majukan bulan
           currentDate.setMonth(currentDate.getMonth() + 1);
         }
 
-        // Ambil nama penghuni terbaru pada akhir periode untuk setiap rumah
         const endOfPeriod = new Date(endDate);
         for (let entry of reportData) {
           const occupant = await getCurrentOccupantAtDate(entry.no_rumah, endOfPeriod);
-          entry.penghuni = occupant || (await supabase.from('warga').select('nama_pemilik').eq('no_rumah', entry.no_rumah).single()).data?.nama_pemilik || '-';
-          // Urutkan bulan
+          if (occupant) entry.penghuni = occupant;
+          else {
+            const { data: w } = await supabase.from('warga').select('nama_pemilik').eq('no_rumah', entry.no_rumah).single();
+            entry.penghuni = w?.nama_pemilik || '-';
+          }
           entry.months.sort();
           entry.monthsDisplay = entry.months.map(m => {
             const [y, mo] = m.split('-');
@@ -1046,10 +1048,8 @@
           }).join(', ');
         }
 
-        // Urutkan berdasarkan nomor rumah
         reportData.sort((a,b) => a.no_rumah.localeCompare(b.no_rumah));
 
-        // Tampilkan di tabel
         const tbody = document.querySelector('#tunggakanTable tbody');
         tbody.innerHTML = '';
         if (reportData.length === 0) {
@@ -1079,7 +1079,6 @@
         const filterBtn = document.getElementById('filterTunggakanBtn');
         const resetBtn = document.getElementById('resetTunggakanBtn');
 
-        // Set default bulan (misal: mulai Nov 2025 sampai bulan berjalan)
         const now = new Date();
         const defaultStart = '2025-11';
         const defaultEnd = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
@@ -1096,7 +1095,7 @@
           koordSelect.value = 'all';
           loadReport();
         });
-        loadReport(); // tampilkan awal
+        loadReport();
       }
 
       // ========== INISIALISASI DASHBOARD ==========
