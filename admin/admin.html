@@ -7,8 +7,11 @@
   <link rel="icon" href="../images/logo.webp" type="image/webp">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <!-- html2pdf untuk PDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <style>
-    /* ========== CSS SAMA SEPERTI SEBELUMNYA ========== */
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       font-family: 'Inter', sans-serif;
@@ -126,13 +129,16 @@
       background: #0b2e4f;
       color: white;
     }
-    .btn-primary, .btn-secondary {
+    .btn-primary, .btn-secondary, .btn-danger {
       padding: 8px 16px;
       border: none;
       border-radius: 8px;
       cursor: pointer;
       font-weight: 600;
       transition: 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
     }
     .btn-primary {
       background: #0b2e4f;
@@ -145,27 +151,16 @@
       background: #64748b;
       color: white;
     }
-    .btn-save-role {
-      background: #27ae60;
-      color: white;
-      padding: 4px 12px;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-    }
-    .btn-save-role:hover {
-      background: #2ecc71;
-    }
-    .btn-delete {
+    .btn-danger {
       background: #e74c3c;
       color: white;
-      border: none;
-      border-radius: 6px;
-      padding: 6px 12px;
-      cursor: pointer;
     }
-    .btn-delete:hover {
+    .btn-danger:hover {
       background: #c0392b;
+    }
+    .btn-sm {
+      padding: 6px 12px;
+      font-size: 0.8rem;
     }
     select {
       padding: 6px;
@@ -202,10 +197,6 @@
       border: 1px solid #ccc;
       border-radius: 8px;
     }
-    .btn-sm {
-      padding: 6px 12px;
-      font-size: 0.8rem;
-    }
     .filter-bar {
       display: flex;
       flex-wrap: wrap;
@@ -225,6 +216,40 @@
       font-weight: 600;
       font-size: 0.85rem;
     }
+    /* Loading spinner */
+    .btn-loading {
+      position: relative;
+      pointer-events: none;
+    }
+    .btn-loading::after {
+      content: "";
+      position: absolute;
+      width: 16px;
+      height: 16px;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      margin: auto;
+      border: 2px solid #fff;
+      border-top-color: transparent;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    /* Chart container */
+    .chart-container {
+      background: white;
+      padding: 20px;
+      border-radius: 16px;
+      margin-top: 20px;
+    }
+    canvas {
+      max-height: 300px;
+      width: 100%;
+    }
     @media (max-width: 768px) {
       .navbar { flex-direction: column; align-items: stretch; }
       .nav-links { justify-content: center; }
@@ -234,24 +259,16 @@
       th, td { padding: 8px; }
       .tabs { justify-content: center; }
       .filter-bar { flex-direction: column; align-items: stretch; }
+      .btn-primary, .btn-secondary, .btn-danger { width: 100%; justify-content: center; }
     }
     /* Print styles */
     @media print {
-      body {
-        background: white;
-        padding: 0;
-        margin: 0;
-      }
-      .navbar, .tabs, .filter-bar, .btn-primary, .btn-secondary, .info, .btn-delete, .btn-edit, .btn-save-role, .form-card, #logoutBtn, .tab-btn {
+      body { background: white; padding: 0; margin: 0; }
+      .navbar, .tabs, .filter-bar, .btn-primary, .btn-secondary, .info, .btn-delete, .btn-edit, .btn-save-role, .form-card, #logoutBtn, .tab-btn, .chart-container, .btn-danger, .print-hide {
         display: none !important;
       }
-      .container {
-        margin: 0;
-        padding: 0;
-      }
-      table {
-        page-break-inside: avoid;
-      }
+      .container { margin: 0; padding: 0; }
+      table { page-break-inside: avoid; }
       .print-header {
         display: block !important;
         text-align: center;
@@ -294,17 +311,25 @@
   <div class="container">
     <h1>Panel Pengurus</h1>
     <div class="tabs" id="tabsContainer">
-      <button class="tab-btn active" data-tab="stats">Statistik Lengkap</button>
+      <button class="tab-btn active" data-tab="stats">Statistik & Grafik</button>
       <button class="tab-btn" data-tab="backup">Backup Data</button>
       <button class="tab-btn" data-tab="nonIuran">Transaksi Non-Iuran</button>
       <button class="tab-btn" data-tab="manageTransactions">Kelola Transaksi</button>
       <button class="tab-btn" data-tab="tunggakan">Laporan Tunggakan</button>
     </div>
 
-    <!-- Statistik Lengkap -->
+    <!-- Statistik & Grafik -->
     <div id="tab-stats" class="tab-content active">
-      <h2>Statistik Lengkap</h2>
+      <h2>Statistik & Grafik</h2>
       <div id="stats-data"><p>Memuat data...</p></div>
+      <div class="chart-container">
+        <h3>📈 Pemasukan Iuran per Bulan</h3>
+        <canvas id="iuranChart"></canvas>
+      </div>
+      <div class="chart-container">
+        <h3>💰 Pemasukan & Pengeluaran (Bulan Ini)</h3>
+        <canvas id="incomeExpenseChart"></canvas>
+      </div>
     </div>
 
     <!-- Backup Data -->
@@ -319,7 +344,6 @@
     <!-- Transaksi Non-Iuran -->
     <div id="tab-nonIuran" class="tab-content">
       <h2>Transaksi Non-Iuran</h2>
-      <!-- Form Pemasukan Lain -->
       <div class="form-card">
         <h3>➕ Pemasukan Lain</h3>
         <form id="formPemasukanLain">
@@ -342,11 +366,9 @@
             <label>Catatan (opsional)</label>
             <textarea id="catatan_pemasukan" rows="2" placeholder="Detail tambahan..."></textarea>
           </div>
-          <button type="submit" class="btn-primary">Simpan Pemasukan</button>
+          <button type="submit" class="btn-primary" id="btnSimpanPemasukan">Simpan Pemasukan</button>
         </form>
       </div>
-
-      <!-- Form Pengeluaran Lain -->
       <div class="form-card">
         <h3>➖ Pengeluaran Lain</h3>
         <form id="formPengeluaranLain">
@@ -372,10 +394,9 @@
             <label>Keterangan (opsional)</label>
             <textarea id="catatan_pengeluaran" rows="2" placeholder="Detail tambahan..."></textarea>
           </div>
-          <button type="submit" class="btn-primary">Simpan Pengeluaran</button>
+          <button type="submit" class="btn-primary" id="btnSimpanPengeluaran">Simpan Pengeluaran</button>
         </form>
       </div>
-
       <div class="form-card">
         <h3>📋 Riwayat Transaksi Non-Iuran Terbaru</h3>
         <div style="overflow-x: auto;">
@@ -384,7 +405,7 @@
               <tr><th>Tanggal</th><th>Jenis</th><th>Keterangan</th><th>Jumlah</th><th>Aksi</th>
             </thead>
             <tbody></tbody>
-          </table>
+           </table>
         </div>
       </div>
     </div>
@@ -419,7 +440,7 @@
             <tr><th>Tanggal</th><th>Jenis</th><th>Keterangan</th><th>Pemasukan</th><th>Pengeluaran</th><th>Saldo</th><th>Aksi</th>
           </thead>
           <tbody></tbody>
-        </table>
+         </table>
       </div>
       <p class="info">⚠️ <strong>Peringatan:</strong> Menghapus transaksi akan <strong>mengubah data historis</strong> tetapi <strong>tidak akan mengoreksi saldo secara otomatis</strong>. Setelah hapus, periksa kembali saldo kas dan gunakan fitur <strong>Pemasukan Lain / Pengeluaran Lain</strong> untuk menambahkan koreksi manual jika diperlukan.</p>
     </div>
@@ -444,15 +465,15 @@
         </div>
         <button id="filterTunggakanBtn" class="btn-primary">Tampilkan</button>
         <button id="resetTunggakanBtn" class="btn-secondary">Reset</button>
-        <button id="printTunggakanBtn" class="btn-secondary" style="background: #27ae60;">🖨️ Cetak Laporan</button>
+        <button id="printTunggakanPDF" class="btn-secondary" style="background: #27ae60;">🖨️ Cetak PDF</button>
       </div>
-      <div style="overflow-x: auto;">
+      <div style="overflow-x: auto;" id="tunggakanContainer">
         <table id="tunggakanTable">
           <thead>
             <tr><th>No Rumah</th><th>Penghuni</th><th>Iuran/bln</th><th>Koordinator</th><th>Bulan Tunggakan</th><th>Total Tunggakan</th>
           </thead>
           <tbody></tbody>
-        </table>
+         </table>
       </div>
       <p class="info">Catatan: Tunggakan dihitung per bulan berdasarkan riwayat status rumah. Bulan dengan status "Dibebaskan" tidak dihitung tunggakan.</p>
     </div>
@@ -464,7 +485,7 @@
         <table id="users-table">
           <thead> <th>Email</th><th>Role</th><th>Aksi</th> </thead>
           <tbody></tbody>
-        </table>
+         </table>
       </div>
       <p class="info">Catatan: Hanya admin yang bisa mengubah role.</p>
     </div>
@@ -478,6 +499,7 @@
       const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
       let userRole = null;
+      let iuranChart = null, incomeExpenseChart = null;
 
       // ========== CEK LOGIN & ROLE ==========
       (async () => {
@@ -518,6 +540,7 @@
         initNonIuran();
         initManageTransactions();
         initLaporanTunggakan();
+        initCharts(); // tambahkan inisialisasi grafik
       })();
 
       // ========== FUNGSI PEMBANTU ==========
@@ -528,6 +551,19 @@
 
       function formatDate(iso) {
         return new Date(iso).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' });
+      }
+
+      async function setLoading(btnElement, isLoading) {
+        if (isLoading) {
+          btnElement.disabled = true;
+          btnElement.classList.add('btn-loading');
+          btnElement.dataset.originalText = btnElement.innerText;
+          btnElement.innerText = 'Memproses...';
+        } else {
+          btnElement.disabled = false;
+          btnElement.classList.remove('btn-loading');
+          btnElement.innerText = btnElement.dataset.originalText || btnElement.innerText;
+        }
       }
 
       // ========== STATISTIK ==========
@@ -549,8 +585,8 @@
           const { data: pengeluaranData } = await supabase.from('transaksi_kas').select('pengeluaran').eq('jenis','Pengeluaran');
           let totalPengeluaran = pengeluaranData?.reduce((s,t)=>s+t.pengeluaran,0) || 0;
 
-          const { data: lastSaldo } = await supabase.from('transaksi_kas').select('saldo').order('tanggal',{ascending:false}).limit(1);
-          const saldo = lastSaldo?.[0]?.saldo || 0;
+          const { data: saldoData } = await supabase.rpc('get_current_saldo');
+          const saldo = saldoData || 0;
 
           const now = new Date();
           const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
@@ -575,6 +611,91 @@
           console.error(err);
           statsDiv.innerHTML = '<p>Gagal memuat statistik.</p>';
         }
+      }
+
+      // ========== GRAFIK ==========
+      async function initCharts() {
+        // Grafik iuran per bulan (12 bulan terakhir)
+        const now = new Date();
+        const months = [];
+        const iuranData = [];
+        for (let i = 11; i >= 0; i--) {
+          const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+          const monthStart = new Date(d.getFullYear(), d.getMonth(), 1).toISOString();
+          const monthEnd = new Date(d.getFullYear(), d.getMonth() + 1, 0).toISOString();
+          months.push(d.toLocaleDateString('id-ID', { month: 'short', year: 'numeric' }));
+          const { data } = await supabase
+            .from('transaksi_kas')
+            .select('pemasukan')
+            .eq('jenis', 'Pemasukan')
+            .eq('sumber', 'Iuran Warga')
+            .gte('tanggal', monthStart)
+            .lte('tanggal', monthEnd);
+          const total = data?.reduce((s,t)=>s+t.pemasukan,0) || 0;
+          iuranData.push(total);
+        }
+        const ctxIuran = document.getElementById('iuranChart').getContext('2d');
+        if (iuranChart) iuranChart.destroy();
+        iuranChart = new Chart(ctxIuran, {
+          type: 'line',
+          data: {
+            labels: months,
+            datasets: [{
+              label: 'Iuran Terkumpul (Rp)',
+              data: iuranData,
+              borderColor: '#0b2e4f',
+              backgroundColor: 'rgba(11,46,79,0.1)',
+              tension: 0.2,
+              fill: true
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            scales: {
+              y: { ticks: { callback: (val) => formatRupiah(val) } }
+            }
+          }
+        });
+
+        // Grafik pemasukan & pengeluaran bulan ini (kategori)
+        const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+        const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString();
+        const { data: pemasukanBulanIni } = await supabase
+          .from('transaksi_kas')
+          .select('pemasukan, sumber')
+          .eq('jenis', 'Pemasukan')
+          .gte('tanggal', firstDay)
+          .lte('tanggal', lastDay);
+        const { data: pengeluaranBulanIni } = await supabase
+          .from('transaksi_kas')
+          .select('pengeluaran')
+          .eq('jenis', 'Pengeluaran')
+          .gte('tanggal', firstDay)
+          .lte('tanggal', lastDay);
+        const totalPemasukan = pemasukanBulanIni?.reduce((s,t)=>s+t.pemasukan,0) || 0;
+        const totalPengeluaran = pengeluaranBulanIni?.reduce((s,t)=>s+t.pengeluaran,0) || 0;
+
+        const ctxInEx = document.getElementById('incomeExpenseChart').getContext('2d');
+        if (incomeExpenseChart) incomeExpenseChart.destroy();
+        incomeExpenseChart = new Chart(ctxInEx, {
+          type: 'bar',
+          data: {
+            labels: ['Pemasukan', 'Pengeluaran'],
+            datasets: [{
+              label: 'Nominal (Rp)',
+              data: [totalPemasukan, totalPengeluaran],
+              backgroundColor: ['#2ecc71', '#e74c3c']
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            scales: {
+              y: { ticks: { callback: (val) => formatRupiah(val) } }
+            }
+          }
+        });
       }
 
       // ========== EKSPOR CSV ==========
@@ -645,7 +766,7 @@
           const actionCell = row.insertCell(2);
           const saveBtn = document.createElement('button');
           saveBtn.innerText = 'Simpan';
-          saveBtn.className = 'btn-save-role';
+          saveBtn.className = 'btn-save-role btn-secondary btn-sm';
           saveBtn.onclick = async () => {
             const newRole = select.value;
             const { error: updateError } = await supabase
@@ -662,7 +783,7 @@
         }
       }
 
-      // ========== TRANSAKSI NON-IURAN ==========
+      // ========== TRANSAKSI NON-IURAN (menggunakan RPC) ==========
       function setupCategoryManual(selectId, manualGroupId, manualInputId) {
         const select = document.getElementById(selectId);
         const manualGroup = document.getElementById(manualGroupId);
@@ -680,54 +801,46 @@
 
       async function addPemasukanLain(event) {
         event.preventDefault();
-        let kategori = document.getElementById('kategori_pemasukan').value;
-        if (kategori === 'Lainnya') {
-          const manual = document.getElementById('kategori_pemasukan_manual').value.trim();
-          if (!manual) {
-            alert('Harap isi kategori manual.');
+        const btn = document.getElementById('btnSimpanPemasukan');
+        await setLoading(btn, true);
+        try {
+          let kategori = document.getElementById('kategori_pemasukan').value;
+          if (kategori === 'Lainnya') {
+            const manual = document.getElementById('kategori_pemasukan_manual').value.trim();
+            if (!manual) {
+              alert('Harap isi kategori manual.');
+              return;
+            }
+            kategori = manual;
+          }
+          const jumlah = parseInt(document.getElementById('jumlah_pemasukan').value);
+          const catatan = document.getElementById('catatan_pemasukan').value.trim();
+
+          if (!kategori || isNaN(jumlah) || jumlah <= 0) {
+            alert('Harap isi kategori dan jumlah dengan benar.');
             return;
           }
-          kategori = manual;
-        }
-        const jumlah = parseInt(document.getElementById('jumlah_pemasukan').value);
-        const catatan = document.getElementById('catatan_pemasukan').value.trim();
 
-        if (!kategori || isNaN(jumlah) || jumlah <= 0) {
-          alert('Harap isi kategori dan jumlah dengan benar.');
-          return;
-        }
+          let keterangan = `${kategori}`;
+          if (catatan) keterangan += ` - ${catatan}`;
 
-        let keterangan = `${kategori}`;
-        if (catatan) keterangan += ` - ${catatan}`;
-
-        const { data: lastSaldo } = await supabase
-          .from('transaksi_kas')
-          .select('saldo')
-          .order('tanggal', { ascending: false })
-          .limit(1);
-        let saldo = lastSaldo?.[0]?.saldo || 0;
-        const newSaldo = saldo + jumlah;
-
-        const kasId = `IN-${new Date().toISOString().slice(0,10).replace(/-/g,'')}-${Date.now().toString().slice(-6)}`;
-        const { error } = await supabase
-          .from('transaksi_kas')
-          .insert([{
-            kas_id: kasId,
-            tanggal: new Date(),
-            keterangan: keterangan,
-            pemasukan: jumlah,
-            saldo: newSaldo,
-            jenis: 'Pemasukan',
-            sumber: 'Pemasukan Lain'
-          }]);
-        if (error) {
-          alert('Gagal menyimpan pemasukan: ' + error.message);
-        } else {
+          const kasId = `IN-${new Date().toISOString().slice(0,10).replace(/-/g,'')}-${Date.now().toString().slice(-6)}`;
+          const { error } = await supabase.rpc('insert_transaksi', {
+            p_kas_id: kasId,
+            p_tanggal: new Date().toISOString(),
+            p_keterangan: keterangan,
+            p_pemasukan: jumlah,
+            p_pengeluaran: 0,
+            p_jenis: 'Pemasukan',
+            p_sumber: 'Pemasukan Lain'
+          });
+          if (error) throw error;
           alert('✅ Pemasukan berhasil ditambahkan');
           document.getElementById('formPemasukanLain').reset();
           document.getElementById('kategori_pemasukan_manual_group').style.display = 'none';
           loadNonIuranTransactions();
           loadStats();
+          initCharts();
           const activeTab = document.querySelector('.tab-btn.active')?.dataset.tab;
           if (activeTab === 'manageTransactions') {
             const filterJenis = document.getElementById('filterJenis').value;
@@ -735,59 +848,55 @@
             const endDate = document.getElementById('filterEndDate').value;
             loadAllTransactions(filterJenis, startDate, endDate);
           }
+        } catch (err) {
+          alert('Gagal menyimpan pemasukan: ' + err.message);
+        } finally {
+          await setLoading(btn, false);
         }
       }
 
       async function addPengeluaranLain(event) {
         event.preventDefault();
-        let kategori = document.getElementById('kategori_pengeluaran').value;
-        if (kategori === 'Lainnya') {
-          const manual = document.getElementById('kategori_pengeluaran_manual').value.trim();
-          if (!manual) {
-            alert('Harap isi kategori manual.');
+        const btn = document.getElementById('btnSimpanPengeluaran');
+        await setLoading(btn, true);
+        try {
+          let kategori = document.getElementById('kategori_pengeluaran').value;
+          if (kategori === 'Lainnya') {
+            const manual = document.getElementById('kategori_pengeluaran_manual').value.trim();
+            if (!manual) {
+              alert('Harap isi kategori manual.');
+              return;
+            }
+            kategori = manual;
+          }
+          const jumlah = parseInt(document.getElementById('jumlah_pengeluaran').value);
+          const catatan = document.getElementById('catatan_pengeluaran').value.trim();
+
+          if (!kategori || isNaN(jumlah) || jumlah <= 0) {
+            alert('Harap isi kategori dan jumlah dengan benar.');
             return;
           }
-          kategori = manual;
-        }
-        const jumlah = parseInt(document.getElementById('jumlah_pengeluaran').value);
-        const catatan = document.getElementById('catatan_pengeluaran').value.trim();
 
-        if (!kategori || isNaN(jumlah) || jumlah <= 0) {
-          alert('Harap isi kategori dan jumlah dengan benar.');
-          return;
-        }
+          let keterangan = `${kategori}`;
+          if (catatan) keterangan += ` - ${catatan}`;
 
-        let keterangan = `${kategori}`;
-        if (catatan) keterangan += ` - ${catatan}`;
-
-        const { data: lastSaldo } = await supabase
-          .from('transaksi_kas')
-          .select('saldo')
-          .order('tanggal', { ascending: false })
-          .limit(1);
-        let saldo = lastSaldo?.[0]?.saldo || 0;
-        const newSaldo = saldo - jumlah;
-
-        const kasId = `EX-${new Date().toISOString().slice(0,10).replace(/-/g,'')}-${Date.now().toString().slice(-6)}`;
-        const { error } = await supabase
-          .from('transaksi_kas')
-          .insert([{
-            kas_id: kasId,
-            tanggal: new Date(),
-            keterangan: keterangan,
-            pengeluaran: jumlah,
-            saldo: newSaldo,
-            jenis: 'Pengeluaran',
-            sumber: 'Pengeluaran Lain'
-          }]);
-        if (error) {
-          alert('Gagal menyimpan pengeluaran: ' + error.message);
-        } else {
+          const kasId = `EX-${new Date().toISOString().slice(0,10).replace(/-/g,'')}-${Date.now().toString().slice(-6)}`;
+          const { error } = await supabase.rpc('insert_transaksi', {
+            p_kas_id: kasId,
+            p_tanggal: new Date().toISOString(),
+            p_keterangan: keterangan,
+            p_pemasukan: 0,
+            p_pengeluaran: jumlah,
+            p_jenis: 'Pengeluaran',
+            p_sumber: 'Pengeluaran Lain'
+          });
+          if (error) throw error;
           alert('✅ Pengeluaran berhasil ditambahkan');
           document.getElementById('formPengeluaranLain').reset();
           document.getElementById('kategori_pengeluaran_manual_group').style.display = 'none';
           loadNonIuranTransactions();
           loadStats();
+          initCharts();
           const activeTab = document.querySelector('.tab-btn.active')?.dataset.tab;
           if (activeTab === 'manageTransactions') {
             const filterJenis = document.getElementById('filterJenis').value;
@@ -795,6 +904,10 @@
             const endDate = document.getElementById('filterEndDate').value;
             loadAllTransactions(filterJenis, startDate, endDate);
           }
+        } catch (err) {
+          alert('Gagal menyimpan pengeluaran: ' + err.message);
+        } finally {
+          await setLoading(btn, false);
         }
       }
 
@@ -846,7 +959,7 @@
           const actionCell = row.insertCell(4);
           const delBtn = document.createElement('button');
           delBtn.innerText = 'Hapus';
-          delBtn.className = 'btn-delete btn-sm';
+          delBtn.className = 'btn-danger btn-sm';
           delBtn.onclick = async () => {
             if (confirm('Hapus transaksi ini? Saldo tidak akan otomatis dikembalikan. Pastikan Anda membuat koreksi manual jika perlu.')) {
               const { error: delError } = await supabase
@@ -858,6 +971,7 @@
                 alert('Transaksi dihapus');
                 loadNonIuranTransactions();
                 loadStats();
+                initCharts();
                 const activeTab = document.querySelector('.tab-btn.active')?.dataset.tab;
                 if (activeTab === 'manageTransactions') {
                   const filterJenis = document.getElementById('filterJenis').value;
@@ -920,7 +1034,7 @@
           const actionCell = row.insertCell(6);
           const delBtn = document.createElement('button');
           delBtn.innerText = 'Hapus';
-          delBtn.className = 'btn-delete btn-sm';
+          delBtn.className = 'btn-danger btn-sm';
           delBtn.onclick = async () => {
             if (confirm(`Hapus transaksi ini?\n\n⚠️ PERINGATAN: Saldo tidak akan otomatis dikembalikan. Gunakan form Pemasukan/Pengeluaran Lain untuk koreksi manual jika diperlukan.`)) {
               const { error: delError } = await supabase
@@ -932,6 +1046,7 @@
                 alert('Transaksi dihapus');
                 loadAllTransactions(filterJenis, startDate, endDate);
                 loadStats();
+                initCharts();
                 loadNonIuranTransactions();
               }
             }
@@ -947,11 +1062,6 @@
         const applyBtn = document.getElementById('applyFilterBtn');
         const resetBtn = document.getElementById('resetFilterBtn');
 
-        if (!filterJenis || !startDate || !endDate || !applyBtn || !resetBtn) {
-          console.error("Missing elements in manage transactions tab");
-          return;
-        }
-
         const load = () => {
           loadAllTransactions(filterJenis.value, startDate.value, endDate.value);
         };
@@ -965,7 +1075,7 @@
         load();
       }
 
-      // ========== LAPORAN TUNGGAKAN (DENGAN PERBAIKAN) ==========
+      // ========== LAPORAN TUNGGAKAN (RPC) ==========
       async function loadKoordinatorOptions() {
         const { data, error } = await supabase
           .from('warga')
@@ -988,148 +1098,29 @@
       }
 
       async function generateTunggakanReport(startMonth, endMonth, koordinatorFilter) {
-        console.log("generateTunggakanReport", startMonth, endMonth, koordinatorFilter);
         if (!startMonth || !endMonth) {
           alert('Pilih rentang bulan terlebih dahulu.');
           return;
         }
 
-        const [startYear, startMon] = startMonth.split('-').map(Number);
-        const [endYear, endMon] = endMonth.split('-').map(Number);
-        const startDate = new Date(startYear, startMon - 1, 1);
-        const endDate = new Date(endYear, endMon, 0); // akhir bulan
+        const startDateISO = startMonth + '-01';
+        const endDateISO = endMonth + '-01';
 
-        let query = supabase.from('warga').select('no_rumah, koordinator');
-        if (koordinatorFilter !== 'all') {
-          query = query.eq('koordinator', koordinatorFilter);
-        }
-        const { data: wargaList, error: wargaError } = await query;
-        if (wargaError) {
-          console.error(wargaError);
-          alert('Gagal mengambil data warga');
-          return;
-        }
-
-        const { data: payments, error: payError } = await supabase
-          .from('transaksi_iuran')
-          .select('no_rumah, bulan')
-          .gte('bulan', startDate.toISOString())
-          .lte('bulan', endDate.toISOString());
-        if (payError) {
-          console.error(payError);
-          alert('Gagal mengambil data pembayaran');
-          return;
-        }
-
-        const paidMap = new Map();
-        payments?.forEach(p => {
-          const date = new Date(p.bulan);
-          const key = `${p.no_rumah}|${date.getFullYear()}-${date.getMonth()+1}`;
-          paidMap.set(key, true);
+        const { data, error } = await supabase.rpc('get_tunggakan_report', {
+          p_start_month: startDateISO,
+          p_end_month: endDateISO,
+          p_koordinator_filter: koordinatorFilter === 'all' ? null : koordinatorFilter
         });
 
-        // Ambil semua riwayat kondisi
-        const { data: histories, error: historyError } = await supabase
-          .from('riwayat_kondisi')
-          .select('no_rumah, kondisi, iuran_per_bulan, berlaku_sejak, nama_penghuni')
-          .order('berlaku_sejak', { ascending: true });
-        if (historyError) {
-          console.error(historyError);
-          alert('Gagal mengambil riwayat kondisi');
+        if (error) {
+          console.error(error);
+          alert('Gagal mengambil laporan tunggakan: ' + error.message);
           return;
         }
-
-        // Ubah berlaku_sejak menjadi string YYYY-MM-DD untuk perbandingan
-        const historyMap = new Map(); // key: no_rumah, value: array of { berlaku_sejak_str, kondisi, iuran, nama_penghuni }
-        histories.forEach(h => {
-          if (!historyMap.has(h.no_rumah)) historyMap.set(h.no_rumah, []);
-          const dateStr = new Date(h.berlaku_sejak).toISOString().split('T')[0];
-          historyMap.get(h.no_rumah).push({
-            berlaku_sejak: dateStr,
-            kondisi: h.kondisi,
-            iuran: h.iuran_per_bulan,
-            nama_penghuni: h.nama_penghuni
-          });
-        });
-
-        function getStatusAtDate(noRumah, targetDateStr) {
-          const entries = historyMap.get(noRumah) || [];
-          // Cari riwayat terbaru dengan berlaku_sejak <= targetDateStr
-          let latest = null;
-          for (let e of entries) {
-            if (e.berlaku_sejak <= targetDateStr) {
-              if (!latest || e.berlaku_sejak > latest.berlaku_sejak) {
-                latest = e;
-              }
-            }
-          }
-          if (latest) {
-            return {
-              kondisi: latest.kondisi,
-              iuran: latest.iuran,
-              nama_penghuni: latest.nama_penghuni
-            };
-          }
-          // Tidak ada riwayat -> default Berpenghuni dengan iuran 75000
-          return { kondisi: 'Berpenghuni', iuran: 75000, nama_penghuni: null };
-        }
-
-        const reportData = [];
-        let currentDate = new Date(startDate);
-        while (currentDate <= endDate) {
-          const year = currentDate.getFullYear();
-          const month = currentDate.getMonth() + 1;
-          const monthKey = `${year}-${month}`;
-          const targetDateStr = `${year}-${String(month).padStart(2,'0')}-01`;
-
-          for (const w of wargaList) {
-            const statusInfo = getStatusAtDate(w.no_rumah, targetDateStr);
-            const { kondisi, iuran } = statusInfo;
-            if (kondisi === 'Dibebaskan' || iuran === 0) continue;
-
-            const paidKey = `${w.no_rumah}|${monthKey}`;
-            const isPaid = paidMap.has(paidKey);
-            if (!isPaid && iuran > 0) {
-              let entry = reportData.find(r => r.no_rumah === w.no_rumah);
-              if (!entry) {
-                entry = {
-                  no_rumah: w.no_rumah,
-                  iuran: iuran,
-                  koordinator: w.koordinator,
-                  months: [],
-                  total: 0
-                };
-                reportData.push(entry);
-              }
-              if (entry.months.length === 0) entry.iuran = iuran;
-              entry.months.push(monthKey);
-              entry.total += iuran;
-            }
-          }
-          currentDate.setMonth(currentDate.getMonth() + 1);
-        }
-
-        const endOfPeriodStr = `${endYear}-${String(endMon).padStart(2,'0')}-01`;
-        for (let entry of reportData) {
-          const statusInfo = getStatusAtDate(entry.no_rumah, endOfPeriodStr);
-          let penghuni = statusInfo.nama_penghuni;
-          if (!penghuni) {
-            const { data: w } = await supabase.from('warga').select('nama_pemilik').eq('no_rumah', entry.no_rumah).single();
-            penghuni = w?.nama_pemilik || '-';
-          }
-          entry.penghuni = penghuni;
-          entry.months.sort();
-          entry.monthsDisplay = entry.months.map(m => {
-            const [y, mo] = m.split('-');
-            return `${mo}/${y}`;
-          }).join(', ');
-        }
-
-        reportData.sort((a,b) => a.no_rumah.localeCompare(b.no_rumah));
 
         const tbody = document.querySelector('#tunggakanTable tbody');
         tbody.innerHTML = '';
-        if (reportData.length === 0) {
+        if (!data || data.length === 0) {
           const row = tbody.insertRow();
           const cell = row.insertCell(0);
           cell.colSpan = 6;
@@ -1137,14 +1128,14 @@
           cell.style.textAlign = 'center';
           return;
         }
-        reportData.forEach(r => {
+        data.forEach(r => {
           const row = tbody.insertRow();
           row.insertCell(0).innerText = r.no_rumah;
           row.insertCell(1).innerText = r.penghuni;
-          row.insertCell(2).innerText = formatRupiah(r.iuran);
+          row.insertCell(2).innerText = formatRupiah(r.iuran_per_bulan);
           row.insertCell(3).innerText = r.koordinator || '-';
-          row.insertCell(4).innerText = r.monthsDisplay;
-          row.insertCell(5).innerText = formatRupiah(r.total);
+          row.insertCell(4).innerText = r.bulan_tunggakan;
+          row.insertCell(5).innerText = formatRupiah(r.total_tunggakan);
         });
       }
 
@@ -1155,7 +1146,7 @@
         const koordSelect = document.getElementById('tunggakanKoordinator');
         const filterBtn = document.getElementById('filterTunggakanBtn');
         const resetBtn = document.getElementById('resetTunggakanBtn');
-        const printBtn = document.getElementById('printTunggakanBtn');
+        const printPDF = document.getElementById('printTunggakanPDF');
 
         const now = new Date();
         const defaultStart = '2025-11';
@@ -1173,17 +1164,24 @@
           koordSelect.value = 'all';
           loadReport();
         });
-        if (printBtn) {
-          printBtn.addEventListener('click', () => {
-            window.print();
-          });
-        }
+        printPDF.addEventListener('click', () => {
+          const element = document.getElementById('tunggakanContainer');
+          const opt = {
+            margin: 0.5,
+            filename: `laporan_tunggakan_${startInput.value}_to_${endInput.value}.pdf`,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2, letterRendering: true },
+            jsPDF: { unit: 'in', format: 'a4', orientation: 'landscape' }
+          };
+          html2pdf().set(opt).from(element).save();
+        });
         loadReport();
       }
 
       // ========== INISIALISASI DASHBOARD ==========
       async function initDashboard() {
         await loadStats();
+        await initCharts();
 
         const tabs = document.querySelectorAll('.tab-btn');
         const contents = document.querySelectorAll('.tab-content');
@@ -1196,7 +1194,7 @@
             document.getElementById(`tab-${tabId}`).classList.add('active');
 
             if (tabId === 'users' && userRole === 'admin') loadUsers();
-            if (tabId === 'stats') loadStats();
+            if (tabId === 'stats') { loadStats(); initCharts(); }
             if (tabId === 'nonIuran') loadNonIuranTransactions();
             if (tabId === 'manageTransactions') {
               const filterJenis = document.getElementById('filterJenis').value;
@@ -1226,11 +1224,17 @@
         loadNonIuranTransactions();
       }
 
+      // ========== LOGOUT ==========
       document.getElementById('logoutBtn').addEventListener('click', async (e) => {
         e.preventDefault();
         await supabase.auth.signOut();
         window.location.href = 'login.html';
       });
+
+      // ========== PWA REGISTRATION (opsional) ==========
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/sw.js').catch(err => console.log('SW registration failed:', err));
+      }
     })();
   </script>
 </body>
