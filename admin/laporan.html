@@ -178,7 +178,7 @@
     @keyframes spin {
       to { transform: rotate(360deg); }
     }
-    /* Style untuk PDF */
+    /* ==================== PDF Styles ==================== */
     .pdf-header {
       text-align: center;
       margin-bottom: 20px;
@@ -197,12 +197,55 @@
       color: #666;
       margin-bottom: 10px;
     }
+    .signature-section {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 40px;
+      padding-top: 20px;
+      border-top: 1px solid #ddd;
+      gap: 30px;
+      flex-wrap: wrap;
+    }
+    .signature-item {
+      flex: 1;
+      text-align: center;
+      min-width: 150px;
+    }
+    .signature-item .title {
+      font-size: 0.8rem;
+      color: #666;
+      margin-bottom: 12px;
+    }
+    .signature-item .role {
+      font-weight: 600;
+      margin-bottom: 20px;
+      font-size: 0.9rem;
+    }
+    .signature-item .signature-line {
+      border-bottom: 1px solid #000;
+      width: 80%;
+      margin: 0 auto 8px auto;
+    }
+    .signature-item .signature-name {
+      font-size: 0.8rem;
+      color: #333;
+      font-weight: 500;
+    }
+    .footer {
+      margin-top: 20px;
+      text-align: center;
+      font-size: 0.7rem;
+      color: #666;
+      border-top: 1px solid #eee;
+      padding-top: 12px;
+    }
     @media print {
       body { background: white; }
       .navbar, .filter-bar, .btn-print, .btn-export-excel, .btn-export-pdf, .btn-quick, .chart-container { display: none; }
       .pdf-header { display: block !important; }
       .summary-grid { display: grid; }
       table { page-break-inside: avoid; }
+      .signature-section, .footer { display: flex; }
     }
     @media (max-width: 768px) {
       .navbar { flex-direction: column; align-items: stretch; }
@@ -211,6 +254,7 @@
       .filter-bar { flex-direction: column; align-items: stretch; }
       table { font-size: 0.75rem; }
       th, td { padding: 8px; }
+      .signature-section { flex-direction: column; gap: 20px; }
     }
   </style>
 </head>
@@ -257,7 +301,6 @@
       <div id="chartEmptyMessage" style="display: none; text-align: center; color: #666; padding: 20px;">Tidak ada data untuk ditampilkan</div>
     </div>
 
-    <!-- Container untuk PDF (akan di-capture) -->
     <div id="pdfContainer">
       <div class="pdf-header">
         <img src="../images/logo.webp" alt="Logo">
@@ -272,6 +315,31 @@
           </thead>
           <tbody></tbody>
          </table>
+      </div>
+
+      <div class="signature-section">
+        <div class="signature-item">
+          <div class="title">Direkap oleh,</div>
+          <div class="role">Bendahara</div>
+          <div class="signature-line"></div>
+          <div class="signature-name">Didiek Fahrizal</div>
+        </div>
+        <div class="signature-item">
+          <div class="title">Dilaporkan Oleh,</div>
+          <div class="role">Sekretaris</div>
+          <div class="signature-line"></div>
+          <div class="signature-name">Supriyetno</div>
+        </div>
+        <div class="signature-item">
+          <div class="title">Diketahui oleh,</div>
+          <div class="role">Ketua</div>
+          <div class="signature-line"></div>
+          <div class="signature-name">Ramli Munthe</div>
+        </div>
+      </div>
+
+      <div class="footer" id="footer">
+        Sistem KWP3T v3.2026 | Design by Yetno | <span id="printTimestamp"></span>
       </div>
     </div>
 
@@ -292,7 +360,6 @@
       let currentStart = null;
       let currentEnd = null;
 
-      // Cek login dan role
       (async () => {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) {
@@ -324,37 +391,77 @@
         return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka);
       }
 
+      // Format tanggal dengan penanganan aman terhadap null, format aneh, dan timezone
       function formatDate(iso) {
-        if (!iso) return '';
-        const [year, month, day] = iso.split('-');
-        return `${day}/${month}/${year}`;
+        if (!iso) return '-';
+
+        try {
+          // Coba parsing menggunakan Date untuk akurasi timezone
+          const d = new Date(iso);
+          if (!isNaN(d.getTime())) {
+            return d.toLocaleDateString('id-ID');
+          }
+        } catch (e) {
+          // Jika gagal, lanjut ke metode split manual
+        }
+
+        // Fallback: ambil bagian YYYY-MM-DD
+        try {
+          const clean = iso.includes('T') ? iso.split('T')[0] : iso;
+          const parts = clean.split('-');
+          if (parts.length === 3) {
+            const [year, month, day] = parts;
+            return `${day.padStart(2, '0')}/${month.padStart(2, '0')}/${year}`;
+          }
+        } catch (e) {
+          console.error('Format tanggal error:', iso);
+        }
+        return iso; // jika semua gagal, tampilkan asli
       }
 
       async function loadKas(start = null, end = null) {
         currentStart = start;
         currentEnd = end;
 
-        // Validasi filter tanggal
         if (start && end && new Date(start) > new Date(end)) {
           alert('Tanggal mulai tidak boleh lebih besar dari tanggal akhir');
           return;
         }
 
-        // Tampilkan loading
         const loadingDiv = document.getElementById('loadingIndicator');
         loadingDiv.style.display = 'block';
 
-        // Kosongkan tabel sementara
+        const tbody = document.querySelector('#kasTable tbody');
+        tbody.innerHTML = '<tr><td colspan="6" class="loading">Memuat data...</td></tr>';
+      }
+
+      // [Bagian loadKas dan lainnya akan ditulis ulang tanpa error karakter aneh]
+      // Karena terlalu panjang, saya akan lanjutkan di sini dengan kode yang bersih.
+
+      // Fungsi loadKas yang sebenarnya (tanpa error karakter):
+      async function loadKas(start = null, end = null) {
+        currentStart = start;
+        currentEnd = end;
+
+        if (start && end && new Date(start) > new Date(end)) {
+          alert('Tanggal mulai tidak boleh lebih besar dari tanggal akhir');
+          return;
+        }
+
+        const loadingDiv = document.getElementById('loadingIndicator');
+        loadingDiv.style.display = 'block';
+
         const tbody = document.querySelector('#kasTable tbody');
         tbody.innerHTML = '<tr><td colspan="6" class="loading">Memuat data...</td></tr>';
 
-        // Query data dalam rentang
         let query = supabase
           .from('transaksi_kas')
           .select('tanggal,keterangan,pemasukan,pengeluaran,saldo,sumber')
           .order('tanggal', { ascending: true });
-        if (start) query = query.gte('tanggal', start);
-        if (end) query = query.lte('tanggal', end);
+
+        if (start) query = query.gte('tanggal', start + 'T00:00:00');
+        if (end) query = query.lte('tanggal', end + 'T23:59:59');
+
         const { data, error } = await query;
 
         loadingDiv.style.display = 'none';
@@ -366,13 +473,12 @@
         }
         currentData = data;
 
-        // Hitung saldo awal (sebelum start)
         let saldoAwal = 0;
         if (start) {
           const { data: prevData } = await supabase
             .from('transaksi_kas')
             .select('saldo')
-            .lt('tanggal', start)
+            .lt('tanggal', start + 'T00:00:00')
             .order('tanggal', { ascending: false })
             .limit(1);
           saldoAwal = prevData?.[0]?.saldo || 0;
@@ -384,16 +490,12 @@
         const totalPengeluaran = data.reduce((sum, row) => sum + (row.pengeluaran || 0), 0);
         const saldoAkhir = saldoAwal + totalPemasukan - totalPengeluaran;
 
-        // Update summary
         document.getElementById('saldoAwal').innerText = formatRupiah(saldoAwal);
         document.getElementById('totalPemasukan').innerText = formatRupiah(totalPemasukan);
         document.getElementById('totalPengeluaran').innerText = formatRupiah(totalPengeluaran);
         document.getElementById('saldoAkhir').innerText = formatRupiah(saldoAkhir);
 
-        // Render tabel
         renderTable(data);
-
-        // Update grafik
         updateChart(data);
       }
 
@@ -410,11 +512,9 @@
           tr.insertCell(1).innerText = row.keterangan;
           tr.insertCell(2).innerHTML = row.pemasukan ? `<span style="color:green;font-weight:bold">${formatRupiah(row.pemasukan)}</span>` : '-';
           tr.insertCell(3).innerHTML = row.pengeluaran ? `<span style="color:red;font-weight:bold">${formatRupiah(row.pengeluaran)}</span>` : '-';
-          // Warna saldo: merah jika negatif, hitam jika positif
           const saldoColor = row.saldo < 0 ? 'red' : 'black';
           tr.insertCell(4).innerHTML = `<b style="color:${saldoColor}">${formatRupiah(row.saldo)}</b>`;
           tr.insertCell(5).innerText = row.sumber || '-';
-          // Highlight baris jika pemasukan atau pengeluaran
           if (row.pemasukan) tr.style.background = '#ecfdf5';
           if (row.pengeluaran) tr.style.background = '#fef2f2';
         });
@@ -435,8 +535,9 @@
 
         const monthly = {};
         data.forEach(row => {
-          const date = new Date(row.tanggal);
-          const key = `${date.getFullYear()}-${date.getMonth()+1}`;
+          const cleanDate = row.tanggal.split('T')[0];
+          const [year, month] = cleanDate.split('-');
+          const key = `${year}-${month}`;
           if (!monthly[key]) monthly[key] = { pemasukan: 0, pengeluaran: 0 };
           monthly[key].pemasukan += row.pemasukan || 0;
           monthly[key].pengeluaran += row.pengeluaran || 0;
@@ -451,7 +552,7 @@
 
         const labels = sortedKeys.map(key => {
           const [y, m] = key.split('-');
-          const date = new Date(parseInt(y), parseInt(m)-1);
+          const date = new Date(`${y}-${m}-01`);
           return date.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
         });
 
@@ -479,7 +580,6 @@
         });
       }
 
-      // Export to Excel (XLSX)
       function exportToExcel() {
         if (!currentData.length) {
           alert('Tidak ada data untuk diekspor');
@@ -499,13 +599,11 @@
         XLSX.writeFile(wb, `laporan_kas_${new Date().toISOString().slice(0,10)}.xlsx`);
       }
 
-      // Export to PDF (html2pdf)
       async function exportToPDF() {
         if (!currentData.length) {
           alert('Tidak ada data untuk dicetak');
           return;
         }
-        // Update summary for PDF
         const saldoAwal = document.getElementById('saldoAwal').innerText;
         const totalPemasukan = document.getElementById('totalPemasukan').innerText;
         const totalPengeluaran = document.getElementById('totalPengeluaran').innerText;
@@ -518,6 +616,13 @@
         `;
         document.getElementById('summaryForPdf').innerHTML = summaryHtml;
         document.getElementById('pdfDate').innerText = `Periode: ${currentStart || 'Semua'} s/d ${currentEnd || 'Semua'} | Dicetak: ${new Date().toLocaleString('id-ID')}`;
+
+        const printTimestamp = document.getElementById('printTimestamp');
+        if (printTimestamp) {
+          const now = new Date();
+          const formatted = now.toLocaleString('id-ID', { dateStyle: 'full', timeStyle: 'short' });
+          printTimestamp.innerText = formatted;
+        }
 
         const element = document.getElementById('pdfContainer');
         const opt = {
