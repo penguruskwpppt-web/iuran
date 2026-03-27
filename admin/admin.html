@@ -8,6 +8,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <style>
+    /* ========== CSS SAMA SEPERTI SEBELUMNYA ========== */
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       font-family: 'Inter', sans-serif;
@@ -261,11 +262,13 @@
       <button class="tab-btn" data-tab="manageTransactions">Kelola Transaksi</button>
     </div>
 
+    <!-- Statistik Lengkap -->
     <div id="tab-stats" class="tab-content active">
       <h2>Statistik Lengkap</h2>
       <div id="stats-data"><p>Memuat data...</p></div>
     </div>
 
+    <!-- Backup Data -->
     <div id="tab-backup" class="tab-content">
       <h2>Backup Data</h2>
       <button id="export-warga" class="btn-primary">Export Data Warga (CSV)</button>
@@ -274,6 +277,7 @@
       <p class="info">Klik tombol untuk mengunduh file CSV.</p>
     </div>
 
+    <!-- Transaksi Non-Iuran -->
     <div id="tab-nonIuran" class="tab-content">
       <h2>Transaksi Non-Iuran</h2>
       <!-- Form Pemasukan Lain -->
@@ -340,11 +344,13 @@
             <thead>
               <tr><th>Tanggal</th><th>Jenis</th><th>Keterangan</th><th>Jumlah</th><th>Aksi</th>
             </thead>
-            <tbody></tbody>         
+            <tbody></tbody>
+          腿
         </div>
       </div>
     </div>
 
+    <!-- Kelola Transaksi -->
     <div id="tab-manageTransactions" class="tab-content">
       <h2>Kelola Semua Transaksi</h2>
       <div class="filter-bar">
@@ -379,12 +385,14 @@
       <p class="info">⚠️ <strong>Peringatan:</strong> Menghapus transaksi akan <strong>mengubah data historis</strong> tetapi <strong>tidak akan mengoreksi saldo secara otomatis</strong>. Setelah hapus, periksa kembali saldo kas dan gunakan fitur <strong>Pemasukan Lain / Pengeluaran Lain</strong> untuk menambahkan koreksi manual jika diperlukan.</p>
     </div>
 
+    <!-- Manajemen User (hanya untuk admin, akan ditampilkan dinamis) -->
     <div id="tab-users" class="tab-content" style="display: none;">
       <h2>Daftar User & Role</h2>
       <div style="overflow-x: auto;">
         <table id="users-table">
-          <thead> vowel<th>Email</th><th>Role</th><th>Aksi</th> </thead>
-          <tbody></tbody>         
+          <thead> <th>Email</th><th>Role</th><th>Aksi</th> </thead>
+          <tbody></tbody>
+        </table>
       </div>
       <p class="info">Catatan: Hanya admin yang bisa mengubah role.</p>
     </div>
@@ -399,7 +407,7 @@
 
       let userRole = null;
 
-      // Cek login dan role
+      // ========== CEK LOGIN & ROLE ==========
       (async () => {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) {
@@ -435,12 +443,13 @@
           document.getElementById('tab-users').style.display = 'block';
         }
 
+        // Inisialisasi semua fitur
         initDashboard();
         initNonIuran();
         initManageTransactions();
       })();
 
-      // ========== FUNGSI UMUM ==========
+      // ========== FUNGSI PEMBANTU ==========
       function formatRupiah(angka) {
         if (angka === null || isNaN(angka)) angka = 0;
         return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka);
@@ -535,7 +544,7 @@
         }
       }
 
-      // ========== MANAJEMEN USER (hanya admin) ==========
+      // ========== MANAJEMEN USER ==========
       async function loadUsers() {
         const { data: profiles, error } = await supabase
           .from('profiles')
@@ -648,7 +657,7 @@
           document.getElementById('kategori_pemasukan_manual_group').style.display = 'none';
           loadNonIuranTransactions();
           loadStats();
-          loadAllTransactions(); // refresh tabel kelola transaksi
+          loadAllTransactions(document.getElementById('filterJenis').value, document.getElementById('filterStartDate').value, document.getElementById('filterEndDate').value);
         }
       }
 
@@ -702,7 +711,7 @@
           document.getElementById('kategori_pengeluaran_manual_group').style.display = 'none';
           loadNonIuranTransactions();
           loadStats();
-          loadAllTransactions();
+          loadAllTransactions(document.getElementById('filterJenis').value, document.getElementById('filterStartDate').value, document.getElementById('filterEndDate').value);
         }
       }
 
@@ -720,6 +729,7 @@
           return;
         }
         const tbody = document.querySelector('#nonIuranTable tbody');
+        if (!tbody) return;
         tbody.innerHTML = '';
         data.forEach(t => {
           const row = tbody.insertRow();
@@ -745,7 +755,7 @@
                 alert('Transaksi dihapus');
                 loadNonIuranTransactions();
                 loadStats();
-                loadAllTransactions();
+                loadAllTransactions(document.getElementById('filterJenis').value, document.getElementById('filterStartDate').value, document.getElementById('filterEndDate').value);
               }
             }
           };
@@ -755,6 +765,7 @@
 
       // ========== KELOLA SEMUA TRANSAKSI ==========
       async function loadAllTransactions(filterJenis = 'all', startDate = null, endDate = null) {
+        console.log("loadAllTransactions called", filterJenis, startDate, endDate);
         let query = supabase
           .from('transaksi_kas')
           .select('kas_id, tanggal, keterangan, pemasukan, pengeluaran, saldo, sumber, jenis')
@@ -774,13 +785,26 @@
 
         const { data, error } = await query;
         if (error) {
-          console.error(error);
+          console.error("Error loading transactions:", error);
           alert('Gagal memuat transaksi');
           return;
         }
+        console.log("Data loaded:", data.length);
 
         const tbody = document.querySelector('#allTransactionsTable tbody');
+        if (!tbody) {
+          console.error("Table body not found");
+          return;
+        }
         tbody.innerHTML = '';
+        if (data.length === 0) {
+          const row = tbody.insertRow();
+          const cell = row.insertCell(0);
+          cell.colSpan = 7;
+          cell.innerText = 'Tidak ada transaksi.';
+          cell.style.textAlign = 'center';
+          return;
+        }
         data.forEach(t => {
           const row = tbody.insertRow();
           row.insertCell(0).innerText = formatDate(t.tanggal);
@@ -813,11 +837,17 @@
       }
 
       function initManageTransactions() {
+        console.log("initManageTransactions called");
         const filterJenis = document.getElementById('filterJenis');
         const startDate = document.getElementById('filterStartDate');
         const endDate = document.getElementById('filterEndDate');
         const applyBtn = document.getElementById('applyFilterBtn');
         const resetBtn = document.getElementById('resetFilterBtn');
+
+        if (!filterJenis || !startDate || !endDate || !applyBtn || !resetBtn) {
+          console.error("Missing elements in manage transactions tab");
+          return;
+        }
 
         const load = () => {
           loadAllTransactions(filterJenis.value, startDate.value, endDate.value);
@@ -829,10 +859,11 @@
           endDate.value = '';
           load();
         });
+        // Load initial data
         load();
       }
 
-      // ========== INISIALISASI ==========
+      // ========== INISIALISASI DASHBOARD ==========
       async function initDashboard() {
         await loadStats();
 
@@ -845,11 +876,12 @@
             btn.classList.add('active');
             contents.forEach(c => c.classList.remove('active'));
             document.getElementById(`tab-${tabId}`).classList.add('active');
+
+            // Refresh data sesuai tab
             if (tabId === 'users' && userRole === 'admin') loadUsers();
             if (tabId === 'stats') loadStats();
             if (tabId === 'nonIuran') loadNonIuranTransactions();
             if (tabId === 'manageTransactions') {
-              // refresh filter values when tab opens
               const filterJenis = document.getElementById('filterJenis').value;
               const startDate = document.getElementById('filterStartDate').value;
               const endDate = document.getElementById('filterEndDate').value;
@@ -871,6 +903,7 @@
         loadNonIuranTransactions();
       }
 
+      // Logout
       document.getElementById('logoutBtn').addEventListener('click', async (e) => {
         e.preventDefault();
         await supabase.auth.signOut();
