@@ -246,9 +246,9 @@
     <div class="nav-links">
       <a href="admin.html" class="active">Dashboard</a>
       <a href="warga.html">Data Warga</a>
+	  <a href="riwayat.html">Riwayat Rumah</a>
       <a href="iuran.html">Bayar Iuran</a>
-      <a href="laporan.html">Laporan Kas</a>
-      <a href="riwayat.html">Riwayat Rumah</a>
+      <a href="laporan.html">Laporan Kas</a>      
       <a href="#" id="logoutBtn">Logout</a>
     </div>
   </nav>
@@ -966,111 +966,158 @@
       }
 
       async function generateTunggakanReport(startMonth, endMonth, koordinatorFilter) {
-        console.log("generateTunggakanReport", startMonth, endMonth, koordinatorFilter);
-        if (!startMonth || !endMonth) {
-          alert('Pilih rentang bulan terlebih dahulu.');
-          return;
+  console.log("generateTunggakanReport", startMonth, endMonth, koordinatorFilter);
+  if (!startMonth || !endMonth) {
+    alert('Pilih rentang bulan terlebih dahulu.');
+    return;
+  }
+
+  // Konversi input month (YYYY-MM) ke objek Date awal bulan
+  const [startYear, startMon] = startMonth.split('-').map(Number);
+  const [endYear, endMon] = endMonth.split('-').map(Number);
+  const startDate = new Date(startYear, startMon - 1, 1);
+  const endDate = new Date(endYear, endMon, 0); // akhir bulan
+
+  // Ambil semua rumah (bisa difilter koordinator)
+  let query = supabase.from('warga').select('no_rumah, koordinator');
+  if (koordinatorFilter !== 'all') {
+    query = query.eq('koordinator', koordinatorFilter);
+  }
+  const { data: wargaList, error: wargaError } = await query;
+  if (wargaError) {
+    console.error(wargaError);
+    alert('Gagal mengambil data warga');
+    return;
+  }
+
+  // Ambil semua pembayaran iuran dalam rentang
+  const { data: payments, error: payError } = await supabase
+    .from('transaksi_iuran')
+    .select('no_rumah, bulan')
+    .gte('bulan', startDate.toISOString())
+    .lte('bulan', endDate.toISOString());
+  if (payError) {
+    console.error(payError);
+    alert('Gagal mengambil data pembayaran');
+    return;
+  }
+
+  // Map pembayaran: { 'no_rumah|tahun-bulan': true }
+  const paidMap = new Map();
+  payments?.forEach(p => {
+    const date = new Date(p.bulan);
+    const key = `${p.no_rumah}|${date.getFullYear()}-${date.getMonth()+1}`;
+    paidMap.set(key, true);
+  });
+
+  // Ambil semua riwayat kondisi (untuk mengetahui status & iuran per bulan)
+  const { data: histories, error: historyError } = await supabase
+    .from('riwayat_kondisi')
+    .select('no_rumah, kondisi, iuran_per_bulan, berlaku_sejak')
+    .order('berlaku_sejak', { ascending: true });
+  if (historyError) {
+    console.error(historyError);
+    alert('Gagal mengambil riwayat kondisi');
+    return;
+  }
+
+  // Fungsi untuk mendapatkan status & iuran yang berlaku pada suatu tanggal
+  function getStatusAtDate(noRumah, targetDate) {
+    // filter riwayat untuk rumah tersebut yang berlaku <= targetDate
+    const relevant = histories
+      .filter(h => h.no_rumah === noRumah && new Date(h.berlaku_sejak) <= targetDate)
+      .sort((a, b) => new Date(b.berlaku_sejak) - new Date(a.berlaku_sejak));
+    if (relevant.length === 0) {
+      // Jika tidak ada riwayat, default ke data warga (fallback)
+      const w = wargaList.find(w => w.no_rumah === noRumah);
+      if (w) return { kondisi: 'Berpenghuni', iuran: 75000 }; // default asumsi
+      return null;
+    }
+    return { kondisi: relevant[0].kondisi, iuran: relevant[0].iuran_per_bulan };
+  }
+
+  const reportData = [];
+  // Loop setiap bulan dalam rentang
+  let currentDate = new Date(startDate);
+  while (currentDate <= endDate) {
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth() + 1;
+    const monthKey = `${year}-${month}`;
+    const targetDate = new Date(year, month - 1, 1); // tanggal 1 bulan tersebut untuk cek riwayat
+
+    // Untuk setiap rumah, cek status dan pembayaran
+    for (const w of wargaList) {
+      const statusInfo = getStatusAtDate(w.no_rumah, targetDate);
+      if (!statusInfo) continue;
+      const { kondisi, iuran } = statusInfo;
+      // Jika status dibebaskan atau iuran 0, lewati (tidak perlu tunggakan)
+      if (kondisi === 'Dibebaskan' || iuran === 0) continue;
+
+      const paidKey = `${w.no_rumah}|${monthKey}`;
+      const isPaid = paidMap.has(paidKey);
+      if (!isPaid && iuran > 0) {
+        // Cari entry rumah di reportData
+        let entry = reportData.find(r => r.no_rumah === w.no_rumah);
+        if (!entry) {
+          entry = {
+            no_rumah: w.no_rumah,
+            iuran: iuran,
+            koordinator: w.koordinator,
+            months: [],
+            total: 0
+          };
+          reportData.push(entry);
         }
-
-        const [startYear, startMon] = startMonth.split('-').map(Number);
-        const [endYear, endMon] = endMonth.split('-').map(Number);
-        const startDate = new Date(startYear, startMon - 1, 1);
-        const endDate = new Date(endYear, endMon, 0); // akhir bulan
-
-        let query = supabase.from('warga').select('no_rumah, iuran_per_bulan, koordinator');
-        if (koordinatorFilter !== 'all') {
-          query = query.eq('koordinator', koordinatorFilter);
-        }
-        const { data: wargaList, error: wargaError } = await query;
-        if (wargaError) {
-          console.error(wargaError);
-          alert('Gagal mengambil data warga');
-          return;
-        }
-
-        const { data: payments, error: payError } = await supabase
-          .from('transaksi_iuran')
-          .select('no_rumah, bulan')
-          .gte('bulan', startDate.toISOString())
-          .lte('bulan', endDate.toISOString());
-        if (payError) {
-          console.error(payError);
-          alert('Gagal mengambil data pembayaran');
-          return;
-        }
-
-        const paidMap = new Map();
-        payments?.forEach(p => {
-          const date = new Date(p.bulan);
-          const key = `${p.no_rumah}|${date.getFullYear()}-${date.getMonth()+1}`;
-          paidMap.set(key, true);
-        });
-
-        const reportData = [];
-        let currentDate = new Date(startDate);
-        while (currentDate <= endDate) {
-          const year = currentDate.getFullYear();
-          const month = currentDate.getMonth() + 1;
-          const monthKey = `${year}-${month}`;
-          wargaList.forEach(w => {
-            const key = `${w.no_rumah}|${monthKey}`;
-            if (!paidMap.has(key) && w.iuran_per_bulan > 0) {
-              let entry = reportData.find(r => r.no_rumah === w.no_rumah);
-              if (!entry) {
-                entry = {
-                  no_rumah: w.no_rumah,
-                  iuran: w.iuran_per_bulan,
-                  koordinator: w.koordinator,
-                  months: [],
-                  total: 0
-                };
-                reportData.push(entry);
-              }
-              entry.months.push(monthKey);
-              entry.total += w.iuran_per_bulan;
-            }
-          });
-          currentDate.setMonth(currentDate.getMonth() + 1);
-        }
-
-        const endOfPeriod = new Date(endDate);
-        for (let entry of reportData) {
-          const occupant = await getCurrentOccupantAtDate(entry.no_rumah, endOfPeriod);
-          if (occupant) entry.penghuni = occupant;
-          else {
-            const { data: w } = await supabase.from('warga').select('nama_pemilik').eq('no_rumah', entry.no_rumah).single();
-            entry.penghuni = w?.nama_pemilik || '-';
-          }
-          entry.months.sort();
-          entry.monthsDisplay = entry.months.map(m => {
-            const [y, mo] = m.split('-');
-            return `${mo}/${y}`;
-          }).join(', ');
-        }
-
-        reportData.sort((a,b) => a.no_rumah.localeCompare(b.no_rumah));
-
-        const tbody = document.querySelector('#tunggakanTable tbody');
-        tbody.innerHTML = '';
-        if (reportData.length === 0) {
-          const row = tbody.insertRow();
-          const cell = row.insertCell(0);
-          cell.colSpan = 6;
-          cell.innerText = 'Tidak ada tunggakan dalam rentang yang dipilih.';
-          cell.style.textAlign = 'center';
-          return;
-        }
-        reportData.forEach(r => {
-          const row = tbody.insertRow();
-          row.insertCell(0).innerText = r.no_rumah;
-          row.insertCell(1).innerText = r.penghuni;
-          row.insertCell(2).innerText = formatRupiah(r.iuran);
-          row.insertCell(3).innerText = r.koordinator || '-';
-          row.insertCell(4).innerText = r.monthsDisplay;
-          row.insertCell(5).innerText = formatRupiah(r.total);
-        });
+        // Jika entry sudah ada, pastikan iuran per bulan tetap (seharusnya sama untuk semua bulan, tapi bisa berbeda)
+        // Kita simpan iuran per bulan dari riwayat pada bulan pertama ditemukan
+        if (entry.months.length === 0) entry.iuran = iuran;
+        entry.months.push(monthKey);
+        entry.total += iuran;
       }
+    }
+    currentDate.setMonth(currentDate.getMonth() + 1);
+  }
 
+  // Ambil nama penghuni terbaru pada akhir periode untuk setiap rumah yang punya tunggakan
+  const endOfPeriod = new Date(endDate);
+  for (let entry of reportData) {
+    const statusInfo = getStatusAtDate(entry.no_rumah, endOfPeriod);
+    let penghuni = statusInfo?.nama_penghuni;
+    if (!penghuni) {
+      // Ambil nama pemilik dari warga sebagai fallback
+      const { data: w } = await supabase.from('warga').select('nama_pemilik').eq('no_rumah', entry.no_rumah).single();
+      penghuni = w?.nama_pemilik || '-';
+    }
+    entry.penghuni = penghuni;
+    entry.months.sort();
+    entry.monthsDisplay = entry.months.map(m => {
+      const [y, mo] = m.split('-');
+      return `${mo}/${y}`;
+    }).join(', ');
+  }
+
+  reportData.sort((a,b) => a.no_rumah.localeCompare(b.no_rumah));
+
+  const tbody = document.querySelector('#tunggakanTable tbody');
+  tbody.innerHTML = '';
+  if (reportData.length === 0) {
+    const row = tbody.insertRow();
+    const cell = row.insertCell(0);
+    cell.colSpan = 6;
+    cell.innerText = 'Tidak ada tunggakan dalam rentang yang dipilih.';
+    cell.style.textAlign = 'center';
+    return;
+  }
+  reportData.forEach(r => {
+    const row = tbody.insertRow();
+    row.insertCell(0).innerText = r.no_rumah;
+    row.insertCell(1).innerText = r.penghuni;
+    row.insertCell(2).innerText = formatRupiah(r.iuran);
+    row.insertCell(3).innerText = r.koordinator || '-';
+    row.insertCell(4).innerText = r.monthsDisplay;
+    row.insertCell(5).innerText = formatRupiah(r.total);
+  });
+}
       function initLaporanTunggakan() {
         loadKoordinatorOptions();
         const startInput = document.getElementById('tunggakanStartMonth');
