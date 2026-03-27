@@ -8,6 +8,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <style>
+    /* ========== CSS SAMA SEPERTI SEBELUMNYA ========== */
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       font-family: 'Inter', sans-serif;
@@ -503,7 +504,6 @@
           return;
         }
 
-        // Jika role admin, tampilkan tab Manajemen User
         if (userRole === 'admin') {
           const tabsContainer = document.getElementById('tabsContainer');
           const usersTabBtn = document.createElement('button');
@@ -965,7 +965,7 @@
         load();
       }
 
-      // ========== LAPORAN TUNGGAKAN ==========
+      // ========== LAPORAN TUNGGAKAN (DENGAN PERBAIKAN) ==========
       async function loadKoordinatorOptions() {
         const { data, error } = await supabase
           .from('warga')
@@ -997,7 +997,7 @@
         const [startYear, startMon] = startMonth.split('-').map(Number);
         const [endYear, endMon] = endMonth.split('-').map(Number);
         const startDate = new Date(startYear, startMon - 1, 1);
-        const endDate = new Date(endYear, endMon, 0);
+        const endDate = new Date(endYear, endMon, 0); // akhir bulan
 
         let query = supabase.from('warga').select('no_rumah, koordinator');
         if (koordinatorFilter !== 'all') {
@@ -1028,6 +1028,7 @@
           paidMap.set(key, true);
         });
 
+        // Ambil semua riwayat kondisi
         const { data: histories, error: historyError } = await supabase
           .from('riwayat_kondisi')
           .select('no_rumah, kondisi, iuran_per_bulan, berlaku_sejak, nama_penghuni')
@@ -1038,19 +1039,39 @@
           return;
         }
 
-        function getStatusAtDate(noRumah, targetDate) {
-          const relevant = histories
-            .filter(h => h.no_rumah === noRumah && new Date(h.berlaku_sejak) <= targetDate)
-            .sort((a, b) => new Date(b.berlaku_sejak) - new Date(a.berlaku_sejak));
-          if (relevant.length === 0) {
-            return { kondisi: 'Berpenghuni', iuran: 75000, nama_penghuni: null };
+        // Ubah berlaku_sejak menjadi string YYYY-MM-DD untuk perbandingan
+        const historyMap = new Map(); // key: no_rumah, value: array of { berlaku_sejak_str, kondisi, iuran, nama_penghuni }
+        histories.forEach(h => {
+          if (!historyMap.has(h.no_rumah)) historyMap.set(h.no_rumah, []);
+          const dateStr = new Date(h.berlaku_sejak).toISOString().split('T')[0];
+          historyMap.get(h.no_rumah).push({
+            berlaku_sejak: dateStr,
+            kondisi: h.kondisi,
+            iuran: h.iuran_per_bulan,
+            nama_penghuni: h.nama_penghuni
+          });
+        });
+
+        function getStatusAtDate(noRumah, targetDateStr) {
+          const entries = historyMap.get(noRumah) || [];
+          // Cari riwayat terbaru dengan berlaku_sejak <= targetDateStr
+          let latest = null;
+          for (let e of entries) {
+            if (e.berlaku_sejak <= targetDateStr) {
+              if (!latest || e.berlaku_sejak > latest.berlaku_sejak) {
+                latest = e;
+              }
+            }
           }
-          const latest = relevant[0];
-          return {
-            kondisi: latest.kondisi,
-            iuran: latest.iuran_per_bulan,
-            nama_penghuni: latest.nama_penghuni
-          };
+          if (latest) {
+            return {
+              kondisi: latest.kondisi,
+              iuran: latest.iuran,
+              nama_penghuni: latest.nama_penghuni
+            };
+          }
+          // Tidak ada riwayat -> default Berpenghuni dengan iuran 75000
+          return { kondisi: 'Berpenghuni', iuran: 75000, nama_penghuni: null };
         }
 
         const reportData = [];
@@ -1059,9 +1080,10 @@
           const year = currentDate.getFullYear();
           const month = currentDate.getMonth() + 1;
           const monthKey = `${year}-${month}`;
-          const targetDate = new Date(year, month - 1, 1);
+          const targetDateStr = `${year}-${String(month).padStart(2,'0')}-01`;
+
           for (const w of wargaList) {
-            const statusInfo = getStatusAtDate(w.no_rumah, targetDate);
+            const statusInfo = getStatusAtDate(w.no_rumah, targetDateStr);
             const { kondisi, iuran } = statusInfo;
             if (kondisi === 'Dibebaskan' || iuran === 0) continue;
 
@@ -1087,9 +1109,9 @@
           currentDate.setMonth(currentDate.getMonth() + 1);
         }
 
-        const endOfPeriod = new Date(endDate);
+        const endOfPeriodStr = `${endYear}-${String(endMon).padStart(2,'0')}-01`;
         for (let entry of reportData) {
-          const statusInfo = getStatusAtDate(entry.no_rumah, endOfPeriod);
+          const statusInfo = getStatusAtDate(entry.no_rumah, endOfPeriodStr);
           let penghuni = statusInfo.nama_penghuni;
           if (!penghuni) {
             const { data: w } = await supabase.from('warga').select('nama_pemilik').eq('no_rumah', entry.no_rumah).single();
