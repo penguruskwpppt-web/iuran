@@ -262,29 +262,25 @@
       align-items: flex-start;
     }
 
-    /* Dashboard stats – dua baris, baris kedua center */
+    /* Dashboard stats – 5 cards dengan gaya modern */
     .dashboard-stats {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 24px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 20px;
       margin-top: 30px;
     }
-    .stat-box {
+    .stat-card {
       background: white;
-      border-radius: 24px;
-      padding: 24px 20px;
+      border-radius: 20px;
+      padding: 20px;
       text-align: center;
-      box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05);
-      border: 1px solid #eef2f8;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.05);
       transition: transform 0.2s, box-shadow 0.2s;
-      flex: 1;
-      min-width: 200px;
-      max-width: 280px;
+      border: 1px solid #eef2f8;
     }
-    .stat-box:hover {
+    .stat-card:hover {
       transform: translateY(-5px);
-      box-shadow: 0 20px 30px -10px rgba(0,0,0,0.1);
+      box-shadow: 0 15px 30px rgba(0,0,0,0.1);
     }
     .stat-icon {
       font-size: 2rem;
@@ -292,44 +288,45 @@
       margin-bottom: 12px;
     }
     .stat-number {
-      font-size: 2rem;
+      font-size: 1.8rem;
       font-weight: 800;
       color: var(--dark);
+      margin: 8px 0;
+      word-break: break-word;
     }
     .stat-label {
       font-size: 0.85rem;
       color: #64748b;
-      margin-top: 8px;
       font-weight: 500;
     }
 
    /* Gallery – 3 columns */
-.gallery-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 24px;
-}
-.gallery-item {
-  border-radius: 20px;
-  overflow: hidden;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-  transition: transform 0.2s;
-}
-.gallery-item:hover {
-  transform: translateY(-5px);
-}
-.gallery-item img {
-  width: 100%;
-  aspect-ratio: 3 / 2;   /* Mengganti height:200px dengan proporsi 3:2 (600:400) */
-  object-fit: cover;
-  display: block;
-}
-.gallery-caption {
-  padding: 12px;
-  background: white;
-  text-align: center;
-  font-weight: 500;
-}
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+    }
+    .gallery-item {
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+      transition: transform 0.2s;
+    }
+    .gallery-item:hover {
+      transform: translateY(-5px);
+    }
+    .gallery-item img {
+      width: 100%;
+      aspect-ratio: 3 / 2;
+      object-fit: cover;
+      display: block;
+    }
+    .gallery-caption {
+      padding: 12px;
+      background: white;
+      text-align: center;
+      font-weight: 500;
+    }
     /* Announcements */
     .announcement-list {
       display: flex;
@@ -527,12 +524,11 @@
       }
       .nav-links.active { display: flex; }
       .menu-toggle { display: block; }
-      .dashboard-stats { gap: 16px; }
-      .stat-box { min-width: calc(50% - 16px); max-width: none; }
+      .dashboard-stats { grid-template-columns: repeat(2, 1fr); gap: 16px; }
+      .stat-number { font-size: 1.4rem; }
       .gallery-grid { grid-template-columns: 1fr; }
       .contact-board { grid-template-columns: 1fr; }
       .finance-grid { grid-template-columns: 1fr; }
-      .stat-number { font-size: 1.5rem; }
       .logo img { width: 55px; height: 55px; }
       .logo h1 { font-size: 1.6rem; }
       .resi-item { flex-direction: column; align-items: flex-start; }
@@ -571,7 +567,7 @@
   </div>
 </header>
 
-<!-- Modal Info Pembayaran (sama) -->
+<!-- Modal Info Pembayaran -->
 <div id="paymentModal" class="modal">
   <div class="modal-content">
     <span class="close-modal">&times;</span>
@@ -598,7 +594,7 @@
   </div>
 </div>
 
-<!-- Modal Riwayat Pembayaran (diperbaiki) -->
+<!-- Modal Riwayat Pembayaran -->
 <div id="historyModal" class="modal">
   <div class="modal-content">
     <span class="close-modal" id="closeHistoryModal">&times;</span>
@@ -665,12 +661,32 @@
 <section id="dashboard">
   <div class="container">
     <h2 class="title">Ringkasan Keuangan Terkini</h2>
-    <div id="dashboardContent" class="dashboard-stats">
-      <div class="stat-box"><div class="stat-icon"><i class="fas fa-arrow-up"></i></div><div class="stat-number" id="totalPemasukan">-</div><div class="stat-label">Total Pemasukan</div></div>
-      <div class="stat-box"><div class="stat-icon"><i class="fas fa-arrow-down"></i></div><div class="stat-number" id="totalPengeluaran">-</div><div class="stat-label">Total Pengeluaran</div></div>
-      <div class="stat-box"><div class="stat-icon"><i class="fas fa-wallet"></i></div><div class="stat-number" id="saldoKas">-</div><div class="stat-label">Saldo Kas</div></div>
-      <div class="stat-box"><div class="stat-icon"><i class="fas fa-calendar-alt"></i></div><div class="stat-number" id="iuranBulanIni">-</div><div class="stat-label">Iuran Bulan Ini</div></div>
-      <div class="stat-box"><div class="stat-icon"><i class="fas fa-clock"></i></div><div class="stat-number" id="totalTunggakan">-</div><div class="stat-label">Total Tunggakan</div></div>
+    <div class="dashboard-stats">
+      <div class="stat-card">
+        <div class="stat-icon"><i class="fas fa-arrow-up"></i></div>
+        <div class="stat-number" id="totalPemasukan">-</div>
+        <div class="stat-label">Total Pemasukan</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon"><i class="fas fa-arrow-down"></i></div>
+        <div class="stat-number" id="totalPengeluaran">-</div>
+        <div class="stat-label">Total Pengeluaran</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon"><i class="fas fa-wallet"></i></div>
+        <div class="stat-number" id="saldoKas">-</div>
+        <div class="stat-label">Saldo Kas</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon"><i class="fas fa-calendar-alt"></i></div>
+        <div class="stat-number" id="iuranBulanIni">-</div>
+        <div class="stat-label">Iuran Bulan Ini</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon"><i class="fas fa-clock"></i></div>
+        <div class="stat-number" id="totalTunggakan">-</div>
+        <div class="stat-label">Total Tunggakan</div>
+      </div>
     </div>
   </div>
 </section>
@@ -680,39 +696,20 @@
     <h2 class="title">Galeri Kegiatan</h2>
     <div class="gallery-grid">
       <div class="gallery-item">
-        <img 
-          src="https://drive.google.com/uc?export=view&id=1E2rF3gzlPYCmekPb2Mne9dQ1je1dhoLc" 
-          alt="Pembagian THR" 
-          width="600" 
-          height="400"
-          loading="lazy"
-        >
+        <img src="https://drive.google.com/uc?export=view&id=1E2rF3gzlPYCmekPb2Mne9dQ1je1dhoLc" alt="Pembagian THR" loading="lazy">
         <div class="gallery-caption">Pembagian THR</div>
       </div>
       <div class="gallery-item">
-        <img 
-          src="https://drive.google.com/uc?export=view&id=1z8gcQ2eT7n4fynLXWRIif7h6jUc9hkI2" 
-          alt="Gotong Royong" 
-          width="600" 
-          height="400"
-          loading="lazy"
-        >
+        <img src="https://drive.google.com/uc?export=view&id=1z8gcQ2eT7n4fynLXWRIif7h6jUc9hkI2" alt="Gotong Royong" loading="lazy">
         <div class="gallery-caption">Gotong Royong</div>
       </div>
       <div class="gallery-item">
-        <img 
-          src="https://drive.google.com/uc?export=view&id=1mLcg_95bTQ8BzIhSVQtzM8YUzT15BlKG" 
-          alt="Pemindahan Tiang" 
-          width="600" 
-          height="400"
-          loading="lazy"
-        >
+        <img src="https://drive.google.com/uc?export=view&id=1mLcg_95bTQ8BzIhSVQtzM8YUzT15BlKG" alt="Pemindahan Tiang" loading="lazy">
         <div class="gallery-caption">Pemindahan Tiang</div>
       </div>
     </div>
   </div>
 </section>
-
 
 <section id="pengumuman">
   <div class="container">
@@ -778,6 +775,7 @@
   const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind1YXJndHh1bGFxdXhweml1emhvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1MjMxNTYsImV4cCI6MjA5MDA5OTE1Nn0.EcVFAGh3ZgTDs8Paz9O_8MpkliKPF0vI7cAuuIsvb2U'
   const supabase = createClient(supabaseUrl, supabaseKey)
 
+  // ========== FUNGSI PEMBANTU ==========
   function formatRupiah(angka) {
     if (angka === null || isNaN(angka)) angka = 0
     return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka)
@@ -792,6 +790,7 @@
     return `Lunas: ${day} ${month} ${year}`
   }
 
+  // ========== DASHBOARD (RINGKASAN KEUANGAN) ==========
   async function loadDashboard() {
     try {
       const { data: lastKas } = await supabase.from('transaksi_kas').select('saldo').order('tanggal', { ascending: false }).limit(1);
@@ -813,6 +812,7 @@
       const totalIuranBulanIni = iuranBulanIni?.reduce((s, t) => s + t.pemasukan, 0) || 0;
       document.getElementById('iuranBulanIni').innerText = formatRupiah(totalIuranBulanIni);
 
+      // Hitung total tunggakan (semua rumah)
       const { data: wargaList } = await supabase.from('warga').select('no_rumah, kondisi_terakhir, iuran_per_bulan').in('kondisi_terakhir', ['Berpenghuni', 'Kosong']);
       const { data: allPayments } = await supabase.from('transaksi_iuran').select('no_rumah, bulan');
       const paidMap = new Map();
@@ -843,50 +843,113 @@
     }
   }
 
+  // ========== LOGIKA CEK TUNGGAKAN (SAMA SEPERTI iuran.html) ==========
+  async function getRiwayatKondisiForHouse(noRumah) {
+    const { data, error } = await supabase
+      .from('riwayat_kondisi')
+      .select('berlaku_sejak, kondisi, iuran_per_bulan')
+      .eq('no_rumah', noRumah)
+      .order('berlaku_sejak', { ascending: true });
+    if (error) return [];
+    return data || [];
+  }
+
+  function getStatusAtDate(histories, targetDateStr) {
+    let latest = null;
+    for (let h of histories) {
+      const berlakuStr = new Date(h.berlaku_sejak).toISOString().split('T')[0];
+      if (berlakuStr <= targetDateStr) {
+        if (!latest || berlakuStr > latest.berlakuStr) {
+          latest = { berlakuStr, kondisi: h.kondisi, iuran: h.iuran_per_bulan };
+        }
+      }
+    }
+    if (latest) {
+      return { kondisi: latest.kondisi, iuran: latest.iuran };
+    }
+    // default jika tidak ada riwayat: Berpenghuni dengan iuran 75000
+    return { kondisi: 'Berpenghuni', iuran: 75000 };
+  }
+
   async function cekTunggakanByRumah() {
     const noRumah = prompt("Masukkan nomor rumah yang ingin dicek tunggakannya:", "")
     if (!noRumah) return
     try {
-      const { data: warga, error } = await supabase.from('warga').select('nama_pemilik, kondisi_terakhir, iuran_per_bulan').eq('no_rumah', noRumah).single()
-      if (error || !warga) { alert(`Nomor rumah ${noRumah} tidak ditemukan.`); return }
+      // Ambil data warga
+      const { data: warga, error: wargaError } = await supabase
+        .from('warga')
+        .select('nama_pemilik, kondisi_terakhir, iuran_per_bulan')
+        .eq('no_rumah', noRumah)
+        .single()
+      if (wargaError || !warga) {
+        alert(`Nomor rumah ${noRumah} tidak ditemukan.`)
+        return
+      }
       if (warga.kondisi_terakhir === 'Dibebaskan') {
         alert(`🏠 Rumah ${noRumah} (${warga.nama_pemilik})\n\nStatus: DIBEBASKAN\nAnda tidak dikenakan iuran.`)
         return
       }
-      const { data: payments } = await supabase.from('transaksi_iuran').select('bulan').eq('no_rumah', noRumah)
-      const paidMonths = new Set()
+
+      // Ambil riwayat kondisi rumah
+      const histories = await getRiwayatKondisiForHouse(noRumah)
+
+      // Ambil pembayaran yang sudah ada
+      const { data: payments } = await supabase
+        .from('transaksi_iuran')
+        .select('bulan')
+        .eq('no_rumah', noRumah)
+      const paidSet = new Set()
       payments?.forEach(p => {
         const date = new Date(p.bulan);
-        paidMonths.add(`${date.getFullYear()}-${date.getMonth()+1}`);
+        paidSet.add(`${date.getFullYear()}-${date.getMonth()+1}`);
       });
+
+      // Hitung tunggakan dari Nov 2025 sampai bulan ini
       const startDate = new Date(2025, 10, 1);
       const now = new Date();
       const endYear = now.getFullYear();
       const endMonth = now.getMonth() + 1;
       const tunggakan = [];
       let totalNominal = 0;
+
       let year = startDate.getFullYear();
       let month = startDate.getMonth() + 1;
+
       while (year < endYear || (year === endYear && month <= endMonth)) {
+        const dateStr = `${year}-${String(month).padStart(2,'0')}-01`;
+        const { kondisi: statusBulan, iuran: iuranBulan } = getStatusAtDate(histories, dateStr);
+        if (statusBulan === 'Dibebaskan' || iuranBulan === 0) {
+          month++;
+          if (month > 12) { month = 1; year++; }
+          continue;
+        }
         const key = `${year}-${month}`;
-        if (!paidMonths.has(key)) {
-          tunggakan.push(`${month}/${year}`);
-          totalNominal += warga.iuran_per_bulan;
+        const isPaid = paidSet.has(key);
+        if (!isPaid && iuranBulan > 0) {
+          tunggakan.push(`${month}/${year} (${formatRupiah(iuranBulan)})`);
+          totalNominal += iuranBulan;
         }
         month++;
         if (month > 12) { month = 1; year++; }
       }
-      let pesan = `🏠 Rumah ${noRumah} (${warga.nama_pemilik})\nStatus: ${warga.kondisi_terakhir === 'Kosong' ? 'KOSONG' : 'BERPENGHUNI'} (iuran Rp ${formatRupiah(warga.iuran_per_bulan)}/bln)\n\n`;
+
+      let pesan = `🏠 Rumah ${noRumah} (${warga.nama_pemilik})\nStatus saat ini: ${warga.kondisi_terakhir === 'Kosong' ? 'KOSONG' : 'BERPENGHUNI'}\n\n`;
       if (tunggakan.length === 0) {
-        const bulanSekarang = new Date().toLocaleString('id-ID', { month: 'long', year: 'numeric' });
+        const bulanSekarang = now.toLocaleString('id-ID', { month: 'long', year: 'numeric' });
         pesan += `✅ Tidak Ada Tunggakan (Periode Nov 2025 – ${bulanSekarang})\nTerima kasih telah membayar iuran tepat waktu. 🙏`;
       } else {
-        pesan += `⚠️ Tunggakan ${tunggakan.length} bulan:\n${tunggakan.join(', ')}\nTotal: ${formatRupiah(totalNominal)}\n\n`;
-        if (tunggakan.length >= 2) pesan += `⚠️ PERINGATAN! Jika tunggakan >2 bulan, layanan kebersihan akan dihentikan sementara.`;
-        else pesan += `Segera lunasi tunggakan Anda.`;
+        pesan += `⚠️ Tunggakan ${tunggakan.length} bulan:\n${tunggakan.join('\n')}\n\nTotal: ${formatRupiah(totalNominal)}\n\n`;
+        if (tunggakan.length >= 2) {
+          pesan += `⚠️ PERINGATAN! Jika tunggakan >2 bulan, layanan kebersihan akan dihentikan sementara.`;
+        } else {
+          pesan += `Segera lunasi tunggakan Anda.`;
+        }
       }
       alert(pesan);
-    } catch (err) { console.error(err); alert('Gagal memeriksa tunggakan.'); }
+    } catch (err) {
+      console.error(err);
+      alert('Gagal memeriksa tunggakan.');
+    }
   }
 
   function openLaporanKas() {
@@ -899,7 +962,7 @@
     try {
       const { data: payments, error } = await supabase
         .from('transaksi_iuran')
-        .select('bulan, jumlah, metode, created_at') // tambah created_at
+        .select('bulan, jumlah, metode, created_at')
         .eq('no_rumah', noRumah)
         .order('bulan', { ascending: false });
       if (error || !payments || payments.length === 0) {
