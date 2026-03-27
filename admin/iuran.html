@@ -8,7 +8,6 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <style>
-    /* CSS sama seperti sebelumnya – tidak diubah */
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       font-family: 'Inter', sans-serif;
@@ -276,9 +275,8 @@
       let currentIuran = 0;
       let currentOccupantName = '';
       let currentOccupantPhone = '';
-      let paidSet = new Set(); // berisi string tanggal YYYY-MM-01 yang sudah dibayar
+      let paidSet = new Set();
 
-      // Cek login dan role
       (async () => {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) {
@@ -382,13 +380,12 @@
       function fillManualMonthOptions(paidSet) {
         const select = document.getElementById('manualMonthSelect');
         select.innerHTML = '<option value="">-- Pilih Bulan --</option>';
-        const startDate = new Date(2025, 10, 1); // 1 November 2025
-        const now = new Date();
-        const endYear = now.getFullYear();
-        const endMonth = now.getMonth() + 1;
-        let year = startDate.getFullYear();
-        let month = startDate.getMonth() + 1;
-        while (year < endYear || (year === endYear && month <= endMonth)) {
+        const startDate = new Date(2025, 10, 1);
+        const endDate = new Date(2027, 10, 1);
+        let current = new Date(startDate);
+        while (current <= endDate) {
+          const year = current.getFullYear();
+          const month = current.getMonth() + 1;
           const dateStr = `${year}-${String(month).padStart(2,'0')}-01`;
           if (!paidSet.has(dateStr)) {
             const option = document.createElement('option');
@@ -396,8 +393,7 @@
             option.textContent = `${month}/${year}`;
             select.appendChild(option);
           }
-          month++;
-          if (month > 12) { month = 1; year++; }
+          current.setMonth(current.getMonth() + 1);
         }
       }
 
@@ -451,14 +447,13 @@
           return;
         }
 
-        // Ambil data pembayaran yang sudah ada
         const { data: payments } = await supabase
           .from('transaksi_iuran')
           .select('bulan')
           .eq('no_rumah', noRumah);
         paidSet.clear();
         payments?.forEach(p => {
-          const dateStr = new Date(p.bulan).toISOString().split('T')[0]; // ambil YYYY-MM-DD
+          const dateStr = new Date(p.bulan).toISOString().split('T')[0];
           paidSet.add(dateStr);
         });
 
@@ -582,7 +577,7 @@
         let skippedCount = 0;
 
         for (const bulanStr of selectedDates) {
-          // Cek apakah sudah dibayar (sekali lagi untuk amannya)
+          // Cek duplikat (opsional, karena UNIQUE constraint akan menangani)
           const { data: existing, error: checkError } = await supabase
             .from('transaksi_iuran')
             .select('created_at')
@@ -617,17 +612,14 @@
             }]);
 
           if (iuranError) {
-            // Tangani duplicate key violation (23505)
             if (iuranError.code === '23505') {
-              alert(`⚠️ Iuran bulan ${bulanStr} sudah pernah dibayar sebelumnya.`);
-              skippedCount++;
+              alert(`⚠️ Iuran bulan ${bulanStr} sudah pernah dibayar (terdeteksi oleh database).`);
             } else {
               alert(`Gagal simpan iuran untuk bulan ${bulanStr}: ${iuranError.message}`);
             }
             continue;
           }
 
-          // Update saldo kas
           const { data: lastSaldo } = await supabase
             .from('transaksi_kas')
             .select('saldo')
