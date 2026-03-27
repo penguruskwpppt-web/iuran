@@ -7,6 +7,8 @@
   <link rel="icon" href="images/logo.webp" type="image/webp">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <style>
     * {
       margin: 0;
@@ -118,7 +120,6 @@
     .btn-primary:active {
       transform: scale(0.96);
     }
-    /* BATAL / RESET */
     .btn-cancel {
       background: #f1f5f9;
       color: #334155;
@@ -247,7 +248,7 @@
   </style>
 </head>
 <body>
-<div class="container">
+<div class="container" id="reportContainer">
   <div class="report-header">
     <img src="images/logo.webp" alt="Logo KWP3T">
     <div>
@@ -275,7 +276,7 @@
     </div>
   </div>
 
-  <div class="filter-bar">
+  <div class="filter-bar" id="filterBar">
     <div class="filter-group">
       <label>Tanggal Mulai</label>
       <input type="date" id="startDate">
@@ -286,8 +287,8 @@
     </div>
     <button id="filterBtn" class="btn-primary"><i class="fas fa-filter"></i> Filter</button>
     <button id="resetBtn" class="btn-cancel"><i class="fas fa-undo"></i> Reset</button>
-    <button id="printBtn" class="btn-primary"><i class="fas fa-print"></i> Cetak</button>
-    <button id="exportBtn" class="btn-primary" style="background:#27ae60;"><i class="fas fa-download"></i> Export</button>
+    <button id="pdfBtn" class="btn-primary"><i class="fas fa-file-pdf"></i> Cetak PDF</button>
+    <button id="excelBtn" class="btn-primary" style="background:#27ae60;"><i class="fas fa-file-excel"></i> Export Excel</button>
   </div>
 
   <div style="overflow-x: auto;">
@@ -331,6 +332,7 @@
   const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind1YXJndHh1bGFxdXhweml1emhvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1MjMxNTYsImV4cCI6MjA5MDA5OTE1Nn0.EcVFAGh3ZgTDs8Paz9O_8MpkliKPF0vI7cAuuIsvb2U'
   const supabase = createClient(supabaseUrl, supabaseKey)
 
+  let currentData = [];
   let saldoAwalGlobal = 0;
 
   function formatRupiah(angka) {
@@ -338,7 +340,6 @@
     return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka);
   }
 
-  // Format tanggal: 01 November 2026
   function formatFullDate(iso) {
     const date = new Date(iso);
     const day = date.getDate().toString().padStart(2, '0');
@@ -368,9 +369,9 @@
     const { data, error } = await query;
     if (error) console.error(error);
     else {
-      const filteredData = data || [];
-      updateSummary(filteredData);
-      renderTable(filteredData);
+      currentData = data || [];
+      updateSummary(currentData);
+      renderTable(currentData);
     }
   }
 
@@ -388,6 +389,14 @@
   function renderTable(data) {
     const tbody = document.querySelector('#kasTable tbody');
     tbody.innerHTML = '';
+    if (!data.length) {
+      const row = tbody.insertRow();
+      const cell = row.insertCell(0);
+      cell.colSpan = 6;
+      cell.innerText = 'Tidak ada data';
+      cell.style.textAlign = 'center';
+      return;
+    }
     data.forEach(row => {
       const tr = tbody.insertRow();
       tr.insertCell(0).innerText = formatFullDate(row.tanggal);
@@ -399,28 +408,33 @@
     });
   }
 
-  async function exportCSV() {
-    const { data, error } = await supabase.from('transaksi_kas').select('*').order('tanggal', { ascending: true });
-    if (error) return alert('Gagal mengambil data');
-    const headers = ['tanggal','keterangan','pemasukan','pengeluaran','saldo','jenis','sumber'];
-    const rows = data.map(row => headers.map(h => {
-      let val = row[h];
-      if (h === 'tanggal') val = formatFullDate(row.tanggal);
-      if (typeof val === 'number') val = val.toString();
-      if (typeof val === 'string' && (val.includes(',') || val.includes('"'))) val = `"${val.replace(/"/g, '""')}"`;
-      return val || '';
-    }).join(','));
-    const csv = [headers.join(','), ...rows].join('\n');
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    link.href = url;
-    link.download = `laporan_kas_${new Date().toISOString().slice(0,10)}.csv`;
-    link.click();
-    URL.revokeObjectURL(url);
+  // Export to Excel (XLSX)
+  function exportToExcel() {
+    if (!currentData.length) {
+      alert('Tidak ada data untuk diekspor');
+      return;
+    }
+    const wsData = currentData.map(row => ({
+      Tanggal: formatFullDate(row.tanggal),
+      Keterangan: row.keterangan,
+      Pemasukan: row.pemasukan || 0,
+      Pengeluaran: row.pengeluaran || 0,
+      Saldo: row.saldo,
+      Sumber: row.sumber || ''
+    }));
+    const ws = XLSX.utils.json_to_sheet(wsData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Laporan Kas');
+    XLSX.writeFile(wb, `laporan_kas_${new Date().toISOString().slice(0,10)}.xlsx`);
   }
 
-  function updatePrintTimestamp() {
+  // Export to PDF (html2pdf)
+  function exportToPDF() {
+    if (!currentData.length) {
+      alert('Tidak ada data untuk dicetak');
+      return;
+    }
+    // Set timestamp in footer
     const now = new Date();
     const options = { 
       weekday: 'long', 
@@ -433,19 +447,25 @@
     };
     const formatted = now.toLocaleString('id-ID', options);
     document.getElementById('printTimestamp').innerText = `Dicetak: ${formatted}`;
+
+    // Clone the container to avoid affecting the original
+    const element = document.getElementById('reportContainer');
+    const opt = {
+      margin: [0.5, 0.5, 0.5, 0.5],
+      filename: `laporan_kas_${new Date().toISOString().slice(0,10)}.pdf`,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2, letterRendering: true },
+      jsPDF: { unit: 'in', format: 'a4', orientation: 'landscape' },
+      pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+    };
+    html2pdf().set(opt).from(element).save();
   }
 
-  function printReport() {
-    updatePrintTimestamp(); // update timestamp before printing
-    window.print();
-  }
-
-  // Initial timestamp on load
-  updatePrintTimestamp();
-
+  // Initial load
   await fetchSaldoAwal();
-  loadKas();
+  await loadKas();
 
+  // Event listeners
   document.getElementById('filterBtn').addEventListener('click', () => {
     const start = document.getElementById('startDate').value;
     const end = document.getElementById('endDate').value;
@@ -456,8 +476,13 @@
     document.getElementById('endDate').value = '';
     loadKas();
   });
-  document.getElementById('exportBtn').addEventListener('click', exportCSV);
-  document.getElementById('printBtn').addEventListener('click', printReport);
+  document.getElementById('pdfBtn').addEventListener('click', exportToPDF);
+  document.getElementById('excelBtn').addEventListener('click', exportToExcel);
+
+  // Initial timestamp (optional)
+  const now = new Date();
+  const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' };
+  document.getElementById('printTimestamp').innerText = `Dicetak: ${now.toLocaleString('id-ID', options)}`;
 </script>
 </body>
 </html>
