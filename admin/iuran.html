@@ -8,6 +8,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <style>
+    /* CSS sama seperti sebelumnya – tidak diubah */
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       font-family: 'Inter', sans-serif;
@@ -241,7 +242,7 @@
                 <tr><th>Bulan</th><th>Jumlah</th><th>Metode</th><th>Bukti</th><th>Tanggal Bayar</th>
               </thead>
               <tbody></tbody>
-            </table>
+            斋
           </div>
         </div>
       </div>
@@ -276,7 +277,7 @@
       let currentOccupantName = '';
       let currentOccupantPhone = '';
       let paidSet = new Set();
-      let rumahRiwayat = []; // menyimpan riwayat rumah untuk perhitungan status per bulan
+      let rumahRiwayat = []; // menyimpan riwayat kondisi rumah untuk status per bulan
 
       // Cek login dan role
       (async () => {
@@ -379,24 +380,23 @@
         });
       }
 
-      function fillManualMonthOptions(paidSet) {
-        const select = document.getElementById('manualMonthSelect');
-        select.innerHTML = '<option value="">-- Pilih Bulan --</option>';
-        const startDate = new Date(2025, 10, 1);
-        const endDate = new Date(2027, 10, 1);
-        let current = new Date(startDate);
-        while (current <= endDate) {
-          const year = current.getFullYear();
-          const month = current.getMonth() + 1;
-          const dateStr = `${year}-${String(month).padStart(2,'0')}-01`;
-          if (!paidSet.has(dateStr)) {
-            const option = document.createElement('option');
-            option.value = dateStr;
-            option.textContent = `${month}/${year}`;
-            select.appendChild(option);
+      // Fungsi untuk mendapatkan status dan iuran pada tanggal tertentu
+      function getStatusAtDate(noRumah, targetDateStr, histories) {
+        // histories adalah riwayat untuk rumah ini
+        let latest = null;
+        for (let h of histories) {
+          const berlakuStr = new Date(h.berlaku_sejak).toISOString().split('T')[0];
+          if (berlakuStr <= targetDateStr) {
+            if (!latest || berlakuStr > latest.berlakuStr) {
+              latest = { berlakuStr, kondisi: h.kondisi, iuran: h.iuran_per_bulan };
+            }
           }
-          current.setMonth(current.getMonth() + 1);
         }
+        if (latest) {
+          return { kondisi: latest.kondisi, iuran: latest.iuran };
+        }
+        // fallback ke data warga saat ini (asumsi status saat ini)
+        return { kondisi: currentOccupant ? currentOccupant.kondisi : 'Berpenghuni', iuran: currentIuran };
       }
 
       async function checkHouse(noRumah) {
@@ -462,24 +462,6 @@
         }
         rumahRiwayat = histories || [];
 
-        // Fungsi untuk mendapatkan status pada tanggal tertentu
-        function getStatusAtDate(targetDateStr) {
-          let latest = null;
-          for (let h of rumahRiwayat) {
-            const berlakuStr = new Date(h.berlaku_sejak).toISOString().split('T')[0];
-            if (berlakuStr <= targetDateStr) {
-              if (!latest || berlakuStr > latest.berlakuStr) {
-                latest = { berlakuStr, kondisi: h.kondisi, iuran: h.iuran_per_bulan };
-              }
-            }
-          }
-          if (latest) {
-            return { kondisi: latest.kondisi, iuran: latest.iuran };
-          }
-          // default ke data warga saat ini
-          return { kondisi: status, iuran: iuran };
-        }
-
         // Ambil pembayaran yang sudah ada
         const { data: payments } = await supabase
           .from('transaksi_iuran')
@@ -506,7 +488,7 @@
         while (year < endYear || (year === endYear && month <= endMonth)) {
           const dateStr = `${year}-${String(month).padStart(2,'0')}-01`;
           const targetDateStr = dateStr;
-          const { kondisi: statusBulan, iuran: iuranBulan } = getStatusAtDate(targetDateStr);
+          const { kondisi: statusBulan, iuran: iuranBulan } = getStatusAtDate(noRumah, targetDateStr, rumahRiwayat);
           if (statusBulan === 'Dibebaskan' || iuranBulan === 0) {
             // Bulan ini tidak perlu dibayar, lewati
             month++;
@@ -540,7 +522,35 @@
           document.getElementById('paymentForm').style.display = 'none';
         }
 
-        fillManualMonthOptions(paidSet);
+        // Isi dropdown manual bulan dengan bulan yang belum dibayar dan bukan Dibebaskan
+        fillManualMonthOptions(paidSet, rumahRiwayat);
+      }
+
+      function fillManualMonthOptions(paidSet, histories) {
+        const select = document.getElementById('manualMonthSelect');
+        select.innerHTML = '<option value="">-- Pilih Bulan --</option>';
+        const startDate = new Date(2025, 10, 1);
+        const endDate = new Date(2027, 10, 1);
+        let current = new Date(startDate);
+        while (current <= endDate) {
+          const year = current.getFullYear();
+          const month = current.getMonth() + 1;
+          const dateStr = `${year}-${String(month).padStart(2,'0')}-01`;
+          // Jika sudah dibayar, skip
+          if (paidSet.has(dateStr)) {
+            current.setMonth(current.getMonth() + 1);
+            continue;
+          }
+          // Cek status bulan ini (apakah Dibebaskan)
+          const { kondisi: statusBulan } = getStatusAtDate(selectedHouse.no_rumah, dateStr, histories);
+          if (statusBulan !== 'Dibebaskan') {
+            const option = document.createElement('option');
+            option.value = dateStr;
+            option.textContent = `${month}/${year}`;
+            select.appendChild(option);
+          }
+          current.setMonth(current.getMonth() + 1);
+        }
       }
 
       document.getElementById('selectAllBtn')?.addEventListener('click', () => {
@@ -645,21 +655,8 @@
           const year = parseInt(bulanStr.slice(0,4));
           const month = parseInt(bulanStr.slice(5,7));
           const targetDateStr = bulanStr;
-          const statusInfo = (() => {
-            let latest = null;
-            for (let h of rumahRiwayat) {
-              const berlakuStr = new Date(h.berlaku_sejak).toISOString().split('T')[0];
-              if (berlakuStr <= targetDateStr) {
-                if (!latest || berlakuStr > latest.berlakuStr) {
-                  latest = { berlakuStr, iuran: h.iuran_per_bulan };
-                }
-              }
-            }
-            if (latest) return { iuran: latest.iuran };
-            return { iuran: currentIuran };
-          })();
-
-          const jumlah = statusInfo.iuran;
+          const { iuran: iuranBulan } = getStatusAtDate(selectedHouse.no_rumah, targetDateStr, rumahRiwayat);
+          const jumlah = iuranBulan;
           const kasId = `IU-${new Date().toISOString().slice(0,10).replace(/-/g,'')}-${Date.now().toString().slice(-6)}-${month}`;
 
           const { error: iuranError } = await supabase
