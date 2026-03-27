@@ -727,66 +727,85 @@
       }
 
       async function loadNonIuranTransactions() {
-        const { data, error } = await supabase
-          .from('transaksi_kas')
-          .select('kas_id, tanggal, keterangan, pemasukan, pengeluaran, sumber')
-          .eq('jenis', 'Pemasukan')
-          .neq('sumber', 'Iuran Warga')
-          .or('jenis.eq.Pengeluaran')
-          .order('tanggal', { ascending: false })
-          .limit(20);
-        if (error) {
-          console.error(error);
-          return;
-        }
-        const tbody = document.querySelector('#nonIuranTable tbody');
-        if (!tbody) return;
-        tbody.innerHTML = '';
-        if (!data || data.length === 0) {
-          const row = tbody.insertRow();
-          const cell = row.insertCell(0);
-          cell.colSpan = 5;
-          cell.innerText = 'Tidak ada transaksi non-iuran.';
-          cell.style.textAlign = 'center';
-          return;
-        }
-        data.forEach(t => {
-          const row = tbody.insertRow();
-          const tanggal = formatDate(t.tanggal);
-          const jenis = t.pemasukan ? 'Pemasukan' : 'Pengeluaran';
-          const jumlah = t.pemasukan ? t.pemasukan : t.pengeluaran;
-          row.insertCell(0).innerText = tanggal;
-          row.insertCell(1).innerText = jenis;
-          row.insertCell(2).innerText = t.keterangan;
-          row.insertCell(3).innerText = formatRupiah(jumlah);
-          const actionCell = row.insertCell(4);
-          const delBtn = document.createElement('button');
-          delBtn.innerText = 'Hapus';
-          delBtn.className = 'btn-delete btn-sm';
-          delBtn.onclick = async () => {
-            if (confirm('Hapus transaksi ini? Saldo tidak akan otomatis dikembalikan. Pastikan Anda membuat koreksi manual jika perlu.')) {
-              const { error: delError } = await supabase
-                .from('transaksi_kas')
-                .delete()
-                .eq('kas_id', t.kas_id);
-              if (delError) alert('Gagal hapus: ' + delError.message);
-              else {
-                alert('Transaksi dihapus');
-                loadNonIuranTransactions();
-                loadStats();
-                const activeTab = document.querySelector('.tab-btn.active')?.dataset.tab;
-                if (activeTab === 'manageTransactions') {
-                  const filterJenis = document.getElementById('filterJenis').value;
-                  const startDate = document.getElementById('filterStartDate').value;
-                  const endDate = document.getElementById('filterEndDate').value;
-                  loadAllTransactions(filterJenis, startDate, endDate);
-                }
-              }
+  try {
+    // Ambil semua transaksi pengeluaran (apapun sumbernya)
+    const { data: pengeluaran, error: err1 } = await supabase
+      .from('transaksi_kas')
+      .select('kas_id, tanggal, keterangan, pemasukan, pengeluaran, sumber')
+      .eq('jenis', 'Pengeluaran')
+      .order('tanggal', { ascending: false })
+      .limit(20);
+
+    // Ambil transaksi pemasukan yang bukan iuran warga
+    const { data: pemasukan, error: err2 } = await supabase
+      .from('transaksi_kas')
+      .select('kas_id, tanggal, keterangan, pemasukan, pengeluaran, sumber')
+      .eq('jenis', 'Pemasukan')
+      .neq('sumber', 'Iuran Warga')
+      .order('tanggal', { ascending: false })
+      .limit(20);
+
+    if (err1 || err2) {
+      console.error('Error fetching non-iuran transactions:', err1, err2);
+      return;
+    }
+
+    // Gabungkan, urutkan berdasarkan tanggal, ambil 20 terbaru
+    const all = [...(pengeluaran || []), ...(pemasukan || [])];
+    all.sort((a, b) => new Date(b.tanggal) - new Date(a.tanggal));
+    const latest = all.slice(0, 20);
+
+    const tbody = document.querySelector('#nonIuranTable tbody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    if (latest.length === 0) {
+      const row = tbody.insertRow();
+      const cell = row.insertCell(0);
+      cell.colSpan = 5;
+      cell.innerText = 'Tidak ada transaksi non-iuran.';
+      cell.style.textAlign = 'center';
+      return;
+    }
+    latest.forEach(t => {
+      const row = tbody.insertRow();
+      const tanggal = formatDate(t.tanggal);
+      const jenis = t.pemasukan ? 'Pemasukan' : 'Pengeluaran';
+      const jumlah = t.pemasukan ? t.pemasukan : t.pengeluaran;
+      row.insertCell(0).innerText = tanggal;
+      row.insertCell(1).innerText = jenis;
+      row.insertCell(2).innerText = t.keterangan;
+      row.insertCell(3).innerText = formatRupiah(jumlah);
+      const actionCell = row.insertCell(4);
+      const delBtn = document.createElement('button');
+      delBtn.innerText = 'Hapus';
+      delBtn.className = 'btn-delete btn-sm';
+      delBtn.onclick = async () => {
+        if (confirm('Hapus transaksi ini? Saldo tidak akan otomatis dikembalikan. Pastikan Anda membuat koreksi manual jika perlu.')) {
+          const { error: delError } = await supabase
+            .from('transaksi_kas')
+            .delete()
+            .eq('kas_id', t.kas_id);
+          if (delError) alert('Gagal hapus: ' + delError.message);
+          else {
+            alert('Transaksi dihapus');
+            loadNonIuranTransactions();
+            loadStats();
+            const activeTab = document.querySelector('.tab-btn.active')?.dataset.tab;
+            if (activeTab === 'manageTransactions') {
+              const filterJenis = document.getElementById('filterJenis').value;
+              const startDate = document.getElementById('filterStartDate').value;
+              const endDate = document.getElementById('filterEndDate').value;
+              loadAllTransactions(filterJenis, startDate, endDate);
             }
-          };
-          actionCell.appendChild(delBtn);
-        });
-      }
+          }
+        }
+      };
+      actionCell.appendChild(delBtn);
+    });
+  } catch (err) {
+    console.error(err);
+  }
+}
 
       // ========== KELOLA SEMUA TRANSAKSI ==========
       async function loadAllTransactions(filterJenis = 'all', startDate = null, endDate = null) {
