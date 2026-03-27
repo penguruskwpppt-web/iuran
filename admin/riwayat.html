@@ -55,6 +55,27 @@
       margin-bottom: 20px;
       color: #0b2e4f;
     }
+    .search-bar {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      align-items: flex-end;
+    }
+    .search-bar input {
+      flex: 1;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 1rem;
+    }
+    .search-bar button {
+      background: #0b2e4f;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
     .btn-primary {
       background: #0b2e4f;
       color: white;
@@ -144,6 +165,7 @@
       th, td { padding: 8px; }
       .btn-edit, .btn-delete { padding: 4px 8px; font-size: 0.7rem; }
       .modal-content { width: 95%; padding: 16px; }
+      .search-bar { flex-direction: column; align-items: stretch; }
     }
   </style>
 </head>
@@ -165,14 +187,18 @@
 
   <div class="container">
     <h1>Riwayat Perubahan Status & Penghuni</h1>
+    <div class="search-bar">
+      <input type="text" id="searchNoRumah" placeholder="Cari berdasarkan nomor rumah...">
+      <button id="searchBtn"><i class="fas fa-search"></i> Cari</button>
+      <button id="resetSearchBtn">Reset</button>
+    </div>
     <button id="btnTambahRiwayat" class="btn-primary"><i class="fas fa-plus"></i> Tambah Riwayat</button>
     <div style="overflow-x: auto;">
       <table id="riwayatTable">
         <thead>
           <tr><th>No Rumah</th><th>Nama Penghuni</th><th>No HP Penghuni</th><th>Status</th><th>Iuran/Bulan</th><th>Berlaku Sejak</th><th>Keterangan</th><th>Aksi</th>
         </thead>
-        <tbody></tbody>
-      闭
+        <tbody></tbody>      
     </div>
   </div>
 
@@ -216,6 +242,7 @@
       const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
       let currentEditId = null;
+      let allRiwayat = [];
 
       // Cek login dan role
       (async () => {
@@ -244,6 +271,17 @@
         loadRiwayat();
       })();
 
+      // ========== FUNGSI PEMBANTU ==========
+      function formatRupiah(angka) {
+        if (angka === null || isNaN(angka)) angka = 0;
+        return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka);
+      }
+
+      function formatDate(iso) {
+        return new Date(iso).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' });
+      }
+
+      // ========== DROPDOWN WARGA ==========
       async function loadWargaDropdown() {
         const { data, error } = await supabase
           .from('warga')
@@ -263,13 +301,31 @@
         }
       }
 
+      // Saat pilih rumah, isi iuran dari data warga
       document.getElementById('no_rumah').addEventListener('change', (e) => {
         const selected = e.target.selectedOptions[0];
         const iuran = selected.getAttribute('data-iuran');
         if (iuran) document.getElementById('iuran_per_bulan').value = iuran;
       });
 
-      // Fungsi untuk memperbarui kondisi terakhir dan iuran di tabel warga berdasarkan riwayat terbaru
+      // ========== OTOMATIS IURAN BERDASARKAN STATUS ==========
+      const statusIuranMap = {
+        'Berpenghuni': 75000,
+        'Kosong': 50000,
+        'Dibebaskan': 0
+      };
+      const kondisiSelect = document.getElementById('kondisi');
+      const iuranInput = document.getElementById('iuran_per_bulan');
+
+      kondisiSelect.addEventListener('change', () => {
+        const selectedStatus = kondisiSelect.value;
+        const autoIuran = statusIuranMap[selectedStatus];
+        if (autoIuran !== undefined) {
+          iuranInput.value = autoIuran;
+        }
+      });
+
+      // ========== UPDATE WARGA DARI RIWAYAT TERBARU ==========
       async function updateWargaFromHistory(no_rumah) {
         const { data: histories, error } = await supabase
           .from('riwayat_kondisi')
@@ -295,19 +351,33 @@
         }
       }
 
-      async function loadRiwayat() {
-        const { data, error } = await supabase
-          .from('riwayat_kondisi')
-          .select('*')
-          .order('no_rumah', { ascending: true })
-          .order('berlaku_sejak', { ascending: false });
-        if (error) console.error(error);
-        else renderTable(data);
+      // ========== LOAD RIWAYAT (DENGAN FILTER) ==========
+      async function loadRiwayat(filterNoRumah = null) {
+        let query = supabase.from('riwayat_kondisi').select('*').order('no_rumah', { ascending: true }).order('berlaku_sejak', { ascending: false });
+        if (filterNoRumah) {
+          query = query.eq('no_rumah', filterNoRumah);
+        }
+        const { data, error } = await query;
+        if (error) {
+          console.error(error);
+          alert('Gagal memuat riwayat');
+          return;
+        }
+        allRiwayat = data || [];
+        renderTable(allRiwayat);
       }
 
       function renderTable(riwayat) {
         const tbody = document.querySelector('#riwayatTable tbody');
         tbody.innerHTML = '';
+        if (riwayat.length === 0) {
+          const row = tbody.insertRow();
+          const cell = row.insertCell(0);
+          cell.colSpan = 8;
+          cell.innerText = 'Tidak ada data riwayat.';
+          cell.style.textAlign = 'center';
+          return;
+        }
         riwayat.forEach(r => {
           const row = tbody.insertRow();
           row.insertCell(0).innerText = r.no_rumah;
@@ -355,10 +425,12 @@
         document.getElementById('nama_penghuni').value = '';
         document.getElementById('no_hp_penghuni').value = '';
         document.getElementById('kondisi').value = 'Berpenghuni';
-        document.getElementById('iuran_per_bulan').value = '';
+        document.getElementById('iuran_per_bulan').value = ''; // akan diisi otomatis oleh listener status (default Berpenghuni -> 75000)
         document.getElementById('berlaku_sejak').value = '';
         document.getElementById('keterangan').value = '';
         document.getElementById('modalRiwayat').style.display = 'flex';
+        // Trigger change on kondisi to set default iuran (75000)
+        kondisiSelect.dispatchEvent(new Event('change'));
       }
 
       document.getElementById('btnTambahRiwayat').onclick = openAddModal;
@@ -415,7 +487,7 @@
         // Update warga dengan kondisi & iuran terbaru (tanpa mengubah nama pemilik)
         await updateWargaFromHistory(no_rumah);
         document.getElementById('modalRiwayat').style.display = 'none';
-        loadRiwayat();
+        loadRiwayat(); // refresh semua data (tanpa filter)
         loadWargaDropdown(); // refresh dropdown karena iuran warga mungkin berubah
       });
 
@@ -434,15 +506,26 @@
         loadWargaDropdown();
       }
 
-      function formatRupiah(angka) {
-        if (angka === null || isNaN(angka)) angka = 0;
-        return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka);
-      }
+      // ========== PENCARIAN ==========
+      const searchInput = document.getElementById('searchNoRumah');
+      const searchBtn = document.getElementById('searchBtn');
+      const resetBtn = document.getElementById('resetSearchBtn');
 
-      function formatDate(iso) {
-        return new Date(iso).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' });
-      }
+      searchBtn.addEventListener('click', () => {
+        const keyword = searchInput.value.trim();
+        if (keyword === '') {
+          loadRiwayat();
+        } else {
+          loadRiwayat(keyword);
+        }
+      });
 
+      resetBtn.addEventListener('click', () => {
+        searchInput.value = '';
+        loadRiwayat();
+      });
+
+      // Logout
       document.getElementById('logoutBtn').addEventListener('click', async (e) => {
         e.preventDefault();
         await supabase.auth.signOut();
