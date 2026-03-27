@@ -22,6 +22,17 @@
       max-width: 420px;
       width: 100%;
       box-shadow: 0 20px 35px rgba(0,0,0,0.2);
+      animation: fadeIn 0.5s ease;
+    }
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(15px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
     .login-container h2 {
       text-align: center;
@@ -82,6 +93,10 @@
       cursor: pointer;
       transition: 0.2s;
       margin-top: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
     }
     .btn-login:hover {
       background: #e67e22;
@@ -90,6 +105,18 @@
     .btn-login.loading {
       pointer-events: none;
       opacity: 0.8;
+    }
+    .spinner {
+      width: 16px;
+      height: 16px;
+      border: 2px solid #fff;
+      border-top: 2px solid transparent;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      display: inline-block;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
     }
     .error-message {
       background: #fee2e2;
@@ -161,6 +188,8 @@
       const infoDiv = document.getElementById('infoMessage');
       const errorDiv = document.getElementById('errorMessage');
 
+      let isLoading = false;
+
       function showInfo(msg) {
         infoDiv.style.display = 'block';
         infoDiv.innerText = msg;
@@ -176,46 +205,72 @@
         errorDiv.style.display = 'none';
       }
 
+      function translateError(msg) {
+        if (msg.includes('Invalid login credentials')) {
+          return 'Email atau password salah';
+        }
+        if (msg.includes('Email not confirmed')) {
+          return 'Email belum dikonfirmasi. Periksa inbox untuk verifikasi.';
+        }
+        if (msg.includes('User not found')) {
+          return 'Email tidak terdaftar.';
+        }
+        return 'Login gagal, silakan coba lagi.';
+      }
+
       // Auto focus
       emailInput.focus();
 
-      // Toggle password visibility
+      // Toggle password
       togglePassword.addEventListener('click', () => {
         const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
         passwordInput.setAttribute('type', type);
         togglePassword.textContent = type === 'password' ? '👁️' : '🙈';
       });
 
-      // Cek apakah sudah login
+      // Cek apakah sudah login (dengan pesan halus)
       (async () => {
         try {
           const { data: { user } } = await supabaseClient.auth.getUser();
           if (user) {
-            window.location.href = 'admin.html';
+            showInfo('🔄 Sesi ditemukan, mengalihkan...');
+            setTimeout(() => {
+              window.location.href = 'admin.html';
+            }, 500);
           }
         } catch (err) {
           console.error('Error checking session:', err);
         }
       })();
 
-      // Login function
+      // Fungsi login dengan anti-spam, validasi, spinner
       const performLogin = async () => {
+        if (isLoading) return;
         hideMessages();
-        const email = emailInput.value.trim();
+
+        let email = emailInput.value.trim().toLowerCase();
         const password = passwordInput.value.trim();
 
-        if (!email || !password) {
-          showError('Email dan password harus diisi.');
+        // Validasi email
+        const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailPattern.test(email)) {
+          showError('Format email tidak valid');
           return;
         }
 
+        if (!password) {
+          showError('Password harus diisi');
+          return;
+        }
+
+        isLoading = true;
         loginBtn.classList.add('loading');
-        loginBtn.innerHTML = '⏳ Memproses...';
+        loginBtn.innerHTML = '<span class="spinner"></span> Memproses...';
 
         try {
           const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
           if (error) {
-            showError('Login gagal: ' + error.message);
+            showError(translateError(error.message));
             console.error('Login error:', error);
           } else {
             showInfo('✅ Login berhasil, mengalihkan...');
@@ -224,21 +279,36 @@
             }, 600);
           }
         } catch (err) {
-          showError('Terjadi kesalahan jaringan: ' + err.message);
+          showError('Terjadi kesalahan jaringan. Periksa koneksi internet Anda.');
           console.error('Network error:', err);
         } finally {
+          isLoading = false;
           loginBtn.classList.remove('loading');
           loginBtn.innerHTML = 'Login';
         }
       };
 
-      // Event listeners
-      loginBtn.addEventListener('click', performLogin);
-      document.addEventListener('keypress', (e) => {
+      // ========== UX IMPROVEMENTS ==========
+      // 1. Enter hanya pada input email & password (bukan global)
+      [emailInput, passwordInput].forEach(input => {
+        input.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            performLogin();
+          }
+        });
+      });
+
+      // 2. Enter di email langsung pindah ke password (auto-focus)
+      emailInput.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') {
-          performLogin();
+          e.preventDefault();
+          passwordInput.focus();
         }
       });
+
+      // Event klik tombol login
+      loginBtn.addEventListener('click', performLogin);
     })();
   </script>
 </body>
