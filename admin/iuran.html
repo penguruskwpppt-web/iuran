@@ -8,7 +8,6 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <style>
-    /* CSS sama seperti sebelumnya */
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       font-family: 'Inter', sans-serif;
@@ -71,7 +70,7 @@
       margin-bottom: 8px;
       font-weight: 600;
     }
-    input, select {
+    input, select, textarea {
       width: 100%;
       padding: 12px;
       border: 1px solid #ccc;
@@ -129,6 +128,16 @@
       font-weight: normal;
       flex: 1;
     }
+    .checkbox-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .checkbox-group input {
+      width: auto;
+      margin: 0;
+    }
     @media (max-width: 768px) {
       .navbar { flex-direction: column; align-items: stretch; }
       .nav-links { justify-content: center; }
@@ -147,6 +156,7 @@
       <a href="warga.html">Data Warga</a>
       <a href="iuran.html" class="active">Bayar Iuran</a>
       <a href="laporan.html">Laporan Kas</a>
+      <a href="riwayat.html">Riwayat Rumah</a>
       <a href="#" id="logoutBtn">Logout</a>
     </div>
   </nav>
@@ -163,7 +173,8 @@
 
       <div id="houseInfo" style="display: none;">
         <div class="info-box">
-          <p><strong>Nama Pemilik:</strong> <span id="namaPemilik"></span></p>
+          <p><strong>Nama Penghuni:</strong> <span id="namaPenghuni"></span></p>
+          <p><strong>No HP Penghuni:</strong> <span id="noHpPenghuni"></span></p>
           <p><strong>Iuran per Bulan:</strong> <span id="iuranPerBulan"></span></p>
           <p><strong>Status Rumah:</strong> <span id="statusRumah"></span></p>
         </div>
@@ -172,6 +183,16 @@
           <div id="unpaidMonthsList" class="unpaid-list"></div>
           <div id="noUnpaidMessage" style="display: none; color: #27ae60; text-align: center; padding: 12px;">
             ✅ Tidak ada tunggakan. Semua iuran sudah lunas.
+          </div>
+        </div>
+        <div class="checkbox-group">
+          <input type="checkbox" id="manualMonthCheckbox">
+          <label for="manualMonthCheckbox" style="font-weight: normal;">Bayar bulan lain (bukan dari tunggakan)</label>
+        </div>
+        <div id="manualMonthInput" style="display: none;">
+          <div class="form-group" style="margin-top: 12px;">
+            <label>Pilih Bulan</label>
+            <input type="month" id="manualMonth">
           </div>
         </div>
       </div>
@@ -200,9 +221,12 @@
       const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind1YXJndHh1bGFxdXhweml1emhvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1MjMxNTYsImV4cCI6MjA5MDA5OTE1Nn0.EcVFAGh3ZgTDs8Paz9O_8MpkliKPF0vI7cAuuIsvb2U';
       const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-      let selectedHouse = null;
+      let selectedHouse = null;      // data warga (pemilik)
+      let selectedOccupant = null;   // data riwayat terbaru (penghuni)
       let selectedMonth = null;
       let currentIuran = 0;
+      let currentOccupantName = '';
+      let currentOccupantPhone = '';
 
       // Cek login dan role
       (async () => {
@@ -227,7 +251,6 @@
           window.location.href = '../index.html';
           return;
         }
-        // Jika role valid, load daftar rumah
         loadHouseList();
       })();
 
@@ -248,14 +271,32 @@
         }
       }
 
+      // Ambil riwayat terbaru yang berlaku pada tanggal tertentu
+      async function getCurrentOccupant(noRumah, asOfDate = new Date()) {
+        const dateStr = asOfDate.toISOString().split('T')[0];
+        const { data, error } = await supabase
+          .from('riwayat_kondisi')
+          .select('*')
+          .eq('no_rumah', noRumah)
+          .lte('berlaku_sejak', dateStr)
+          .order('berlaku_sejak', { ascending: false })
+          .limit(1);
+        if (error) {
+          console.error(error);
+          return null;
+        }
+        return data && data.length > 0 ? data[0] : null;
+      }
+
       async function checkHouse(noRumah) {
         if (!noRumah) {
           alert('Masukkan nomor rumah terlebih dahulu.');
           return;
         }
+        // Ambil data warga (pemilik)
         const { data: warga, error: wargaError } = await supabase
           .from('warga')
-          .select('no_rumah, nama_pemilik, iuran_per_bulan, kondisi_terakhir')
+          .select('*')
           .eq('no_rumah', noRumah)
           .single();
         if (wargaError || !warga) {
@@ -263,20 +304,41 @@
           return;
         }
         selectedHouse = warga;
-        currentIuran = warga.iuran_per_bulan;
 
-        document.getElementById('namaPemilik').innerText = warga.nama_pemilik;
-        document.getElementById('iuranPerBulan').innerText = formatRupiah(warga.iuran_per_bulan);
-        document.getElementById('statusRumah').innerText = warga.kondisi_terakhir;
+        // Ambil riwayat terbaru (penghuni) yang berlaku saat ini
+        const occupant = await getCurrentOccupant(noRumah);
+        selectedOccupant = occupant;
+
+        let displayName = warga.nama_pemilik;
+        let displayPhone = warga.no_hp_pemilik || '-';
+        let iuran = warga.iuran_per_bulan;
+        let status = warga.kondisi_terakhir;
+
+        if (occupant) {
+          displayName = occupant.nama_penghuni || displayName;
+          displayPhone = occupant.no_hp_penghuni || displayPhone;
+          iuran = occupant.iuran_per_bulan;
+          status = occupant.kondisi;
+        }
+
+        currentIuran = iuran;
+        currentOccupantName = displayName;
+        currentOccupantPhone = displayPhone;
+
+        document.getElementById('namaPenghuni').innerText = displayName;
+        document.getElementById('noHpPenghuni').innerText = displayPhone;
+        document.getElementById('iuranPerBulan').innerText = formatRupiah(iuran);
+        document.getElementById('statusRumah').innerText = status;
         document.getElementById('houseInfo').style.display = 'block';
 
-        if (warga.kondisi_terakhir === 'Dibebaskan') {
+        if (status === 'Dibebaskan') {
           document.getElementById('unpaidMonthsList').innerHTML = '';
           document.getElementById('noUnpaidMessage').style.display = 'block';
           document.getElementById('paymentForm').style.display = 'none';
           return;
         }
 
+        // Ambil pembayaran yang sudah ada
         const { data: payments } = await supabase
           .from('transaksi_iuran')
           .select('bulan')
@@ -326,6 +388,9 @@
               document.getElementById('paymentForm').style.display = 'block';
               document.querySelectorAll('.unpaid-item').forEach(i => i.classList.remove('selected'));
               itemDiv.classList.add('selected');
+              // Uncheck manual checkbox if needed
+              document.getElementById('manualMonthCheckbox').checked = false;
+              document.getElementById('manualMonthInput').style.display = 'none';
             });
             container.appendChild(itemDiv);
           });
@@ -334,26 +399,66 @@
         }
       }
 
-      document.getElementById('checkHouseBtn').addEventListener('click', () => {
-        const noRumah = document.getElementById('searchHouse').value.trim();
-        checkHouse(noRumah);
-      });
-      document.getElementById('searchHouse').addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-          e.preventDefault();
-          checkHouse(e.target.value.trim());
+      // Toggle manual month input
+      document.getElementById('manualMonthCheckbox').addEventListener('change', (e) => {
+        const isChecked = e.target.checked;
+        const manualDiv = document.getElementById('manualMonthInput');
+        manualDiv.style.display = isChecked ? 'block' : 'none';
+        if (isChecked) {
+          // Disable radio buttons in unpaid list
+          document.querySelectorAll('.unpaid-item input[type="radio"]').forEach(radio => {
+            radio.disabled = true;
+          });
+          // Clear selected month from radio
+          selectedMonth = null;
+          document.getElementById('paymentForm').style.display = 'none';
+        } else {
+          // Enable radio buttons
+          document.querySelectorAll('.unpaid-item input[type="radio"]').forEach(radio => {
+            radio.disabled = false;
+          });
         }
       });
 
+      // Proses pembayaran
       document.getElementById('submitPaymentBtn').addEventListener('click', async () => {
-        if (!selectedHouse || !selectedMonth) {
-          alert('Pilih rumah dan bulan yang akan dibayar terlebih dahulu.');
+        if (!selectedHouse) {
+          alert('Silakan cek rumah terlebih dahulu.');
           return;
         }
+
+        let monthToPay = selectedMonth;
+        const manualChecked = document.getElementById('manualMonthCheckbox').checked;
+        if (manualChecked) {
+          const manualMonthVal = document.getElementById('manualMonth').value;
+          if (!manualMonthVal) {
+            alert('Pilih bulan yang akan dibayar.');
+            return;
+          }
+          const [year, month] = manualMonthVal.split('-');
+          monthToPay = { year: parseInt(year), month: parseInt(month) };
+          // Cek apakah bulan sudah dibayar
+          const bulanDate = new Date(year, month-1, 1);
+          const { data: existing } = await supabase
+            .from('transaksi_iuran')
+            .select('id')
+            .eq('no_rumah', selectedHouse.no_rumah)
+            .eq('bulan', bulanDate.toISOString());
+          if (existing && existing.length > 0) {
+            alert(`Bulan ${month}/${year} sudah dibayar sebelumnya.`);
+            return;
+          }
+        } else {
+          if (!monthToPay) {
+            alert('Pilih bulan yang akan dibayar dari daftar tunggakan.');
+            return;
+          }
+        }
+
         const metode = document.getElementById('metode').value;
         const file = document.getElementById('buktiFile').files[0];
-        const bulanDate = new Date(selectedMonth.year, selectedMonth.month - 1, 1);
-        const bulanStr = `${selectedMonth.year}-${String(selectedMonth.month).padStart(2,'0')}`;
+        const bulanDate = new Date(monthToPay.year, monthToPay.month - 1, 1);
+        const bulanStr = `${monthToPay.year}-${String(monthToPay.month).padStart(2,'0')}`;
         const jumlah = currentIuran;
 
         let buktiUrl = null;
@@ -387,6 +492,7 @@
           return;
         }
 
+        // Update transaksi_kas
         const { data: lastSaldo } = await supabase
           .from('transaksi_kas')
           .select('saldo')
@@ -399,7 +505,7 @@
           .insert([{
             kas_id: kasId,
             tanggal: new Date(),
-            keterangan: `Iuran ${selectedHouse.no_rumah} bulan ${bulanStr}`,
+            keterangan: `Iuran ${selectedHouse.no_rumah} - ${currentOccupantName} bulan ${bulanStr}`,
             pemasukan: jumlah,
             saldo: newSaldo,
             jenis: 'Pemasukan',
@@ -411,12 +517,27 @@
         }
 
         alert('✅ Pembayaran iuran berhasil disimpan!');
+        // Reset form
         document.getElementById('searchHouse').value = '';
         document.getElementById('houseInfo').style.display = 'none';
         document.getElementById('paymentForm').style.display = 'none';
         document.getElementById('buktiFile').value = '';
+        document.getElementById('manualMonthCheckbox').checked = false;
+        document.getElementById('manualMonthInput').style.display = 'none';
         selectedHouse = null;
+        selectedOccupant = null;
         selectedMonth = null;
+      });
+
+      document.getElementById('checkHouseBtn').addEventListener('click', () => {
+        const noRumah = document.getElementById('searchHouse').value.trim();
+        checkHouse(noRumah);
+      });
+      document.getElementById('searchHouse').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          checkHouse(e.target.value.trim());
+        }
       });
 
       function formatRupiah(angka) {
