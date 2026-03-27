@@ -8,6 +8,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -94,10 +96,12 @@
     }
     .btn-print {
       background: #2c3e50;
-      margin-left: auto;
     }
-    .btn-export {
+    .btn-export-excel {
       background: #27ae60;
+    }
+    .btn-export-pdf {
+      background: #e67e22;
     }
     .btn-quick {
       background: #f59e0b;
@@ -130,6 +134,7 @@
       padding: 20px;
       border-radius: 16px;
       margin-bottom: 20px;
+      position: relative;
     }
     canvas {
       max-height: 300px;
@@ -152,26 +157,60 @@
       background: #0b2e4f;
       color: white;
     }
-    .loading {
+    .loading-indicator {
       text-align: center;
       padding: 20px;
       font-style: italic;
       color: #64748b;
+      display: none;
+    }
+    .loading-spinner {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 2px solid #ccc;
+      border-top-color: #0b2e4f;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      vertical-align: middle;
+      margin-right: 8px;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    /* Style untuk PDF */
+    .pdf-header {
+      text-align: center;
+      margin-bottom: 20px;
+      display: none;
+    }
+    .pdf-header img {
+      width: 60px;
+      border-radius: 50%;
+    }
+    .pdf-header h2 {
+      margin: 10px 0;
+      color: #0b2e4f;
+    }
+    .pdf-date {
+      font-size: 12px;
+      color: #666;
+      margin-bottom: 10px;
+    }
+    @media print {
+      body { background: white; }
+      .navbar, .filter-bar, .btn-print, .btn-export-excel, .btn-export-pdf, .btn-quick, .chart-container { display: none; }
+      .pdf-header { display: block !important; }
+      .summary-grid { display: grid; }
+      table { page-break-inside: avoid; }
     }
     @media (max-width: 768px) {
       .navbar { flex-direction: column; align-items: stretch; }
       .nav-links { justify-content: center; }
       .summary-grid { grid-template-columns: repeat(2, 1fr); }
       .filter-bar { flex-direction: column; align-items: stretch; }
-      .btn-print { margin-left: 0; }
       table { font-size: 0.75rem; }
       th, td { padding: 8px; }
-    }
-    @media print {
-      body { background: white; }
-      .navbar, .filter-bar, .btn-print, .btn-export, .btn-quick, .chart-container { display: none; }
-      .summary-grid { display: grid; }
-      table { page-break-inside: avoid; }
     }
   </style>
 </head>
@@ -208,21 +247,36 @@
       <button id="monthBtn" class="btn-quick">Bulan Ini</button>
       <button id="filterBtn">Filter</button>
       <button id="resetBtn">Reset</button>
-      <button id="printBtn" class="btn-print"><i class="fas fa-print"></i> Cetak</button>
-      <button id="exportBtn" class="btn-export"><i class="fas fa-download"></i> Ekspor CSV</button>
+      <button id="exportExcelBtn" class="btn-export-excel"><i class="fas fa-file-excel"></i> Export Excel</button>
+      <button id="exportPdfBtn" class="btn-export-pdf"><i class="fas fa-file-pdf"></i> Cetak PDF</button>
+      <button id="printBtn" class="btn-print"><i class="fas fa-print"></i> Cetak (Browser)</button>
     </div>
 
     <div class="chart-container">
       <canvas id="kasChart"></canvas>
+      <div id="chartEmptyMessage" style="display: none; text-align: center; color: #666; padding: 20px;">Tidak ada data untuk ditampilkan</div>
     </div>
 
-    <div style="overflow-x: auto;">
-      <table id="kasTable">
-        <thead>
-          <tr><th>Tanggal</th><th>Keterangan</th><th>Pemasukan</th><th>Pengeluaran</th><th>Saldo</th><th>Sumber</th>
-        </thead>
-        <tbody></tbody>
-      </table>
+    <!-- Container untuk PDF (akan di-capture) -->
+    <div id="pdfContainer">
+      <div class="pdf-header">
+        <img src="../images/logo.webp" alt="Logo">
+        <h2>Laporan Kas KWP3T</h2>
+        <div class="pdf-date" id="pdfDate"></div>
+      </div>
+      <div id="summaryForPdf" class="summary-grid" style="margin-bottom: 20px;"></div>
+      <div style="overflow-x: auto;">
+        <table id="kasTable">
+          <thead>
+            <tr><th>Tanggal</th><th>Keterangan</th><th>Pemasukan</th><th>Pengeluaran</th><th>Saldo</th><th>Sumber</th>
+          </thead>
+          <tbody></tbody>
+         </table>
+      </div>
+    </div>
+
+    <div id="loadingIndicator" class="loading-indicator">
+      <div class="loading-spinner"></div> Memuat data...
     </div>
   </div>
 
@@ -234,6 +288,9 @@
       const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
       let chart = null;
+      let currentData = [];
+      let currentStart = null;
+      let currentEnd = null;
 
       // Cek login dan role
       (async () => {
@@ -267,7 +324,6 @@
         return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka);
       }
 
-      // Format tanggal aman dari timezone (gunakan komponen langsung)
       function formatDate(iso) {
         if (!iso) return '';
         const [year, month, day] = iso.split('-');
@@ -275,17 +331,24 @@
       }
 
       async function loadKas(start = null, end = null) {
+        currentStart = start;
+        currentEnd = end;
+
         // Validasi filter tanggal
-        if (start && end && start > end) {
+        if (start && end && new Date(start) > new Date(end)) {
           alert('Tanggal mulai tidak boleh lebih besar dari tanggal akhir');
           return;
         }
 
         // Tampilkan loading
+        const loadingDiv = document.getElementById('loadingIndicator');
+        loadingDiv.style.display = 'block';
+
+        // Kosongkan tabel sementara
         const tbody = document.querySelector('#kasTable tbody');
         tbody.innerHTML = '<tr><td colspan="6" class="loading">Memuat data...</td></tr>';
-        
-        // Query data dalam rentang (hanya kolom yang diperlukan)
+
+        // Query data dalam rentang
         let query = supabase
           .from('transaksi_kas')
           .select('tanggal,keterangan,pemasukan,pengeluaran,saldo,sumber')
@@ -293,11 +356,15 @@
         if (start) query = query.gte('tanggal', start);
         if (end) query = query.lte('tanggal', end);
         const { data, error } = await query;
+
+        loadingDiv.style.display = 'none';
+
         if (error) {
           console.error(error);
           tbody.innerHTML = '<tr><td colspan="6">Gagal memuat data</td></tr>';
           return;
         }
+        currentData = data;
 
         // Hitung saldo awal (sebelum start)
         let saldoAwal = 0;
@@ -310,11 +377,9 @@
             .limit(1);
           saldoAwal = prevData?.[0]?.saldo || 0;
         } else {
-          // Tanpa filter, saldo awal = 0 (konsep akuntansi dasar)
           saldoAwal = 0;
         }
 
-        // Hitung total pemasukan dan pengeluaran dalam rentang
         const totalPemasukan = data.reduce((sum, row) => sum + (row.pemasukan || 0), 0);
         const totalPengeluaran = data.reduce((sum, row) => sum + (row.pengeluaran || 0), 0);
         const saldoAkhir = saldoAwal + totalPemasukan - totalPengeluaran;
@@ -343,49 +408,31 @@
           const tr = tbody.insertRow();
           tr.insertCell(0).innerText = formatDate(row.tanggal);
           tr.insertCell(1).innerText = row.keterangan;
-          // Warna hijau untuk pemasukan, merah untuk pengeluaran
           tr.insertCell(2).innerHTML = row.pemasukan ? `<span style="color:green;font-weight:bold">${formatRupiah(row.pemasukan)}</span>` : '-';
           tr.insertCell(3).innerHTML = row.pengeluaran ? `<span style="color:red;font-weight:bold">${formatRupiah(row.pengeluaran)}</span>` : '-';
-          tr.insertCell(4).innerText = formatRupiah(row.saldo);
+          // Warna saldo: merah jika negatif, hitam jika positif
+          const saldoColor = row.saldo < 0 ? 'red' : 'black';
+          tr.insertCell(4).innerHTML = `<b style="color:${saldoColor}">${formatRupiah(row.saldo)}</b>`;
           tr.insertCell(5).innerText = row.sumber || '-';
+          // Highlight baris jika pemasukan atau pengeluaran
+          if (row.pemasukan) tr.style.background = '#ecfdf5';
+          if (row.pengeluaran) tr.style.background = '#fef2f2';
         });
       }
 
-      async function exportCSV() {
-        const start = document.getElementById('startDate').value;
-        const end = document.getElementById('endDate').value;
-        let query = supabase.from('transaksi_kas').select('tanggal,keterangan,pemasukan,pengeluaran,saldo,sumber').order('tanggal', { ascending: true });
-        if (start) query = query.gte('tanggal', start);
-        if (end) query = query.lte('tanggal', end);
-        const { data, error } = await query;
-        if (error) {
-          alert('Gagal mengambil data untuk ekspor');
+      function updateChart(data) {
+        const canvas = document.getElementById('kasChart');
+        const emptyMessage = document.getElementById('chartEmptyMessage');
+        
+        if (!data.length) {
+          canvas.style.display = 'none';
+          emptyMessage.style.display = 'block';
+          if (chart) chart.destroy();
           return;
         }
-        // Header CSV sesuai dengan kolom yang dipilih
-        const headers = ['tanggal','keterangan','pemasukan','pengeluaran','saldo','sumber'];
-        const rows = data.map(row => headers.map(h => {
-          let val = row[h];
-          if (h === 'tanggal') val = formatDate(row.tanggal);
-          if (typeof val === 'number') val = val.toString();
-          if (typeof val === 'string' && (val.includes(',') || val.includes('"'))) val = `"${val.replace(/"/g, '""')}"`;
-          return val || '';
-        }).join(','));
-        const csv = [headers.join(','), ...rows].join('\n');
-        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement('a');
-        const url = URL.createObjectURL(blob);
-        link.href = url;
-        link.download = `laporan_kas_${new Date().toISOString().slice(0,10)}.csv`;
-        link.click();
-        URL.revokeObjectURL(url);
-      }
+        canvas.style.display = 'block';
+        emptyMessage.style.display = 'none';
 
-      function updateChart(data) {
-        const ctx = document.getElementById('kasChart').getContext('2d');
-        if (chart) chart.destroy();
-
-        // Kelompokkan per bulan
         const monthly = {};
         data.forEach(row => {
           const date = new Date(row.tanggal);
@@ -395,25 +442,24 @@
           monthly[key].pengeluaran += row.pengeluaran || 0;
         });
 
-        // Urutkan bulan dengan cara yang stabil (menggunakan angka, bukan string)
         const sortedKeys = Object.keys(monthly).sort((a, b) => {
           const [y1, m1] = a.split('-').map(Number);
           const [y2, m2] = b.split('-').map(Number);
           if (y1 !== y2) return y1 - y2;
           return m1 - m2;
         });
-        
-        // Buat labels dengan format "Mar 2025"
+
         const labels = sortedKeys.map(key => {
           const [y, m] = key.split('-');
           const date = new Date(parseInt(y), parseInt(m)-1);
-          return date.toLocaleDateString('id-ID', { month: 'short', year: 'numeric' });
+          return date.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
         });
 
-        // Mapping data sesuai urutan labels
         const pemasukanData = sortedKeys.map(key => monthly[key].pemasukan);
         const pengeluaranData = sortedKeys.map(key => monthly[key].pengeluaran);
 
+        const ctx = canvas.getContext('2d');
+        if (chart) chart.destroy();
         chart = new Chart(ctx, {
           type: 'bar',
           data: {
@@ -433,8 +479,56 @@
         });
       }
 
-      function printReport() {
-        window.print();
+      // Export to Excel (XLSX)
+      function exportToExcel() {
+        if (!currentData.length) {
+          alert('Tidak ada data untuk diekspor');
+          return;
+        }
+        const wsData = currentData.map(row => ({
+          Tanggal: formatDate(row.tanggal),
+          Keterangan: row.keterangan,
+          Pemasukan: row.pemasukan || 0,
+          Pengeluaran: row.pengeluaran || 0,
+          Saldo: row.saldo,
+          Sumber: row.sumber || ''
+        }));
+        const ws = XLSX.utils.json_to_sheet(wsData);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Laporan Kas');
+        XLSX.writeFile(wb, `laporan_kas_${new Date().toISOString().slice(0,10)}.xlsx`);
+      }
+
+      // Export to PDF (html2pdf)
+      async function exportToPDF() {
+        if (!currentData.length) {
+          alert('Tidak ada data untuk dicetak');
+          return;
+        }
+        // Update summary for PDF
+        const saldoAwal = document.getElementById('saldoAwal').innerText;
+        const totalPemasukan = document.getElementById('totalPemasukan').innerText;
+        const totalPengeluaran = document.getElementById('totalPengeluaran').innerText;
+        const saldoAkhir = document.getElementById('saldoAkhir').innerText;
+        const summaryHtml = `
+          <div class="summary-card"><h3>Saldo Awal</h3><div class="amount">${saldoAwal}</div></div>
+          <div class="summary-card"><h3>Total Pemasukan</h3><div class="amount">${totalPemasukan}</div></div>
+          <div class="summary-card"><h3>Total Pengeluaran</h3><div class="amount">${totalPengeluaran}</div></div>
+          <div class="summary-card"><h3>Saldo Akhir</h3><div class="amount">${saldoAkhir}</div></div>
+        `;
+        document.getElementById('summaryForPdf').innerHTML = summaryHtml;
+        document.getElementById('pdfDate').innerText = `Periode: ${currentStart || 'Semua'} s/d ${currentEnd || 'Semua'} | Dicetak: ${new Date().toLocaleString('id-ID')}`;
+
+        const element = document.getElementById('pdfContainer');
+        const opt = {
+          margin: [0.5, 0.5, 0.5, 0.5],
+          filename: `laporan_kas_${new Date().toISOString().slice(0,10)}.pdf`,
+          image: { type: 'jpeg', quality: 0.98 },
+          html2canvas: { scale: 2, letterRendering: true },
+          jsPDF: { unit: 'in', format: 'a4', orientation: 'landscape' },
+          pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+        };
+        html2pdf().set(opt).from(element).save();
       }
 
       function setupEventListeners() {
@@ -444,10 +538,10 @@
         const monthBtn = document.getElementById('monthBtn');
         const filterBtn = document.getElementById('filterBtn');
         const resetBtn = document.getElementById('resetBtn');
-        const exportBtn = document.getElementById('exportBtn');
+        const exportExcelBtn = document.getElementById('exportExcelBtn');
+        const exportPdfBtn = document.getElementById('exportPdfBtn');
         const printBtn = document.getElementById('printBtn');
 
-        // Auto reload saat ubah tanggal (jika kedua tanggal sudah terisi)
         startInput.addEventListener('change', () => {
           if (endInput.value) loadKas(startInput.value, endInput.value);
         });
@@ -470,17 +564,16 @@
           loadKas(firstDay, lastDay);
         });
         filterBtn.addEventListener('click', () => {
-          const start = startInput.value;
-          const end = endInput.value;
-          loadKas(start, end);
+          loadKas(startInput.value, endInput.value);
         });
         resetBtn.addEventListener('click', () => {
           startInput.value = '';
           endInput.value = '';
           loadKas();
         });
-        exportBtn.addEventListener('click', exportCSV);
-        printBtn.addEventListener('click', printReport);
+        exportExcelBtn.addEventListener('click', exportToExcel);
+        exportPdfBtn.addEventListener('click', exportToPDF);
+        printBtn.addEventListener('click', () => window.print());
 
         document.getElementById('logoutBtn').addEventListener('click', async (e) => {
           e.preventDefault();
@@ -488,9 +581,6 @@
           window.location.href = 'login.html';
         });
       }
-
-      // (Optional) Saran untuk performa: buat index di database
-      // CREATE INDEX idx_tanggal ON transaksi_kas(tanggal);
     })();
   </script>
 </body>
