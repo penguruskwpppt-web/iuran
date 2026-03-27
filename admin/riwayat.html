@@ -90,6 +90,19 @@
     .btn-primary:hover {
       background: #1e4f7a;
     }
+    .btn-cancel {
+      background: #95a5a6;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: 0.2s;
+    }
+    .btn-cancel:hover {
+      background: #7f8c8d;
+    }
     .btn-edit, .btn-delete {
       padding: 6px 12px;
       border: none;
@@ -228,7 +241,7 @@
         <textarea id="keterangan" rows="2" placeholder="Misal: Pindah penghuni, perubahan status, dll."></textarea>
         <div class="modal-buttons">
           <button type="submit" class="btn-primary">Simpan</button>
-          <button type="button" id="closeModal" style="background:#ccc;">Batal</button>
+          <button type="button" id="closeModal" class="btn-cancel">Batal</button>
         </div>
       </form>
     </div>
