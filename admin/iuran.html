@@ -765,14 +765,14 @@
         try {
           const kasIdPrefix = `IU-${Date.now()}-${Math.random().toString(36).substring(2,8)}`;
           const { error: rpcError } = await supabase.rpc('insert_pembayaran_iuran_batch', {
-            p_kas_id_prefix: kasIdPrefix,
-            p_no_rumah: selectedHouse.no_rumah,
-            p_bulan_list: selectedDates,
-            p_jumlah_list: selectedIurans,
-            p_metode: metode,
-            p_bukti_tf: buktiUrl
-          });
-
+  p_kas_id_prefix: kasIdPrefix,
+  p_no_rumah: selectedHouse.no_rumah,
+  p_bulan_list: selectedDates,
+  p_jumlah_list: selectedIurans,
+  p_metode: metode,
+  p_bukti_tf: buktiUrl,
+  p_nama_penghuni: currentOccupantName   // nama penghuni saat ini
+});
           if (rpcError) {
             if (rpcError.message.includes('Duplicate payment')) {
               alert(`⚠️ Salah satu bulan sudah pernah dibayar. Proses dibatalkan.`);
