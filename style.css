@@ -1,25 +1,27 @@
+/* ================= RESET ================= */
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
+/* ================= BASE ================= */
 body {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background: #f4f4f4;
-  padding: 0;
+  background: #f4f6f9;
+  color: #2c3e50;
 }
 
-/* Navbar */
+/* ================= NAVBAR ================= */
 .navbar {
   background: #2c3e50;
-  padding: 1rem 2rem;
+  padding: 14px 24px;
   display: flex;
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
-  gap: 10px;
 }
+
 .nav-brand {
   display: flex;
   align-items: center;
@@ -28,143 +30,178 @@ body {
   font-weight: bold;
   font-size: 1.2rem;
 }
+
 .nav-links {
   display: flex;
-  gap: 15px;
+  gap: 12px;
   flex-wrap: wrap;
 }
+
 .nav-links a {
   color: white;
   text-decoration: none;
-  padding: 5px 10px;
-  border-radius: 4px;
-  transition: background 0.3s;
+  padding: 6px 12px;
+  border-radius: 6px;
+  transition: 0.2s;
 }
-.nav-links a:hover, .nav-links a.active {
+
+.nav-links a:hover,
+.nav-links a.active {
   background: #1a2632;
 }
 
-/* Container */
+/* ================= CONTAINER ================= */
 .container {
   max-width: 1200px;
   margin: 20px auto;
   padding: 0 20px;
 }
+
 h1 {
   margin-bottom: 20px;
-  color: #2c3e50;
 }
 
-/* Cards */
+/* ================= CARDS ================= */
 .stats {
   display: flex;
   gap: 20px;
   flex-wrap: wrap;
-  margin-bottom: 30px;
+  margin-bottom: 25px;
 }
+
 .card {
   background: white;
   padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 0 5px rgba(0,0,0,0.1);
+  border-radius: 12px;
   flex: 1;
   min-width: 200px;
   text-align: center;
-}
-.card h3 {
-  margin-bottom: 10px;
-  font-size: 1rem;
-}
-.card p {
-  font-size: 1.5rem;
-  font-weight: bold;
-  color: #2c3e50;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.06);
 }
 
-/* Tables */
+.card h3 {
+  font-size: 0.9rem;
+  color: #7f8c8d;
+  margin-bottom: 8px;
+}
+
+.card p {
+  font-size: 1.6rem;
+  font-weight: bold;
+}
+
+/* ================= TABLE ================= */
 table {
   width: 100%;
   border-collapse: collapse;
   background: white;
-  margin: 20px 0;
+  border-radius: 10px;
+  overflow: hidden;
 }
+
 th, td {
-  border: 1px solid #ddd;
   padding: 10px;
-  text-align: left;
+  border-bottom: 1px solid #eee;
 }
+
 th {
   background: #2c3e50;
   color: white;
+  font-weight: 600;
 }
 
-/* Buttons */
-button {
-  padding: 8px 12px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-weight: bold;
+tr:hover {
+  background: #f9fafb;
 }
+
+/* ================= BUTTON SYSTEM ================= */
+button {
+  padding: 9px 16px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+/* PRIMARY (SIMPAN / AKSI UTAMA) */
 .btn-primary {
   background: #2c3e50;
   color: white;
 }
 .btn-primary:hover {
   background: #1a2632;
+  transform: translateY(-1px);
 }
+
+/* SECONDARY (BATAL) */
 .btn-secondary {
-  background: #95a5a6;
-  color: white;
+  background: #ecf0f1;
+  color: #2c3e50;
+  border: 1px solid #ddd;
 }
 .btn-secondary:hover {
-  background: #7f8c8d;
+  background: #dfe6e9;
 }
+
+/* SUCCESS (EXPORT / TAMBAH) */
+.btn-success {
+  background: #27ae60;
+  color: white;
+}
+.btn-success:hover {
+  background: #219150;
+}
+
+/* WARNING (EDIT) */
 .btn-edit {
   background: #f39c12;
   color: white;
-  margin-right: 5px;
 }
+.btn-edit:hover {
+  background: #d68910;
+}
+
+/* DANGER (HAPUS) */
 .btn-delete {
   background: #e74c3c;
   color: white;
 }
-.btn-save-role {
-  background: #27ae60;
-  color: white;
-  padding: 4px 8px;
-  font-size: 0.8rem;
+.btn-delete:hover {
+  background: #c0392b;
 }
 
-/* Forms */
+/* ================= FORM ================= */
 form {
   background: white;
   padding: 20px;
-  border-radius: 8px;
-  margin: 20px 0;
+  border-radius: 10px;
+  margin-top: 20px;
 }
+
 label {
   display: block;
   margin: 10px 0 5px;
-  font-weight: bold;
+  font-weight: 600;
 }
+
 input, select, textarea {
   width: 100%;
-  padding: 8px;
-  margin-bottom: 10px;
+  padding: 9px;
   border: 1px solid #ddd;
-  border-radius: 4px;
+  border-radius: 6px;
+  margin-bottom: 10px;
 }
+
 input:focus, select:focus {
   outline: none;
   border-color: #2c3e50;
 }
-.error {
-  color: red;
-  margin-top: 10px;
-}
 
-/* Modal */
+/* ================= MODAL ================= */
 .modal {
   display: none;
   position: fixed;
@@ -173,74 +210,126 @@ input:focus, select:focus {
   width: 100%;
   height: 100%;
   background: rgba(0,0,0,0.5);
-  z-index: 1000;
 }
+
 .modal-content {
   background: white;
   width: 90%;
   max-width: 500px;
-  margin: 50px auto;
+  margin: 60px auto;
   padding: 20px;
-  border-radius: 8px;
+  border-radius: 10px;
 }
+
 .modal-buttons {
   display: flex;
-  gap: 10px;
   justify-content: flex-end;
+  gap: 10px;
   margin-top: 20px;
 }
 
-/* Admin Panel Tabs */
+/* ================= TABS ================= */
 .tabs {
   display: flex;
   gap: 10px;
   margin-bottom: 20px;
   border-bottom: 1px solid #ddd;
-  padding-bottom: 10px;
 }
+
 .tab-btn {
   padding: 8px 16px;
-  background: #f0f0f0;
+  background: #ecf0f1;
   border: none;
+  border-radius: 6px;
   cursor: pointer;
-  border-radius: 4px;
 }
+
 .tab-btn.active {
   background: #2c3e50;
   color: white;
 }
+
 .tab-content {
   display: none;
 }
+
 .tab-content.active {
   display: block;
 }
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 20px;
-}
 
-/* Filter Bar */
+/* ================= FILTER ================= */
 .filter-bar {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
-  gap: 15px;
+  gap: 10px;
   background: white;
   padding: 15px;
-  border-radius: 8px;
+  border-radius: 10px;
   margin-bottom: 20px;
 }
-.filter-bar label {
-  margin: 0;
-}
+
 .filter-bar input {
   width: auto;
-  margin: 0;
 }
-.info {
+
+/* ================= SIGNATURE ================= */
+.signature-section {
+  margin-top: 40px;
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.signature-item {
+  text-align: center;
+  flex: 1;
+}
+
+.signature-item .title {
+  font-weight: 600;
+  margin-bottom: 5px;
+}
+
+.signature-item .role {
+  margin-bottom: 40px; /* ruang tanda tangan */
+}
+
+.signature-line {
+  border-top: 1px solid #000;
+  width: 80%;
+  margin: 0 auto;
+}
+
+.signature-name {
+  margin-top: 8px;
+  font-weight: 600;
+}
+
+/* ================= FOOTER ================= */
+.footer {
+  text-align: center;
+  margin-top: 40px;
+  font-size: 0.85rem;
   color: #7f8c8d;
-  font-size: 0.9rem;
-  margin-top: 15px;
+}
+
+/* ================= RESPONSIVE ================= */
+@media (max-width: 768px) {
+  .stats {
+    flex-direction: column;
+  }
+
+  .filter-bar {
+    flex-direction: column;
+  }
+
+  button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .signature-section {
+    flex-direction: column;
+    align-items: center;
+  }
 }
