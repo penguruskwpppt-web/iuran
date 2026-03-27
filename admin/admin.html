@@ -344,7 +344,7 @@
             <thead>
               <tr><th>Tanggal</th><th>Jenis</th><th>Keterangan</th><th>Jumlah</th><th>Aksi</th>
             </thead>
-            <tbody></tbody>        
+            <tbody></tbody>     
         </div>
       </div>
     </div>
@@ -378,7 +378,8 @@
           <thead>
             <tr><th>Tanggal</th><th>Jenis</th><th>Keterangan</th><th>Pemasukan</th><th>Pengeluaran</th><th>Saldo</th><th>Aksi</th>
           </thead>
-          <tbody></tbody>        
+          <tbody></tbody>
+        寸
       </div>
       <p class="info">⚠️ <strong>Peringatan:</strong> Menghapus transaksi akan <strong>mengubah data historis</strong> tetapi <strong>tidak akan mengoreksi saldo secara otomatis</strong>. Setelah hapus, periksa kembali saldo kas dan gunakan fitur <strong>Pemasukan Lain / Pengeluaran Lain</strong> untuk menambahkan koreksi manual jika diperlukan.</p>
     </div>
@@ -389,8 +390,7 @@
       <div style="overflow-x: auto;">
         <table id="users-table">
           <thead> <th>Email</th><th>Role</th><th>Aksi</th> </thead>
-          <tbody></tbody>
-        寸
+          <tbody></tbody>        
       </div>
       <p class="info">Catatan: Hanya admin yang bisa mengubah role.</p>
     </div>
@@ -441,7 +441,6 @@
           document.getElementById('tab-users').style.display = 'block';
         }
 
-        // Inisialisasi semua fitur
         initDashboard();
         initNonIuran();
         initManageTransactions();
@@ -656,7 +655,7 @@
           loadNonIuranTransactions();
           loadStats();
           // Refresh kelola transaksi jika tab aktif
-          const activeTab = document.querySelector('.tab-btn.active').dataset.tab;
+          const activeTab = document.querySelector('.tab-btn.active')?.dataset.tab;
           if (activeTab === 'manageTransactions') {
             const filterJenis = document.getElementById('filterJenis').value;
             const startDate = document.getElementById('filterStartDate').value;
@@ -716,7 +715,7 @@
           document.getElementById('kategori_pengeluaran_manual_group').style.display = 'none';
           loadNonIuranTransactions();
           loadStats();
-          const activeTab = document.querySelector('.tab-btn.active').dataset.tab;
+          const activeTab = document.querySelector('.tab-btn.active')?.dataset.tab;
           if (activeTab === 'manageTransactions') {
             const filterJenis = document.getElementById('filterJenis').value;
             const startDate = document.getElementById('filterStartDate').value;
@@ -766,7 +765,7 @@
                 alert('Transaksi dihapus');
                 loadNonIuranTransactions();
                 loadStats();
-                const activeTab = document.querySelector('.tab-btn.active').dataset.tab;
+                const activeTab = document.querySelector('.tab-btn.active')?.dataset.tab;
                 if (activeTab === 'manageTransactions') {
                   const filterJenis = document.getElementById('filterJenis').value;
                   const startDate = document.getElementById('filterStartDate').value;
