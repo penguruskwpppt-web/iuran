@@ -763,8 +763,9 @@
         btn.innerText = 'Memproses...';
 
         try {
-          const kasIdPrefix = `IU-${Date.now()}-${Math.random().toString(36).substring(2,8)}`;
-          const { error: rpcError } = await supabase.rpc('insert_pembayaran_iuran_batch', {
+          // Di dalam event listener submitPaymentBtn, setelah buktiUrl didapat
+const kasIdPrefix = `IU-${Date.now()}-${Math.random().toString(36).substring(2,8)}`;
+const { error: rpcError } = await supabase.rpc('insert_pembayaran_iuran_batch', {
   p_kas_id_prefix: kasIdPrefix,
   p_no_rumah: selectedHouse.no_rumah,
   p_bulan_list: selectedDates,
