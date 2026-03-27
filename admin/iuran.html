@@ -228,8 +228,8 @@
         </div>
         <div id="manualMonthInput" style="display: none;">
           <div class="form-group" style="margin-top: 12px;">
-            <label>Pilih Bulan</label>
-            <select id="manualMonthSelect"></select>
+            <label>Pilih Bulan (bisa lebih dari satu)</label>
+            <div id="manualMonthsList" class="unpaid-list"></div>
           </div>
         </div>
 
@@ -239,7 +239,7 @@
           <div style="overflow-x: auto;">
             <table id="riwayatIuranTable" class="history-table">
               <thead>
-                <tr><th>Bulan</th><th>Jumlah</th><th>Metode</th><th>Bukti</th><th>Tanggal Bayar</th>
+                <td><th>Bulan</th><th>Jumlah</th><th>Metode</th><th>Bukti</th><th>Tanggal Bayar</th>
               </thead>
               <tbody></tbody>
             </table>
@@ -277,7 +277,7 @@
       let currentOccupantName = '';
       let currentOccupantPhone = '';
       let paidSet = new Set();
-      let rumahRiwayat = []; // menyimpan riwayat kondisi rumah untuk status per bulan
+      let rumahRiwayat = [];
 
       // Cek login dan role
       (async () => {
@@ -380,9 +380,7 @@
         });
       }
 
-      // Fungsi untuk mendapatkan status dan iuran pada tanggal tertentu
       function getStatusAtDate(noRumah, targetDateStr, histories) {
-        // histories adalah riwayat untuk rumah ini
         let latest = null;
         for (let h of histories) {
           const berlakuStr = new Date(h.berlaku_sejak).toISOString().split('T')[0];
@@ -395,7 +393,6 @@
         if (latest) {
           return { kondisi: latest.kondisi, iuran: latest.iuran };
         }
-        // fallback ke data warga saat ini (asumsi status saat ini)
         return { kondisi: currentOccupant ? currentOccupant.kondisi : 'Berpenghuni', iuran: currentIuran };
       }
 
@@ -404,7 +401,6 @@
           alert('Masukkan nomor rumah terlebih dahulu.');
           return;
         }
-        // Ambil data warga (pemilik)
         const { data: warga, error: wargaError } = await supabase
           .from('warga')
           .select('*')
@@ -416,7 +412,6 @@
         }
         selectedHouse = warga;
 
-        // Ambil riwayat terbaru (penghuni) yang berlaku saat ini
         const occupant = await getCurrentOccupant(noRumah);
         selectedOccupant = occupant;
 
@@ -451,7 +446,7 @@
           return;
         }
 
-        // Ambil semua riwayat kondisi untuk rumah ini (untuk menentukan status per bulan)
+        // Ambil riwayat kondisi
         const { data: histories, error: histError } = await supabase
           .from('riwayat_kondisi')
           .select('berlaku_sejak, kondisi, iuran_per_bulan')
@@ -487,15 +482,12 @@
         let hasUnpaid = false;
         while (year < endYear || (year === endYear && month <= endMonth)) {
           const dateStr = `${year}-${String(month).padStart(2,'0')}-01`;
-          const targetDateStr = dateStr;
-          const { kondisi: statusBulan, iuran: iuranBulan } = getStatusAtDate(noRumah, targetDateStr, rumahRiwayat);
+          const { kondisi: statusBulan, iuran: iuranBulan } = getStatusAtDate(noRumah, dateStr, rumahRiwayat);
           if (statusBulan === 'Dibebaskan' || iuranBulan === 0) {
-            // Bulan ini tidak perlu dibayar, lewati
             month++;
             if (month > 12) { month = 1; year++; }
             continue;
           }
-
           const isPaid = paidSet.has(dateStr);
           if (!isPaid && iuranBulan > 0) {
             hasUnpaid = true;
@@ -522,13 +514,13 @@
           document.getElementById('paymentForm').style.display = 'none';
         }
 
-        // Isi dropdown manual bulan dengan bulan yang belum dibayar dan bukan Dibebaskan
+        // Isi daftar bulan manual (multi-select)
         fillManualMonthOptions(paidSet, rumahRiwayat);
       }
 
       function fillManualMonthOptions(paidSet, histories) {
-        const select = document.getElementById('manualMonthSelect');
-        select.innerHTML = '<option value="">-- Pilih Bulan --</option>';
+        const container = document.getElementById('manualMonthsList');
+        container.innerHTML = '';
         const startDate = new Date(2025, 10, 1);
         const endDate = new Date(2027, 10, 1);
         let current = new Date(startDate);
@@ -536,18 +528,19 @@
           const year = current.getFullYear();
           const month = current.getMonth() + 1;
           const dateStr = `${year}-${String(month).padStart(2,'0')}-01`;
-          // Jika sudah dibayar, skip
           if (paidSet.has(dateStr)) {
             current.setMonth(current.getMonth() + 1);
             continue;
           }
-          // Cek status bulan ini (apakah Dibebaskan)
-          const { kondisi: statusBulan } = getStatusAtDate(selectedHouse.no_rumah, dateStr, histories);
+          const { kondisi: statusBulan, iuran: iuranBulan } = getStatusAtDate(selectedHouse.no_rumah, dateStr, histories);
           if (statusBulan !== 'Dibebaskan') {
-            const option = document.createElement('option');
-            option.value = dateStr;
-            option.textContent = `${month}/${year}`;
-            select.appendChild(option);
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'unpaid-item';
+            itemDiv.innerHTML = `
+              <input type="checkbox" name="manualMonthCheckbox" value="${dateStr}" id="manual_${year}_${month}">
+              <label for="manual_${year}_${month}">${month}/${year} - ${formatRupiah(iuranBulan)}</label>
+            `;
+            container.appendChild(itemDiv);
           }
           current.setMonth(current.getMonth() + 1);
         }
@@ -594,19 +587,19 @@
         let selectedDates = [];
 
         if (manualChecked) {
-          const selectedVal = document.getElementById('manualMonthSelect').value;
-          if (!selectedVal) {
-            alert('Pilih bulan yang akan dibayar.');
+          const checkboxes = document.querySelectorAll('#manualMonthsList input[type="checkbox"]:checked');
+          if (checkboxes.length === 0) {
+            alert('Pilih minimal satu bulan yang akan dibayar.');
             return;
           }
-          selectedDates.push(selectedVal);
+          selectedDates = Array.from(checkboxes).map(cb => cb.value);
         } else {
           const checkboxes = document.querySelectorAll('#unpaidMonthsList input[type="checkbox"]:checked');
           if (checkboxes.length === 0) {
             alert('Pilih minimal satu bulan yang akan dibayar.');
             return;
           }
-          checkboxes.forEach(cb => selectedDates.push(cb.value));
+          selectedDates = Array.from(checkboxes).map(cb => cb.value);
         }
 
         const metode = document.getElementById('metode').value;
@@ -631,7 +624,6 @@
         let skippedCount = 0;
 
         for (const bulanStr of selectedDates) {
-          // Cek duplikat (opsional, karena UNIQUE constraint akan menangani)
           const { data: existing, error: checkError } = await supabase
             .from('transaksi_iuran')
             .select('created_at')
@@ -651,13 +643,9 @@
             continue;
           }
 
-          // Tentukan jumlah iuran yang harus dibayar berdasarkan riwayat pada bulan tersebut
-          const year = parseInt(bulanStr.slice(0,4));
-          const month = parseInt(bulanStr.slice(5,7));
-          const targetDateStr = bulanStr;
-          const { iuran: iuranBulan } = getStatusAtDate(selectedHouse.no_rumah, targetDateStr, rumahRiwayat);
+          const { iuran: iuranBulan } = getStatusAtDate(selectedHouse.no_rumah, bulanStr, rumahRiwayat);
           const jumlah = iuranBulan;
-          const kasId = `IU-${new Date().toISOString().slice(0,10).replace(/-/g,'')}-${Date.now().toString().slice(-6)}-${month}`;
+          const kasId = `IU-${new Date().toISOString().slice(0,10).replace(/-/g,'')}-${Date.now().toString().slice(-6)}-${bulanStr.slice(5,7)}`;
 
           const { error: iuranError } = await supabase
             .from('transaksi_iuran')
