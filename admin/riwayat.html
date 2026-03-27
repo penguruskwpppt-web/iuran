@@ -3,12 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-  <title>Admin Panel - KWP3T</title>
+  <title>Riwayat Rumah - KWP3T Admin</title>
   <link rel="icon" href="../images/logo.webp" type="image/webp">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <style>
-    /* ========== CSS SAMA SEPERTI SEBELUMNYA ========== */
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       font-family: 'Inter', sans-serif;
@@ -56,66 +55,42 @@
       margin-bottom: 20px;
       color: #0b2e4f;
     }
-    .tabs {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 20px;
-      border-bottom: 1px solid #ddd;
-      padding-bottom: 10px;
-      flex-wrap: wrap;
-    }
-    .tab-btn {
-      padding: 8px 16px;
-      background: #f0f0f0;
-      border: none;
-      cursor: pointer;
-      border-radius: 4px;
-      transition: 0.2s;
-    }
-    .tab-btn.active {
+    .btn-primary {
       background: #0b2e4f;
       color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      margin-bottom: 20px;
+      transition: 0.2s;
     }
-    .tab-content {
-      display: none;
+    .btn-primary:hover {
+      background: #1e4f7a;
     }
-    .tab-content.active {
-      display: block;
+    .btn-edit, .btn-delete {
+      padding: 6px 12px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-right: 5px;
     }
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 20px;
-      margin-top: 20px;
+    .btn-edit {
+      background: #f59e0b;
+      color: white;
     }
-    .card {
-      background: white;
-      padding: 20px;
-      border-radius: 16px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-      text-align: center;
-      transition: transform 0.2s;
-    }
-    .card:hover {
-      transform: translateY(-5px);
-    }
-    .card h3 {
-      font-size: 1rem;
-      color: #64748b;
-      margin-bottom: 8px;
-    }
-    .card p {
-      font-size: 1.5rem;
-      font-weight: 800;
-      color: #0b2e4f;
+    .btn-delete {
+      background: #e74c3c;
+      color: white;
     }
     table {
       width: 100%;
       border-collapse: collapse;
       background: white;
-      margin: 20px 0;
       border-radius: 12px;
       overflow: hidden;
+      font-size: 0.85rem;
     }
     th, td {
       border: 1px solid #e2e8f0;
@@ -126,114 +101,49 @@
       background: #0b2e4f;
       color: white;
     }
-    .btn-primary, .btn-secondary {
-      padding: 8px 16px;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      font-weight: 600;
-      transition: 0.2s;
-    }
-    .btn-primary {
-      background: #0b2e4f;
-      color: white;
-    }
-    .btn-primary:hover {
-      background: #1e4f7a;
-    }
-    .btn-secondary {
-      background: #64748b;
-      color: white;
-    }
-    .btn-save-role {
-      background: #27ae60;
-      color: white;
-      padding: 4px 12px;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-    }
-    .btn-save-role:hover {
-      background: #2ecc71;
-    }
-    .btn-delete {
-      background: #e74c3c;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      padding: 6px 12px;
-      cursor: pointer;
-    }
-    .btn-delete:hover {
-      background: #c0392b;
-    }
-    select {
-      padding: 6px;
-      border-radius: 6px;
-      border: 1px solid #ccc;
-    }
-    .info {
-      margin-top: 20px;
-      font-size: 0.85rem;
-      color: #64748b;
-    }
-    .form-card {
-      background: white;
-      border-radius: 20px;
-      padding: 20px;
-      margin-bottom: 20px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-    }
-    .form-card h3 {
-      margin-bottom: 15px;
-      color: #0b2e4f;
-    }
-    .form-group {
-      margin-bottom: 15px;
-    }
-    .form-group label {
-      display: block;
-      margin-bottom: 6px;
-      font-weight: 600;
-    }
-    .form-group input, .form-group select, .form-group textarea {
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
       width: 100%;
-      padding: 8px;
-      border: 1px solid #ccc;
-      border-radius: 8px;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
     }
-    .btn-sm {
-      padding: 6px 12px;
-      font-size: 0.8rem;
-    }
-    .filter-bar {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      align-items: flex-end;
-      margin-bottom: 20px;
+    .modal-content {
       background: white;
-      padding: 16px;
+      max-width: 550px;
+      width: 90%;
+      padding: 20px;
       border-radius: 16px;
     }
-    .filter-group {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
+    .modal-content h2 {
+      margin-bottom: 20px;
     }
-    .filter-group label {
-      font-weight: 600;
-      font-size: 0.85rem;
+    .modal-content input, .modal-content select, .modal-content textarea {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 12px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-family: inherit;
+    }
+    .modal-buttons {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      margin-top: 20px;
     }
     @media (max-width: 768px) {
       .navbar { flex-direction: column; align-items: stretch; }
       .nav-links { justify-content: center; }
-      .container { padding: 0 16px; }
-      .stats-grid { grid-template-columns: 1fr; }
-      table { font-size: 0.85rem; }
+      table { font-size: 0.75rem; }
       th, td { padding: 8px; }
-      .tabs { justify-content: center; }
-      .filter-bar { flex-direction: column; align-items: stretch; }
+      .btn-edit, .btn-delete { padding: 4px 8px; font-size: 0.7rem; }
+      .modal-content { width: 95%; padding: 16px; }
     }
   </style>
 </head>
@@ -244,187 +154,57 @@
       <span>Admin KWP3T</span>
     </div>
     <div class="nav-links">
-      <a href="admin.html" class="active">Dashboard</a>
+      <a href="admin.html">Dashboard</a>
       <a href="warga.html">Data Warga</a>
-	  <a href="riwayat.html">Riwayat Rumah</a>
       <a href="iuran.html">Bayar Iuran</a>
-      <a href="laporan.html">Laporan Kas</a>      
+      <a href="laporan.html">Laporan Kas</a>
+      <a href="riwayat.html" class="active">Riwayat Rumah</a>
       <a href="#" id="logoutBtn">Logout</a>
     </div>
   </nav>
 
   <div class="container">
-    <h1>Panel Pengurus</h1>
-    <div class="tabs" id="tabsContainer">
-      <button class="tab-btn active" data-tab="stats">Statistik Lengkap</button>
-      <button class="tab-btn" data-tab="backup">Backup Data</button>
-      <button class="tab-btn" data-tab="nonIuran">Transaksi Non-Iuran</button>
-      <button class="tab-btn" data-tab="manageTransactions">Kelola Transaksi</button>
-      <button class="tab-btn" data-tab="tunggakan">Laporan Tunggakan</button>
+    <h1>Riwayat Perubahan Status & Penghuni</h1>
+    <button id="btnTambahRiwayat" class="btn-primary"><i class="fas fa-plus"></i> Tambah Riwayat</button>
+    <div style="overflow-x: auto;">
+      <table id="riwayatTable">
+        <thead>
+          <tr><th>No Rumah</th><th>Nama Penghuni</th><th>No HP Penghuni</th><th>Status</th><th>Iuran/Bulan</th><th>Berlaku Sejak</th><th>Keterangan</th><th>Aksi</th>
+        </thead>
+        <tbody></tbody>
+      闭
     </div>
+  </div>
 
-    <!-- Statistik Lengkap -->
-    <div id="tab-stats" class="tab-content active">
-      <h2>Statistik Lengkap</h2>
-      <div id="stats-data"><p>Memuat data...</p></div>
-    </div>
-
-    <!-- Backup Data -->
-    <div id="tab-backup" class="tab-content">
-      <h2>Backup Data</h2>
-      <button id="export-warga" class="btn-primary">Export Data Warga (CSV)</button>
-      <button id="export-transaksi" class="btn-primary">Export Transaksi Iuran (CSV)</button>
-      <button id="export-kas" class="btn-primary">Export Semua Transaksi Kas (CSV)</button>
-      <p class="info">Klik tombol untuk mengunduh file CSV.</p>
-    </div>
-
-    <!-- Transaksi Non-Iuran -->
-    <div id="tab-nonIuran" class="tab-content">
-      <h2>Transaksi Non-Iuran</h2>
-      <!-- Form Pemasukan Lain -->
-      <div class="form-card">
-        <h3>➕ Pemasukan Lain</h3>
-        <form id="formPemasukanLain">
-          <div class="form-group">
-            <label>Kategori</label>
-            <select id="kategori_pemasukan">
-              <option value="Sumbangan">Sumbangan</option>
-              <option value="Lainnya">Lainnya (isi manual)</option>
-            </select>
-          </div>
-          <div id="kategori_pemasukan_manual_group" class="form-group" style="display: none;">
-            <label>Kategori Lainnya (isi)</label>
-            <input type="text" id="kategori_pemasukan_manual" placeholder="Contoh: Donasi, Hibah, dll">
-          </div>
-          <div class="form-group">
-            <label>Jumlah (Rp)</label>
-            <input type="number" id="jumlah_pemasukan" placeholder="0" required>
-          </div>
-          <div class="form-group">
-            <label>Catatan (opsional)</label>
-            <textarea id="catatan_pemasukan" rows="2" placeholder="Detail tambahan..."></textarea>
-          </div>
-          <button type="submit" class="btn-primary">Simpan Pemasukan</button>
-        </form>
-      </div>
-
-      <!-- Form Pengeluaran Lain -->
-      <div class="form-card">
-        <h3>➖ Pengeluaran Lain</h3>
-        <form id="formPengeluaranLain">
-          <div class="form-group">
-            <label>Kategori</label>
-            <select id="kategori_pengeluaran">
-              <option value="Perbaikan">Perbaikan</option>
-              <option value="Kebersihan">Kebersihan</option>
-              <option value="Administrasi">Administrasi</option>
-              <option value="Keamanan">Keamanan</option>
-              <option value="Lainnya">Lainnya (isi manual)</option>
-            </select>
-          </div>
-          <div id="kategori_pengeluaran_manual_group" class="form-group" style="display: none;">
-            <label>Kategori Lainnya (isi)</label>
-            <input type="text" id="kategori_pengeluaran_manual" placeholder="Contoh: Konsumsi, Transport, dll">
-          </div>
-          <div class="form-group">
-            <label>Jumlah (Rp)</label>
-            <input type="number" id="jumlah_pengeluaran" placeholder="0" required>
-          </div>
-          <div class="form-group">
-            <label>Keterangan (opsional)</label>
-            <textarea id="catatan_pengeluaran" rows="2" placeholder="Detail tambahan..."></textarea>
-          </div>
-          <button type="submit" class="btn-primary">Simpan Pengeluaran</button>
-        </form>
-      </div>
-
-      <div class="form-card">
-        <h3>📋 Riwayat Transaksi Non-Iuran Terbaru</h3>
-        <div style="overflow-x: auto;">
-          <table id="nonIuranTable">
-            <thead>
-              <tr><th>Tanggal</th><th>Jenis</th><th>Keterangan</th><th>Jumlah</th><th>Aksi</th>
-            </thead>
-            <tbody></tbody>          
+  <!-- Modal Form Riwayat -->
+  <div id="modalRiwayat" class="modal">
+    <div class="modal-content">
+      <h2 id="modalTitle">Tambah Riwayat</h2>
+      <form id="riwayatForm">
+        <input type="hidden" id="id_riwayat">
+        <label>No Rumah</label>
+        <select id="no_rumah" required></select>
+        <label>Nama Penghuni</label>
+        <input type="text" id="nama_penghuni" placeholder="Nama penghuni (jika ada)">
+        <label>No HP Penghuni</label>
+        <input type="text" id="no_hp_penghuni" placeholder="Nomor HP penghuni (opsional)">
+        <label>Status</label>
+        <select id="kondisi">
+          <option value="Berpenghuni">Berpenghuni</option>
+          <option value="Kosong">Kosong</option>
+          <option value="Dibebaskan">Dibebaskan</option>
+        </select>
+        <label>Iuran per Bulan (Rp)</label>
+        <input type="number" id="iuran_per_bulan" placeholder="Iuran per bulan">
+        <label>Berlaku Sejak (tanggal mulai)</label>
+        <input type="date" id="berlaku_sejak" required>
+        <label>Keterangan (opsional)</label>
+        <textarea id="keterangan" rows="2" placeholder="Misal: Pindah penghuni, perubahan status, dll."></textarea>
+        <div class="modal-buttons">
+          <button type="submit" class="btn-primary">Simpan</button>
+          <button type="button" id="closeModal" style="background:#ccc;">Batal</button>
         </div>
-      </div>
-    </div>
-
-    <!-- Kelola Transaksi -->
-    <div id="tab-manageTransactions" class="tab-content">
-      <h2>Kelola Semua Transaksi</h2>
-      <div class="filter-bar">
-        <div class="filter-group">
-          <label>Jenis Transaksi</label>
-          <select id="filterJenis">
-            <option value="all">Semua</option>
-            <option value="Iuran Warga">Iuran Warga</option>
-            <option value="Pemasukan Lain">Pemasukan Lain</option>
-            <option value="Pengeluaran Lain">Pengeluaran Lain</option>
-          </select>
-        </div>
-        <div class="filter-group">
-          <label>Tanggal Mulai</label>
-          <input type="date" id="filterStartDate">
-        </div>
-        <div class="filter-group">
-          <label>Tanggal Akhir</label>
-          <input type="date" id="filterEndDate">
-        </div>
-        <button id="applyFilterBtn" class="btn-primary">Filter</button>
-        <button id="resetFilterBtn" class="btn-secondary">Reset</button>
-      </div>
-      <div style="overflow-x: auto;">
-        <table id="allTransactionsTable">
-          <thead>
-            <tr><th>Tanggal</th><th>Jenis</th><th>Keterangan</th><th>Pemasukan</th><th>Pengeluaran</th><th>Saldo</th><th>Aksi</th>
-          </thead>
-          <tbody></tbody>        
-      </div>
-      <p class="info">⚠️ <strong>Peringatan:</strong> Menghapus transaksi akan <strong>mengubah data historis</strong> tetapi <strong>tidak akan mengoreksi saldo secara otomatis</strong>. Setelah hapus, periksa kembali saldo kas dan gunakan fitur <strong>Pemasukan Lain / Pengeluaran Lain</strong> untuk menambahkan koreksi manual jika diperlukan.</p>
-    </div>
-
-    <!-- Laporan Tunggakan -->
-    <div id="tab-tunggakan" class="tab-content">
-      <h2>Laporan Tunggakan Iuran</h2>
-      <div class="filter-bar">
-        <div class="filter-group">
-          <label>Bulan Mulai</label>
-          <input type="month" id="tunggakanStartMonth">
-        </div>
-        <div class="filter-group">
-          <label>Bulan Akhir</label>
-          <input type="month" id="tunggakanEndMonth">
-        </div>
-        <div class="filter-group">
-          <label>Koordinator Lorong</label>
-          <select id="tunggakanKoordinator">
-            <option value="all">Semua Koordinator</option>
-          </select>
-        </div>
-        <button id="filterTunggakanBtn" class="btn-primary">Tampilkan</button>
-        <button id="resetTunggakanBtn" class="btn-secondary">Reset</button>
-      </div>
-      <div style="overflow-x: auto;">
-        <table id="tunggakanTable">
-          <thead>
-            <tr><th>No Rumah</th><th>Penghuni</th><th>Iuran/bln</th><th>Koordinator</th><th>Bulan Tunggakan</th><th>Total Tunggakan</th>
-          </thead>
-          <tbody></tbody>        
-      </div>
-      <p class="info">Catatan: Tunggakan dihitung untuk bulan yang belum dibayar dalam rentang yang dipilih. Penghuni diambil dari riwayat terbaru yang berlaku pada bulan akhir rentang.</p>
-    </div>
-
-    <!-- Manajemen User (hanya untuk admin) -->
-    <div id="tab-users" class="tab-content" style="display: none;">
-      <h2>Daftar User & Role</h2>
-      <div style="overflow-x: auto;">
-        <table id="users-table">
-          <thead> <th>Email</th><th>Role</th><th>Aksi</th> </thead>
-          <tbody></tbody>
-        
-      </div>
-      <p class="info">Catatan: Hanya admin yang bisa mengubah role.</p>
+      </form>
     </div>
   </div>
 
@@ -435,9 +215,9 @@
       const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind1YXJndHh1bGFxdXhweml1emhvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1MjMxNTYsImV4cCI6MjA5MDA5OTE1Nn0.EcVFAGh3ZgTDs8Paz9O_8MpkliKPF0vI7cAuuIsvb2U';
       const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-      let userRole = null;
+      let currentEditId = null;
 
-      // ========== CEK LOGIN & ROLE ==========
+      // Cek login dan role
       (async () => {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) {
@@ -454,32 +234,206 @@
           window.location.href = '../index.html';
           return;
         }
-        userRole = profile.role;
         const allowedRoles = ['admin', 'bendahara', 'sekretaris'];
-        if (!allowedRoles.includes(userRole)) {
+        if (!allowedRoles.includes(profile.role)) {
           alert('Akses ditolak. Hanya pengurus yang dapat mengakses halaman ini.');
           window.location.href = '../index.html';
           return;
         }
-
-        // Jika role admin, tampilkan tab Manajemen User
-        if (userRole === 'admin') {
-          const tabsContainer = document.getElementById('tabsContainer');
-          const usersTabBtn = document.createElement('button');
-          usersTabBtn.className = 'tab-btn';
-          usersTabBtn.setAttribute('data-tab', 'users');
-          usersTabBtn.innerText = 'Manajemen User';
-          tabsContainer.appendChild(usersTabBtn);
-          document.getElementById('tab-users').style.display = 'block';
-        }
-
-        initDashboard();
-        initNonIuran();
-        initManageTransactions();
-        initLaporanTunggakan();
+        loadWargaDropdown();
+        loadRiwayat();
       })();
 
-      // ========== FUNGSI PEMBANTU ==========
+      async function loadWargaDropdown() {
+        const { data, error } = await supabase
+          .from('warga')
+          .select('no_rumah, nama_pemilik, iuran_per_bulan')
+          .order('no_rumah');
+        if (error) console.error(error);
+        else {
+          const select = document.getElementById('no_rumah');
+          select.innerHTML = '<option value="">-- Pilih Rumah --</option>';
+          data.forEach(w => {
+            const option = document.createElement('option');
+            option.value = w.no_rumah;
+            option.textContent = `${w.no_rumah} - ${w.nama_pemilik} (iuran ${formatRupiah(w.iuran_per_bulan)})`;
+            option.setAttribute('data-iuran', w.iuran_per_bulan);
+            select.appendChild(option);
+          });
+        }
+      }
+
+      document.getElementById('no_rumah').addEventListener('change', (e) => {
+        const selected = e.target.selectedOptions[0];
+        const iuran = selected.getAttribute('data-iuran');
+        if (iuran) document.getElementById('iuran_per_bulan').value = iuran;
+      });
+
+      // Fungsi untuk memperbarui kondisi terakhir dan iuran di tabel warga berdasarkan riwayat terbaru
+      async function updateWargaFromHistory(no_rumah) {
+        const { data: histories, error } = await supabase
+          .from('riwayat_kondisi')
+          .select('*')
+          .eq('no_rumah', no_rumah)
+          .order('berlaku_sejak', { ascending: false })
+          .limit(1);
+        if (error) {
+          console.error('Gagal mengambil riwayat terbaru:', error);
+          return;
+        }
+        if (histories && histories.length > 0) {
+          const latest = histories[0];
+          const { error: updateError } = await supabase
+            .from('warga')
+            .update({
+              kondisi_terakhir: latest.kondisi,
+              iuran_per_bulan: latest.iuran_per_bulan,
+              updated_at: new Date()
+            })
+            .eq('no_rumah', no_rumah);
+          if (updateError) console.error('Gagal update warga:', updateError);
+        }
+      }
+
+      async function loadRiwayat() {
+        const { data, error } = await supabase
+          .from('riwayat_kondisi')
+          .select('*')
+          .order('no_rumah', { ascending: true })
+          .order('berlaku_sejak', { ascending: false });
+        if (error) console.error(error);
+        else renderTable(data);
+      }
+
+      function renderTable(riwayat) {
+        const tbody = document.querySelector('#riwayatTable tbody');
+        tbody.innerHTML = '';
+        riwayat.forEach(r => {
+          const row = tbody.insertRow();
+          row.insertCell(0).innerText = r.no_rumah;
+          row.insertCell(1).innerText = r.nama_penghuni || '-';
+          row.insertCell(2).innerText = r.no_hp_penghuni || '-';
+          row.insertCell(3).innerText = r.kondisi;
+          row.insertCell(4).innerText = formatRupiah(r.iuran_per_bulan);
+          row.insertCell(5).innerText = formatDate(r.berlaku_sejak);
+          row.insertCell(6).innerText = r.keterangan || '-';
+          const actionCell = row.insertCell(7);
+          const editBtn = document.createElement('button');
+          editBtn.innerText = 'Edit';
+          editBtn.className = 'btn-edit';
+          editBtn.onclick = () => openEditModal(r);
+          const deleteBtn = document.createElement('button');
+          deleteBtn.innerText = 'Hapus';
+          deleteBtn.className = 'btn-delete';
+          deleteBtn.onclick = () => deleteRiwayat(r.id, r.no_rumah);
+          actionCell.appendChild(editBtn);
+          actionCell.appendChild(deleteBtn);
+        });
+      }
+
+      function openEditModal(riwayat) {
+        currentEditId = riwayat.id;
+        document.getElementById('modalTitle').innerText = 'Edit Riwayat';
+        document.getElementById('id_riwayat').value = riwayat.id;
+        document.getElementById('no_rumah').value = riwayat.no_rumah;
+        document.getElementById('no_rumah').disabled = true;
+        document.getElementById('nama_penghuni').value = riwayat.nama_penghuni || '';
+        document.getElementById('no_hp_penghuni').value = riwayat.no_hp_penghuni || '';
+        document.getElementById('kondisi').value = riwayat.kondisi;
+        document.getElementById('iuran_per_bulan').value = riwayat.iuran_per_bulan;
+        document.getElementById('berlaku_sejak').value = riwayat.berlaku_sejak;
+        document.getElementById('keterangan').value = riwayat.keterangan || '';
+        document.getElementById('modalRiwayat').style.display = 'flex';
+      }
+
+      function openAddModal() {
+        currentEditId = null;
+        document.getElementById('modalTitle').innerText = 'Tambah Riwayat';
+        document.getElementById('id_riwayat').value = '';
+        document.getElementById('no_rumah').disabled = false;
+        document.getElementById('no_rumah').value = '';
+        document.getElementById('nama_penghuni').value = '';
+        document.getElementById('no_hp_penghuni').value = '';
+        document.getElementById('kondisi').value = 'Berpenghuni';
+        document.getElementById('iuran_per_bulan').value = '';
+        document.getElementById('berlaku_sejak').value = '';
+        document.getElementById('keterangan').value = '';
+        document.getElementById('modalRiwayat').style.display = 'flex';
+      }
+
+      document.getElementById('btnTambahRiwayat').onclick = openAddModal;
+      document.getElementById('closeModal').onclick = () => {
+        document.getElementById('modalRiwayat').style.display = 'none';
+      };
+
+      document.getElementById('riwayatForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const no_rumah = document.getElementById('no_rumah').value;
+        const nama_penghuni = document.getElementById('nama_penghuni').value || null;
+        const no_hp_penghuni = document.getElementById('no_hp_penghuni').value || null;
+        const kondisi = document.getElementById('kondisi').value;
+        const iuran_per_bulan = parseInt(document.getElementById('iuran_per_bulan').value);
+        const berlaku_sejak = document.getElementById('berlaku_sejak').value;
+        const keterangan = document.getElementById('keterangan').value || null;
+
+        if (!no_rumah || !berlaku_sejak || isNaN(iuran_per_bulan)) {
+          alert('Harap isi semua field yang diperlukan.');
+          return;
+        }
+
+        const data = {
+          no_rumah,
+          nama_penghuni,
+          no_hp_penghuni,
+          kondisi,
+          iuran_per_bulan,
+          berlaku_sejak,
+          keterangan,
+          diubah_oleh: (await supabase.auth.getUser()).data.user?.email || 'admin',
+          created_at: new Date()
+        };
+
+        let error;
+        if (currentEditId) {
+          const { error: updateError } = await supabase
+            .from('riwayat_kondisi')
+            .update(data)
+            .eq('id', currentEditId);
+          error = updateError;
+        } else {
+          const { error: insertError } = await supabase
+            .from('riwayat_kondisi')
+            .insert([data]);
+          error = insertError;
+        }
+
+        if (error) {
+          alert('Gagal menyimpan riwayat: ' + error.message);
+          return;
+        }
+
+        // Update warga dengan kondisi & iuran terbaru (tanpa mengubah nama pemilik)
+        await updateWargaFromHistory(no_rumah);
+        document.getElementById('modalRiwayat').style.display = 'none';
+        loadRiwayat();
+        loadWargaDropdown(); // refresh dropdown karena iuran warga mungkin berubah
+      });
+
+      async function deleteRiwayat(id, no_rumah) {
+        if (!confirm('Yakin hapus riwayat ini? Data warga akan disesuaikan dengan riwayat terbaru yang tersisa.')) return;
+        const { error } = await supabase
+          .from('riwayat_kondisi')
+          .delete()
+          .eq('id', id);
+        if (error) {
+          alert('Gagal hapus: ' + error.message);
+          return;
+        }
+        await updateWargaFromHistory(no_rumah);
+        loadRiwayat();
+        loadWargaDropdown();
+      }
+
       function formatRupiah(angka) {
         if (angka === null || isNaN(angka)) angka = 0;
         return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka);
@@ -489,662 +443,6 @@
         return new Date(iso).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' });
       }
 
-      // ========== STATISTIK ==========
-      async function loadStats() {
-        const statsDiv = document.getElementById('stats-data');
-        statsDiv.innerHTML = '<p>Memuat data...</p>';
-        try {
-          const { count: totalWarga } = await supabase.from('warga').select('*', { count: 'exact', head: true });
-          const { count: totalPenghuni } = await supabase.from('warga').select('*', { count: 'exact', head: true }).eq('kondisi_terakhir', 'Berpenghuni');
-          const { count: totalKosong } = await supabase.from('warga').select('*', { count: 'exact', head: true }).eq('kondisi_terakhir', 'Kosong');
-          const { count: totalDibebaskan } = await supabase.from('warga').select('*', { count: 'exact', head: true }).eq('kondisi_terakhir', 'Dibebaskan');
-
-          const { data: iuranData } = await supabase.from('transaksi_iuran').select('jumlah');
-          let totalIuran = iuranData?.reduce((s,t)=>s+t.jumlah,0) || 0;
-
-          const { data: pemasukanLain } = await supabase.from('transaksi_kas').select('pemasukan').eq('jenis','Pemasukan').neq('sumber','Iuran Warga');
-          let totalPemasukanLain = pemasukanLain?.reduce((s,t)=>s+t.pemasukan,0) || 0;
-
-          const { data: pengeluaranData } = await supabase.from('transaksi_kas').select('pengeluaran').eq('jenis','Pengeluaran');
-          let totalPengeluaran = pengeluaranData?.reduce((s,t)=>s+t.pengeluaran,0) || 0;
-
-          const { data: lastSaldo } = await supabase.from('transaksi_kas').select('saldo').order('tanggal',{ascending:false}).limit(1);
-          const saldo = lastSaldo?.[0]?.saldo || 0;
-
-          const now = new Date();
-          const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-          const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString();
-          const { data: iuranBulanIni } = await supabase.from('transaksi_kas').select('pemasukan').eq('jenis','Pemasukan').eq('sumber','Iuran Warga').gte('tanggal',firstDay).lte('tanggal',lastDay);
-          let totalIuranBulanIni = iuranBulanIni?.reduce((s,t)=>s+t.pemasukan,0) || 0;
-
-          statsDiv.innerHTML = `
-            <div class="stats-grid">
-              <div class="card"><h3>Total Rumah</h3><p>${totalWarga || 0}</p></div>
-              <div class="card"><h3>Berpenghuni</h3><p>${totalPenghuni || 0}</p></div>
-              <div class="card"><h3>Kosong</h3><p>${totalKosong || 0}</p></div>
-              <div class="card"><h3>Dibebaskan</h3><p>${totalDibebaskan || 0}</p></div>
-              <div class="card"><h3>Total Iuran Terkumpul</h3><p>${formatRupiah(totalIuran)}</p></div>
-              <div class="card"><h3>Total Pemasukan Lain</h3><p>${formatRupiah(totalPemasukanLain)}</p></div>
-              <div class="card"><h3>Total Pengeluaran</h3><p>${formatRupiah(totalPengeluaran)}</p></div>
-              <div class="card"><h3>Saldo Kas Terakhir</h3><p>${formatRupiah(saldo)}</p></div>
-              <div class="card"><h3>Iuran Bulan Ini</h3><p>${formatRupiah(totalIuranBulanIni)}</p></div>
-            </div>
-          `;
-        } catch (err) {
-          console.error(err);
-          statsDiv.innerHTML = '<p>Gagal memuat statistik.</p>';
-        }
-      }
-
-      // ========== EKSPOR CSV ==========
-      async function exportToCSV(tableName, columns, filename) {
-        try {
-          let data;
-          if (tableName === 'warga') {
-            const { data: wargaData } = await supabase.from('warga').select('*').order('no_rumah');
-            data = wargaData;
-          } else if (tableName === 'transaksi_iuran') {
-            const { data: iuranData } = await supabase.from('transaksi_iuran').select('kas_id, no_rumah, bulan, jumlah, metode, bukti_tf, created_at').order('bulan', { ascending: false });
-            data = iuranData;
-          } else if (tableName === 'transaksi_kas') {
-            const { data: kasData } = await supabase.from('transaksi_kas').select('kas_id, tanggal, keterangan, pemasukan, pengeluaran, saldo, jenis, sumber').order('tanggal', { ascending: false });
-            data = kasData;
-          } else throw new Error('Tabel tidak dikenal');
-          if (!data || data.length === 0) { alert('Tidak ada data'); return; }
-          const headers = columns.join(',');
-          const rows = data.map(row => columns.map(col => {
-            let val = row[col];
-            if (val === null || val === undefined) val = '';
-            if (typeof val === 'string' && (val.includes(',') || val.includes('"'))) val = `"${val.replace(/"/g, '""')}"`;
-            return val;
-          }).join(','));
-          const csv = [headers, ...rows].join('\n');
-          const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-          const link = document.createElement('a');
-          const url = URL.createObjectURL(blob);
-          link.href = url;
-          link.download = filename;
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-          URL.revokeObjectURL(url);
-        } catch (err) {
-          console.error(err);
-          alert('Gagal ekspor: ' + err.message);
-        }
-      }
-
-      // ========== MANAJEMEN USER ==========
-      async function loadUsers() {
-        const { data: profiles, error } = await supabase
-          .from('profiles')
-          .select('id, email, role')
-          .order('email');
-        if (error) {
-          console.error(error);
-          alert('Gagal memuat daftar user');
-          return;
-        }
-        const tbody = document.querySelector('#users-table tbody');
-        tbody.innerHTML = '';
-        for (const prof of profiles) {
-          const row = tbody.insertRow();
-          row.insertCell(0).innerText = prof.email;
-          const roleCell = row.insertCell(1);
-          const select = document.createElement('select');
-          const roles = ['admin', 'bendahara', 'sekretaris'];
-          roles.forEach(r => {
-            const opt = document.createElement('option');
-            opt.value = r;
-            opt.textContent = r;
-            if (prof.role === r) opt.selected = true;
-            select.appendChild(opt);
-          });
-          roleCell.appendChild(select);
-          const actionCell = row.insertCell(2);
-          const saveBtn = document.createElement('button');
-          saveBtn.innerText = 'Simpan';
-          saveBtn.className = 'btn-save-role';
-          saveBtn.onclick = async () => {
-            const newRole = select.value;
-            const { error: updateError } = await supabase
-              .from('profiles')
-              .update({ role: newRole })
-              .eq('id', prof.id);
-            if (updateError) alert('Gagal update role: ' + updateError.message);
-            else {
-              alert(`Role user ${prof.email} diubah menjadi ${newRole}`);
-              loadUsers();
-            }
-          };
-          actionCell.appendChild(saveBtn);
-        }
-      }
-
-      // ========== TRANSAKSI NON-IURAN ==========
-      function setupCategoryManual(selectId, manualGroupId, manualInputId) {
-        const select = document.getElementById(selectId);
-        const manualGroup = document.getElementById(manualGroupId);
-        const manualInput = document.getElementById(manualInputId);
-        select.addEventListener('change', () => {
-          if (select.value === 'Lainnya') {
-            manualGroup.style.display = 'block';
-            manualInput.required = true;
-          } else {
-            manualGroup.style.display = 'none';
-            manualInput.required = false;
-          }
-        });
-      }
-
-      async function addPemasukanLain(event) {
-        event.preventDefault();
-        let kategori = document.getElementById('kategori_pemasukan').value;
-        if (kategori === 'Lainnya') {
-          const manual = document.getElementById('kategori_pemasukan_manual').value.trim();
-          if (!manual) {
-            alert('Harap isi kategori manual.');
-            return;
-          }
-          kategori = manual;
-        }
-        const jumlah = parseInt(document.getElementById('jumlah_pemasukan').value);
-        const catatan = document.getElementById('catatan_pemasukan').value.trim();
-
-        if (!kategori || isNaN(jumlah) || jumlah <= 0) {
-          alert('Harap isi kategori dan jumlah dengan benar.');
-          return;
-        }
-
-        let keterangan = `${kategori}`;
-        if (catatan) keterangan += ` - ${catatan}`;
-
-        const { data: lastSaldo } = await supabase
-          .from('transaksi_kas')
-          .select('saldo')
-          .order('tanggal', { ascending: false })
-          .limit(1);
-        let saldo = lastSaldo?.[0]?.saldo || 0;
-        const newSaldo = saldo + jumlah;
-
-        const kasId = `IN-${new Date().toISOString().slice(0,10).replace(/-/g,'')}-${Date.now().toString().slice(-6)}`;
-        const { error } = await supabase
-          .from('transaksi_kas')
-          .insert([{
-            kas_id: kasId,
-            tanggal: new Date(),
-            keterangan: keterangan,
-            pemasukan: jumlah,
-            saldo: newSaldo,
-            jenis: 'Pemasukan',
-            sumber: 'Pemasukan Lain'
-          }]);
-        if (error) {
-          alert('Gagal menyimpan pemasukan: ' + error.message);
-        } else {
-          alert('✅ Pemasukan berhasil ditambahkan');
-          document.getElementById('formPemasukanLain').reset();
-          document.getElementById('kategori_pemasukan_manual_group').style.display = 'none';
-          loadNonIuranTransactions();
-          loadStats();
-          const activeTab = document.querySelector('.tab-btn.active')?.dataset.tab;
-          if (activeTab === 'manageTransactions') {
-            const filterJenis = document.getElementById('filterJenis').value;
-            const startDate = document.getElementById('filterStartDate').value;
-            const endDate = document.getElementById('filterEndDate').value;
-            loadAllTransactions(filterJenis, startDate, endDate);
-          }
-        }
-      }
-
-      async function addPengeluaranLain(event) {
-        event.preventDefault();
-        let kategori = document.getElementById('kategori_pengeluaran').value;
-        if (kategori === 'Lainnya') {
-          const manual = document.getElementById('kategori_pengeluaran_manual').value.trim();
-          if (!manual) {
-            alert('Harap isi kategori manual.');
-            return;
-          }
-          kategori = manual;
-        }
-        const jumlah = parseInt(document.getElementById('jumlah_pengeluaran').value);
-        const catatan = document.getElementById('catatan_pengeluaran').value.trim();
-
-        if (!kategori || isNaN(jumlah) || jumlah <= 0) {
-          alert('Harap isi kategori dan jumlah dengan benar.');
-          return;
-        }
-
-        let keterangan = `${kategori}`;
-        if (catatan) keterangan += ` - ${catatan}`;
-
-        const { data: lastSaldo } = await supabase
-          .from('transaksi_kas')
-          .select('saldo')
-          .order('tanggal', { ascending: false })
-          .limit(1);
-        let saldo = lastSaldo?.[0]?.saldo || 0;
-        const newSaldo = saldo - jumlah;
-
-        const kasId = `EX-${new Date().toISOString().slice(0,10).replace(/-/g,'')}-${Date.now().toString().slice(-6)}`;
-        const { error } = await supabase
-          .from('transaksi_kas')
-          .insert([{
-            kas_id: kasId,
-            tanggal: new Date(),
-            keterangan: keterangan,
-            pengeluaran: jumlah,
-            saldo: newSaldo,
-            jenis: 'Pengeluaran',
-            sumber: 'Pengeluaran Lain'
-          }]);
-        if (error) {
-          alert('Gagal menyimpan pengeluaran: ' + error.message);
-        } else {
-          alert('✅ Pengeluaran berhasil ditambahkan');
-          document.getElementById('formPengeluaranLain').reset();
-          document.getElementById('kategori_pengeluaran_manual_group').style.display = 'none';
-          loadNonIuranTransactions();
-          loadStats();
-          const activeTab = document.querySelector('.tab-btn.active')?.dataset.tab;
-          if (activeTab === 'manageTransactions') {
-            const filterJenis = document.getElementById('filterJenis').value;
-            const startDate = document.getElementById('filterStartDate').value;
-            const endDate = document.getElementById('filterEndDate').value;
-            loadAllTransactions(filterJenis, startDate, endDate);
-          }
-        }
-      }
-
-      async function loadNonIuranTransactions() {
-        const { data: pengeluaran, error: err1 } = await supabase
-          .from('transaksi_kas')
-          .select('kas_id, tanggal, keterangan, pemasukan, pengeluaran, sumber')
-          .eq('jenis', 'Pengeluaran')
-          .order('tanggal', { ascending: false })
-          .limit(20);
-
-        const { data: pemasukan, error: err2 } = await supabase
-          .from('transaksi_kas')
-          .select('kas_id, tanggal, keterangan, pemasukan, pengeluaran, sumber')
-          .eq('jenis', 'Pemasukan')
-          .neq('sumber', 'Iuran Warga')
-          .order('tanggal', { ascending: false })
-          .limit(20);
-
-        if (err1 || err2) {
-          console.error('Error fetching non-iuran transactions:', err1, err2);
-          return;
-        }
-
-        const all = [...(pengeluaran || []), ...(pemasukan || [])];
-        all.sort((a, b) => new Date(b.tanggal) - new Date(a.tanggal));
-        const latest = all.slice(0, 20);
-
-        const tbody = document.querySelector('#nonIuranTable tbody');
-        if (!tbody) return;
-        tbody.innerHTML = '';
-        if (latest.length === 0) {
-          const row = tbody.insertRow();
-          const cell = row.insertCell(0);
-          cell.colSpan = 5;
-          cell.innerText = 'Tidak ada transaksi non-iuran.';
-          cell.style.textAlign = 'center';
-          return;
-        }
-        latest.forEach(t => {
-          const row = tbody.insertRow();
-          const tanggal = formatDate(t.tanggal);
-          const jenis = t.pemasukan ? 'Pemasukan' : 'Pengeluaran';
-          const jumlah = t.pemasukan ? t.pemasukan : t.pengeluaran;
-          row.insertCell(0).innerText = tanggal;
-          row.insertCell(1).innerText = jenis;
-          row.insertCell(2).innerText = t.keterangan;
-          row.insertCell(3).innerText = formatRupiah(jumlah);
-          const actionCell = row.insertCell(4);
-          const delBtn = document.createElement('button');
-          delBtn.innerText = 'Hapus';
-          delBtn.className = 'btn-delete btn-sm';
-          delBtn.onclick = async () => {
-            if (confirm('Hapus transaksi ini? Saldo tidak akan otomatis dikembalikan. Pastikan Anda membuat koreksi manual jika perlu.')) {
-              const { error: delError } = await supabase
-                .from('transaksi_kas')
-                .delete()
-                .eq('kas_id', t.kas_id);
-              if (delError) alert('Gagal hapus: ' + delError.message);
-              else {
-                alert('Transaksi dihapus');
-                loadNonIuranTransactions();
-                loadStats();
-                const activeTab = document.querySelector('.tab-btn.active')?.dataset.tab;
-                if (activeTab === 'manageTransactions') {
-                  const filterJenis = document.getElementById('filterJenis').value;
-                  const startDate = document.getElementById('filterStartDate').value;
-                  const endDate = document.getElementById('filterEndDate').value;
-                  loadAllTransactions(filterJenis, startDate, endDate);
-                }
-              }
-            }
-          };
-          actionCell.appendChild(delBtn);
-        });
-      }
-
-      // ========== KELOLA SEMUA TRANSAKSI ==========
-      async function loadAllTransactions(filterJenis = 'all', startDate = null, endDate = null) {
-        let query = supabase
-          .from('transaksi_kas')
-          .select('kas_id, tanggal, keterangan, pemasukan, pengeluaran, saldo, sumber, jenis')
-          .order('tanggal', { ascending: false });
-
-        if (filterJenis !== 'all') {
-          if (filterJenis === 'Iuran Warga') {
-            query = query.eq('sumber', 'Iuran Warga');
-          } else if (filterJenis === 'Pemasukan Lain') {
-            query = query.eq('sumber', 'Pemasukan Lain');
-          } else if (filterJenis === 'Pengeluaran Lain') {
-            query = query.eq('sumber', 'Pengeluaran Lain');
-          }
-        }
-        if (startDate) query = query.gte('tanggal', startDate);
-        if (endDate) query = query.lte('tanggal', endDate);
-
-        const { data, error } = await query;
-        if (error) {
-          console.error("Error loading transactions:", error);
-          alert('Gagal memuat transaksi');
-          return;
-        }
-
-        const tbody = document.querySelector('#allTransactionsTable tbody');
-        if (!tbody) return;
-        tbody.innerHTML = '';
-        if (data.length === 0) {
-          const row = tbody.insertRow();
-          const cell = row.insertCell(0);
-          cell.colSpan = 7;
-          cell.innerText = 'Tidak ada transaksi.';
-          cell.style.textAlign = 'center';
-          return;
-        }
-        data.forEach(t => {
-          const row = tbody.insertRow();
-          row.insertCell(0).innerText = formatDate(t.tanggal);
-          row.insertCell(1).innerText = t.sumber || t.jenis;
-          row.insertCell(2).innerText = t.keterangan;
-          row.insertCell(3).innerText = t.pemasukan ? formatRupiah(t.pemasukan) : '-';
-          row.insertCell(4).innerText = t.pengeluaran ? formatRupiah(t.pengeluaran) : '-';
-          row.insertCell(5).innerText = formatRupiah(t.saldo);
-          const actionCell = row.insertCell(6);
-          const delBtn = document.createElement('button');
-          delBtn.innerText = 'Hapus';
-          delBtn.className = 'btn-delete btn-sm';
-          delBtn.onclick = async () => {
-            if (confirm(`Hapus transaksi ini?\n\n⚠️ PERINGATAN: Saldo tidak akan otomatis dikembalikan. Gunakan form Pemasukan/Pengeluaran Lain untuk koreksi manual jika diperlukan.`)) {
-              const { error: delError } = await supabase
-                .from('transaksi_kas')
-                .delete()
-                .eq('kas_id', t.kas_id);
-              if (delError) alert('Gagal hapus: ' + delError.message);
-              else {
-                alert('Transaksi dihapus');
-                loadAllTransactions(filterJenis, startDate, endDate);
-                loadStats();
-                loadNonIuranTransactions();
-              }
-            }
-          };
-          actionCell.appendChild(delBtn);
-        });
-      }
-
-      function initManageTransactions() {
-        const filterJenis = document.getElementById('filterJenis');
-        const startDate = document.getElementById('filterStartDate');
-        const endDate = document.getElementById('filterEndDate');
-        const applyBtn = document.getElementById('applyFilterBtn');
-        const resetBtn = document.getElementById('resetFilterBtn');
-
-        if (!filterJenis || !startDate || !endDate || !applyBtn || !resetBtn) {
-          console.error("Missing elements in manage transactions tab");
-          return;
-        }
-
-        const load = () => {
-          loadAllTransactions(filterJenis.value, startDate.value, endDate.value);
-        };
-        applyBtn.addEventListener('click', load);
-        resetBtn.addEventListener('click', () => {
-          filterJenis.value = 'all';
-          startDate.value = '';
-          endDate.value = '';
-          load();
-        });
-        load(); // initial load
-      }
-
-      // ========== LAPORAN TUNGGAKAN ==========
-      async function loadKoordinatorOptions() {
-        const { data, error } = await supabase
-          .from('warga')
-          .select('koordinator')
-          .not('koordinator', 'is', null)
-          .order('koordinator');
-        if (error) {
-          console.error(error);
-          return;
-        }
-        const unique = [...new Map(data.map(item => [item.koordinator, item])).values()];
-        const select = document.getElementById('tunggakanKoordinator');
-        unique.forEach(k => {
-          const opt = document.createElement('option');
-          opt.value = k.koordinator;
-          opt.textContent = k.koordinator;
-          select.appendChild(opt);
-        });
-      }
-
-      async function getCurrentOccupantAtDate(noRumah, date) {
-        const dateStr = date.toISOString().split('T')[0];
-        const { data, error } = await supabase
-          .from('riwayat_kondisi')
-          .select('nama_penghuni')
-          .eq('no_rumah', noRumah)
-          .lte('berlaku_sejak', dateStr)
-          .order('berlaku_sejak', { ascending: false })
-          .limit(1);
-        if (error) return null;
-        return data && data.length > 0 ? data[0].nama_penghuni : null;
-      }
-
-      async function generateTunggakanReport(startMonth, endMonth, koordinatorFilter) {
-        if (!startMonth || !endMonth) {
-          alert('Pilih rentang bulan terlebih dahulu.');
-          return;
-        }
-
-        // Konversi month input (YYYY-MM) ke tanggal mulai dan akhir bulan
-        const [startYear, startMon] = startMonth.split('-').map(Number);
-        const [endYear, endMon] = endMonth.split('-').map(Number);
-        const startDate = new Date(startYear, startMon - 1, 1);
-        const endDate = new Date(endYear, endMon, 0); // akhir bulan
-
-        // Ambil semua rumah aktif (kondisi != Dibebaskan? tapi tunggakan tetap bisa untuk kosong? kita ambil semua)
-        let query = supabase.from('warga').select('no_rumah, iuran_per_bulan, koordinator');
-        if (koordinatorFilter !== 'all') {
-          query = query.eq('koordinator', koordinatorFilter);
-        }
-        const { data: wargaList, error: wargaError } = await query;
-        if (wargaError) {
-          console.error(wargaError);
-          alert('Gagal mengambil data warga');
-          return;
-        }
-
-        // Ambil semua pembayaran iuran dalam rentang
-        const { data: payments, error: payError } = await supabase
-          .from('transaksi_iuran')
-          .select('no_rumah, bulan')
-          .gte('bulan', startDate.toISOString())
-          .lte('bulan', endDate.toISOString());
-        if (payError) {
-          console.error(payError);
-          alert('Gagal mengambil data pembayaran');
-          return;
-        }
-
-        // Buat map pembayaran per rumah
-        const paidMap = new Map();
-        payments?.forEach(p => {
-          const date = new Date(p.bulan);
-          const key = `${p.no_rumah}|${date.getFullYear()}-${date.getMonth()+1}`;
-          paidMap.set(key, true);
-        });
-
-        // Loop setiap rumah, hitung bulan dalam rentang yang belum dibayar
-        const reportData = [];
-        let currentDate = new Date(startDate);
-        while (currentDate <= endDate) {
-          const year = currentDate.getFullYear();
-          const month = currentDate.getMonth() + 1;
-          const monthKey = `${year}-${month}`;
-          // Untuk setiap rumah, cek apakah sudah dibayar
-          wargaList.forEach(w => {
-            const key = `${w.no_rumah}|${monthKey}`;
-            if (!paidMap.has(key)) {
-              // Cari entry rumah di reportData
-              let entry = reportData.find(r => r.no_rumah === w.no_rumah);
-              if (!entry) {
-                entry = {
-                  no_rumah: w.no_rumah,
-                  iuran: w.iuran_per_bulan,
-                  koordinator: w.koordinator,
-                  months: [],
-                  total: 0
-                };
-                reportData.push(entry);
-              }
-              entry.months.push(monthKey);
-              entry.total += w.iuran_per_bulan;
-            }
-          });
-          // Majukan bulan
-          currentDate.setMonth(currentDate.getMonth() + 1);
-        }
-
-        // Ambil nama penghuni terbaru pada akhir periode untuk setiap rumah
-        const endOfPeriod = new Date(endDate);
-        for (let entry of reportData) {
-          const occupant = await getCurrentOccupantAtDate(entry.no_rumah, endOfPeriod);
-          entry.penghuni = occupant || (await supabase.from('warga').select('nama_pemilik').eq('no_rumah', entry.no_rumah).single()).data?.nama_pemilik || '-';
-          // Urutkan bulan
-          entry.months.sort();
-          entry.monthsDisplay = entry.months.map(m => {
-            const [y, mo] = m.split('-');
-            return `${mo}/${y}`;
-          }).join(', ');
-        }
-
-        // Urutkan berdasarkan nomor rumah
-        reportData.sort((a,b) => a.no_rumah.localeCompare(b.no_rumah));
-
-        // Tampilkan di tabel
-        const tbody = document.querySelector('#tunggakanTable tbody');
-        tbody.innerHTML = '';
-        if (reportData.length === 0) {
-          const row = tbody.insertRow();
-          const cell = row.insertCell(0);
-          cell.colSpan = 6;
-          cell.innerText = 'Tidak ada tunggakan dalam rentang yang dipilih.';
-          cell.style.textAlign = 'center';
-          return;
-        }
-        reportData.forEach(r => {
-          const row = tbody.insertRow();
-          row.insertCell(0).innerText = r.no_rumah;
-          row.insertCell(1).innerText = r.penghuni;
-          row.insertCell(2).innerText = formatRupiah(r.iuran);
-          row.insertCell(3).innerText = r.koordinator || '-';
-          row.insertCell(4).innerText = r.monthsDisplay;
-          row.insertCell(5).innerText = formatRupiah(r.total);
-        });
-      }
-
-      function initLaporanTunggakan() {
-        loadKoordinatorOptions();
-        const startInput = document.getElementById('tunggakanStartMonth');
-        const endInput = document.getElementById('tunggakanEndMonth');
-        const koordSelect = document.getElementById('tunggakanKoordinator');
-        const filterBtn = document.getElementById('filterTunggakanBtn');
-        const resetBtn = document.getElementById('resetTunggakanBtn');
-
-        // Set default bulan (misal: mulai Nov 2025 sampai bulan berjalan)
-        const now = new Date();
-        const defaultStart = '2025-11';
-        const defaultEnd = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
-        startInput.value = defaultStart;
-        endInput.value = defaultEnd;
-
-        const loadReport = () => {
-          generateTunggakanReport(startInput.value, endInput.value, koordSelect.value);
-        };
-        filterBtn.addEventListener('click', loadReport);
-        resetBtn.addEventListener('click', () => {
-          startInput.value = defaultStart;
-          endInput.value = defaultEnd;
-          koordSelect.value = 'all';
-          loadReport();
-        });
-        loadReport(); // tampilkan awal
-      }
-
-      // ========== INISIALISASI DASHBOARD ==========
-      async function initDashboard() {
-        await loadStats();
-
-        const tabs = document.querySelectorAll('.tab-btn');
-        const contents = document.querySelectorAll('.tab-content');
-        tabs.forEach(btn => {
-          btn.addEventListener('click', () => {
-            const tabId = btn.dataset.tab;
-            tabs.forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            contents.forEach(c => c.classList.remove('active'));
-            document.getElementById(`tab-${tabId}`).classList.add('active');
-
-            if (tabId === 'users' && userRole === 'admin') loadUsers();
-            if (tabId === 'stats') loadStats();
-            if (tabId === 'nonIuran') loadNonIuranTransactions();
-            if (tabId === 'manageTransactions') {
-              const filterJenis = document.getElementById('filterJenis').value;
-              const startDate = document.getElementById('filterStartDate').value;
-              const endDate = document.getElementById('filterEndDate').value;
-              loadAllTransactions(filterJenis, startDate, endDate);
-            }
-            if (tabId === 'tunggakan') {
-              const start = document.getElementById('tunggakanStartMonth').value;
-              const end = document.getElementById('tunggakanEndMonth').value;
-              const koord = document.getElementById('tunggakanKoordinator').value;
-              generateTunggakanReport(start, end, koord);
-            }
-          });
-        });
-
-        document.getElementById('export-warga').onclick = () => exportToCSV('warga', ['no_rumah','nama_pemilik','no_hp_pemilik','status_kepemilikan','kondisi_terakhir','iuran_per_bulan','koordinator','created_at','updated_at'], 'data_warga.csv');
-        document.getElementById('export-transaksi').onclick = () => exportToCSV('transaksi_iuran', ['kas_id','no_rumah','bulan','jumlah','metode','bukti_tf','created_at'], 'transaksi_iuran.csv');
-        document.getElementById('export-kas').onclick = () => exportToCSV('transaksi_kas', ['kas_id','tanggal','keterangan','pemasukan','pengeluaran','saldo','jenis','sumber'], 'transaksi_kas.csv');
-      }
-
-      function initNonIuran() {
-        setupCategoryManual('kategori_pemasukan', 'kategori_pemasukan_manual_group', 'kategori_pemasukan_manual');
-        setupCategoryManual('kategori_pengeluaran', 'kategori_pengeluaran_manual_group', 'kategori_pengeluaran_manual');
-        document.getElementById('formPemasukanLain').addEventListener('submit', addPemasukanLain);
-        document.getElementById('formPengeluaranLain').addEventListener('submit', addPengeluaranLain);
-        loadNonIuranTransactions();
-      }
-
-      // Logout
       document.getElementById('logoutBtn').addEventListener('click', async (e) => {
         e.preventDefault();
         await supabase.auth.signOut();
