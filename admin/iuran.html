@@ -238,10 +238,10 @@
           <div style="overflow-x: auto;">
             <table id="riwayatIuranTable" class="history-table">
               <thead>
-                <tr><th>Bulan</th><th>Jumlah</th><th>Metode</th><th>Bukti</th><th>Tanggal Bayar</th></tr>
+                <tr><th>Bulan</th><th>Jumlah</th><th>Metode</th><th>Bukti</th><th>Tanggal Bayar</th>+
               </thead>
               <tbody></tbody>
-            </table>
+             </table>
           </div>
         </div>
       </div>
@@ -519,7 +519,7 @@
         }
       });
 
-      // Proses pembayaran
+      // Proses pembayaran dengan pengecekan duplikat
       document.getElementById('submitPaymentBtn').addEventListener('click', async () => {
         if (!selectedHouse) {
           alert('Silakan cek rumah terlebih dahulu.');
@@ -537,16 +537,6 @@
           }
           const [year, month] = manualMonthVal.split('-');
           selectedMonths = [{ year: parseInt(year), month: parseInt(month) }];
-          const bulanDate = new Date(year, month-1, 1);
-          const { data: existing } = await supabase
-            .from('transaksi_iuran')
-            .select('id')
-            .eq('no_rumah', selectedHouse.no_rumah)
-            .eq('bulan', bulanDate.toISOString());
-          if (existing && existing.length > 0) {
-            alert(`Bulan ${month}/${year} sudah dibayar sebelumnya.`);
-            return;
-          }
         } else {
           const checkboxes = document.querySelectorAll('#unpaidMonthsList input[type="checkbox"]:checked');
           if (checkboxes.length === 0) {
@@ -562,6 +552,7 @@
         const metode = document.getElementById('metode').value;
         const file = document.getElementById('buktiFile').files[0];
 
+        // Upload bukti hanya sekali
         let buktiUrl = null;
         if (file) {
           const fileExt = file.name.split('.').pop();
@@ -578,11 +569,33 @@
         }
 
         let successCount = 0;
+        let skippedCount = 0;
+
         for (const monthToPay of selectedMonths) {
           const bulanDate = new Date(monthToPay.year, monthToPay.month - 1, 1);
           const bulanStr = `${monthToPay.year}-${String(monthToPay.month).padStart(2,'0')}`;
-          const jumlah = currentIuran;
 
+          // Cek apakah bulan sudah dibayar sebelumnya
+          const { data: existing, error: checkError } = await supabase
+            .from('transaksi_iuran')
+            .select('created_at')
+            .eq('no_rumah', selectedHouse.no_rumah)
+            .eq('bulan', bulanDate.toISOString())
+            .maybeSingle();
+
+          if (checkError) {
+            console.error('Gagal mengecek pembayaran:', checkError);
+            continue;
+          }
+
+          if (existing) {
+            const paidDate = new Date(existing.created_at).toLocaleDateString('id-ID');
+            alert(`⚠️ Iuran bulan ${bulanStr} sudah lunas pada tanggal ${paidDate}. Tidak perlu dibayar lagi.`);
+            skippedCount++;
+            continue;
+          }
+
+          const jumlah = currentIuran;
           const kasId = `IU-${new Date().toISOString().slice(0,10).replace(/-/g,'')}-${Date.now().toString().slice(-6)}-${monthToPay.month}`;
 
           const { error: iuranError } = await supabase
@@ -600,6 +613,7 @@
             continue;
           }
 
+          // Update saldo kas
           const { data: lastSaldo } = await supabase
             .from('transaksi_kas')
             .select('saldo')
@@ -620,13 +634,15 @@
             }]);
           if (kasError) {
             alert(`Gagal update kas untuk bulan ${bulanStr}: ${kasError.message}`);
+            // Rollback iuran? Lebih baik batalkan seluruh proses? Kita lanjut tapi peringatan.
             continue;
           }
           successCount++;
         }
 
         if (successCount > 0) {
-          alert(`✅ ${successCount} bulan berhasil dibayar!`);
+          alert(`✅ ${successCount} bulan berhasil dibayar!${skippedCount > 0 ? ` (${skippedCount} bulan sudah lunas)` : ''}`);
+          // Reset form
           document.getElementById('searchHouse').value = '';
           document.getElementById('houseInfo').style.display = 'none';
           document.getElementById('paymentForm').style.display = 'none';
@@ -635,6 +651,8 @@
           document.getElementById('manualMonthInput').style.display = 'none';
           selectedHouse = null;
           selectedOccupant = null;
+        } else if (skippedCount > 0) {
+          alert(`Tidak ada pembayaran baru. ${skippedCount} bulan sudah lunas.`);
         } else {
           alert('Tidak ada pembayaran yang berhasil.');
         }
