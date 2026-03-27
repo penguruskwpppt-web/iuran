@@ -239,7 +239,6 @@
     @keyframes spin {
       to { transform: rotate(360deg); }
     }
-    /* Chart container */
     .chart-container {
       background: white;
       padding: 20px;
@@ -335,10 +334,14 @@
     <!-- Backup Data -->
     <div id="tab-backup" class="tab-content">
       <h2>Backup Data</h2>
-      <button id="export-warga" class="btn-primary">Export Data Warga (CSV)</button>
-      <button id="export-transaksi" class="btn-primary">Export Transaksi Iuran (CSV)</button>
-      <button id="export-kas" class="btn-primary">Export Semua Transaksi Kas (CSV)</button>
-      <p class="info">Klik tombol untuk mengunduh file CSV.</p>
+      <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px;">
+        <button id="export-warga" class="btn-primary">📄 Export Data Warga (CSV)</button>
+        <button id="export-transaksi" class="btn-primary">📄 Export Transaksi Iuran (CSV)</button>
+        <button id="export-kas" class="btn-primary">📄 Export Semua Transaksi Kas (CSV)</button>
+        <button id="export-riwayat" class="btn-primary">📄 Export Riwayat Kondisi (CSV)</button>
+        <button id="export-all" class="btn-secondary">📦 Export Semua Data (CSV terpisah)</button>
+      </div>
+      <p class="info">Klik tombol untuk mengunduh file CSV masing-masing tabel. Tombol "Export Semua Data" akan mengunduh semua tabel sekaligus (dalam file terpisah).</p>
     </div>
 
     <!-- Transaksi Non-Iuran -->
@@ -405,7 +408,7 @@
               <tr><th>Tanggal</th><th>Jenis</th><th>Keterangan</th><th>Jumlah</th><th>Aksi</th>
             </thead>
             <tbody></tbody>
-           </table>
+            </table>
         </div>
       </div>
     </div>
@@ -440,7 +443,7 @@
             <tr><th>Tanggal</th><th>Jenis</th><th>Keterangan</th><th>Pemasukan</th><th>Pengeluaran</th><th>Saldo</th><th>Aksi</th>
           </thead>
           <tbody></tbody>
-         </table>
+        </table>
       </div>
       <p class="info">⚠️ <strong>Peringatan:</strong> Menghapus transaksi akan <strong>mengubah data historis</strong> tetapi <strong>tidak akan mengoreksi saldo secara otomatis</strong>. Setelah hapus, periksa kembali saldo kas dan gunakan fitur <strong>Pemasukan Lain / Pengeluaran Lain</strong> untuk menambahkan koreksi manual jika diperlukan.</p>
     </div>
@@ -473,7 +476,7 @@
             <tr><th>No Rumah</th><th>Penghuni</th><th>Iuran/bln</th><th>Koordinator</th><th>Bulan Tunggakan</th><th>Total Tunggakan</th>
           </thead>
           <tbody></tbody>
-         </table>
+        </table>
       </div>
       <p class="info">Catatan: Tunggakan dihitung per bulan berdasarkan riwayat status rumah. Bulan dengan status "Dibebaskan" tidak dihitung tunggakan.</p>
     </div>
@@ -485,7 +488,7 @@
         <table id="users-table">
           <thead> <th>Email</th><th>Role</th><th>Aksi</th> </thead>
           <tbody></tbody>
-         </table>
+        </table>
       </div>
       <p class="info">Catatan: Hanya admin yang bisa mengubah role.</p>
     </div>
@@ -540,7 +543,10 @@
         initNonIuran();
         initManageTransactions();
         initLaporanTunggakan();
-        initCharts(); // tambahkan inisialisasi grafik
+        initCharts();
+        initTabs();
+        initLogout();
+        initExportButtons();
       })();
 
       // ========== FUNGSI PEMBANTU ==========
@@ -658,12 +664,12 @@
           }
         });
 
-        // Grafik pemasukan & pengeluaran bulan ini (kategori)
+        // Grafik pemasukan & pengeluaran bulan ini
         const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
         const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString();
         const { data: pemasukanBulanIni } = await supabase
           .from('transaksi_kas')
-          .select('pemasukan, sumber')
+          .select('pemasukan')
           .eq('jenis', 'Pemasukan')
           .gte('tanggal', firstDay)
           .lte('tanggal', lastDay);
@@ -698,21 +704,19 @@
         });
       }
 
-      // ========== EKSPOR CSV ==========
-      async function exportToCSV(tableName, columns, filename) {
+      // ========== EKSPOR CSV (UNIVERSAL) ==========
+      async function exportToCSV(tableName, columns, filename, orderColumn = null) {
         try {
-          let data;
-          if (tableName === 'warga') {
-            const { data: wargaData } = await supabase.from('warga').select('*').order('no_rumah');
-            data = wargaData;
-          } else if (tableName === 'transaksi_iuran') {
-            const { data: iuranData } = await supabase.from('transaksi_iuran').select('kas_id, no_rumah, bulan, jumlah, metode, bukti_tf, created_at').order('bulan', { ascending: false });
-            data = iuranData;
-          } else if (tableName === 'transaksi_kas') {
-            const { data: kasData } = await supabase.from('transaksi_kas').select('kas_id, tanggal, keterangan, pemasukan, pengeluaran, saldo, jenis, sumber').order('tanggal', { ascending: false });
-            data = kasData;
-          } else throw new Error('Tabel tidak dikenal');
-          if (!data || data.length === 0) { alert('Tidak ada data'); return; }
+          let query = supabase.from(tableName).select(columns.join(','));
+          if (orderColumn) {
+            query = query.order(orderColumn, { ascending: true });
+          }
+          const { data, error } = await query;
+          if (error) throw error;
+          if (!data || data.length === 0) {
+            alert(`Tabel ${tableName} kosong.`);
+            return;
+          }
           const headers = columns.join(',');
           const rows = data.map(row => columns.map(col => {
             let val = row[col];
@@ -734,6 +738,20 @@
           console.error(err);
           alert('Gagal ekspor: ' + err.message);
         }
+      }
+
+      async function exportAllData() {
+        const tables = [
+          { name: 'warga', columns: ['no_rumah','nama_pemilik','no_hp_pemilik','status_kepemilikan','kondisi_terakhir','iuran_per_bulan','koordinator','created_at','updated_at'], filename: 'data_warga.csv', order: 'no_rumah' },
+          { name: 'transaksi_iuran', columns: ['kas_id','no_rumah','bulan','jumlah','metode','bukti_tf','created_at'], filename: 'transaksi_iuran.csv', order: 'bulan' },
+          { name: 'transaksi_kas', columns: ['kas_id','tanggal','keterangan','pemasukan','pengeluaran','saldo','jenis','sumber'], filename: 'transaksi_kas.csv', order: 'tanggal' },
+          { name: 'riwayat_kondisi', columns: ['id','no_rumah','kondisi','iuran_per_bulan','berlaku_sejak','nama_penghuni','created_at'], filename: 'riwayat_kondisi.csv', order: 'no_rumah' }
+        ];
+        for (const table of tables) {
+          await exportToCSV(table.name, table.columns, table.filename, table.order);
+          await new Promise(resolve => setTimeout(resolve, 500));
+        }
+        alert('Semua data telah diekspor (file CSV terpisah).');
       }
 
       // ========== MANAJEMEN USER ==========
@@ -788,13 +806,14 @@
         const select = document.getElementById(selectId);
         const manualGroup = document.getElementById(manualGroupId);
         const manualInput = document.getElementById(manualInputId);
+        if (!select || !manualGroup) return;
         select.addEventListener('change', () => {
           if (select.value === 'Lainnya') {
             manualGroup.style.display = 'block';
-            manualInput.required = true;
+            if (manualInput) manualInput.required = true;
           } else {
             manualGroup.style.display = 'none';
-            manualInput.required = false;
+            if (manualInput) manualInput.required = false;
           }
         });
       }
@@ -1179,10 +1198,19 @@
       }
 
       // ========== INISIALISASI DASHBOARD ==========
-      async function initDashboard() {
-        await loadStats();
-        await initCharts();
+      function initDashboard() {
+        loadStats();
+      }
 
+      function initNonIuran() {
+        setupCategoryManual('kategori_pemasukan', 'kategori_pemasukan_manual_group', 'kategori_pemasukan_manual');
+        setupCategoryManual('kategori_pengeluaran', 'kategori_pengeluaran_manual_group', 'kategori_pengeluaran_manual');
+        document.getElementById('formPemasukanLain').addEventListener('submit', addPemasukanLain);
+        document.getElementById('formPengeluaranLain').addEventListener('submit', addPengeluaranLain);
+        loadNonIuranTransactions();
+      }
+
+      function initTabs() {
         const tabs = document.querySelectorAll('.tab-btn');
         const contents = document.querySelectorAll('.tab-content');
         tabs.forEach(btn => {
@@ -1210,26 +1238,23 @@
             }
           });
         });
-
-        document.getElementById('export-warga').onclick = () => exportToCSV('warga', ['no_rumah','nama_pemilik','no_hp_pemilik','status_kepemilikan','kondisi_terakhir','iuran_per_bulan','koordinator','created_at','updated_at'], 'data_warga.csv');
-        document.getElementById('export-transaksi').onclick = () => exportToCSV('transaksi_iuran', ['kas_id','no_rumah','bulan','jumlah','metode','bukti_tf','created_at'], 'transaksi_iuran.csv');
-        document.getElementById('export-kas').onclick = () => exportToCSV('transaksi_kas', ['kas_id','tanggal','keterangan','pemasukan','pengeluaran','saldo','jenis','sumber'], 'transaksi_kas.csv');
       }
 
-      function initNonIuran() {
-        setupCategoryManual('kategori_pemasukan', 'kategori_pemasukan_manual_group', 'kategori_pemasukan_manual');
-        setupCategoryManual('kategori_pengeluaran', 'kategori_pengeluaran_manual_group', 'kategori_pengeluaran_manual');
-        document.getElementById('formPemasukanLain').addEventListener('submit', addPemasukanLain);
-        document.getElementById('formPengeluaranLain').addEventListener('submit', addPengeluaranLain);
-        loadNonIuranTransactions();
+      function initLogout() {
+        document.getElementById('logoutBtn').addEventListener('click', async (e) => {
+          e.preventDefault();
+          await supabase.auth.signOut();
+          window.location.href = 'login.html';
+        });
       }
 
-      // ========== LOGOUT ==========
-      document.getElementById('logoutBtn').addEventListener('click', async (e) => {
-        e.preventDefault();
-        await supabase.auth.signOut();
-        window.location.href = 'login.html';
-      });
+      function initExportButtons() {
+        document.getElementById('export-warga').onclick = () => exportToCSV('warga', ['no_rumah','nama_pemilik','no_hp_pemilik','status_kepemilikan','kondisi_terakhir','iuran_per_bulan','koordinator','created_at','updated_at'], 'data_warga.csv', 'no_rumah');
+        document.getElementById('export-transaksi').onclick = () => exportToCSV('transaksi_iuran', ['kas_id','no_rumah','bulan','jumlah','metode','bukti_tf','created_at'], 'transaksi_iuran.csv', 'bulan');
+        document.getElementById('export-kas').onclick = () => exportToCSV('transaksi_kas', ['kas_id','tanggal','keterangan','pemasukan','pengeluaran','saldo','jenis','sumber'], 'transaksi_kas.csv', 'tanggal');
+        document.getElementById('export-riwayat').onclick = () => exportToCSV('riwayat_kondisi', ['id','no_rumah','kondisi','iuran_per_bulan','berlaku_sejak','nama_penghuni','created_at'], 'riwayat_kondisi.csv', 'no_rumah');
+        document.getElementById('export-all').onclick = exportAllData;
+      }
 
       // ========== PWA REGISTRATION (opsional) ==========
       if ('serviceWorker' in navigator) {
