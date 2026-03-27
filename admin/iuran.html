@@ -47,7 +47,7 @@
       background: #1e4f7a;
     }
     .container {
-      max-width: 800px;
+      max-width: 1000px;
       margin: 20px auto;
       padding: 0 20px;
     }
@@ -154,11 +154,27 @@
       width: auto;
       margin: 0;
     }
+    .history-table {
+      margin-top: 20px;
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+    }
+    .history-table th, .history-table td {
+      border: 1px solid #e2e8f0;
+      padding: 10px;
+      text-align: left;
+    }
+    .history-table th {
+      background: #0b2e4f;
+      color: white;
+    }
     @media (max-width: 768px) {
       .navbar { flex-direction: column; align-items: stretch; }
       .nav-links { justify-content: center; }
       .form-card { padding: 16px; }
       .action-buttons { flex-direction: column; }
+      .history-table th, .history-table td { padding: 6px; }
     }
   </style>
 </head>
@@ -215,6 +231,19 @@
             <input type="month" id="manualMonth">
           </div>
         </div>
+
+        <!-- Riwayat Pembayaran -->
+        <div id="riwayatSection" style="margin-top: 30px;">
+          <h4>📜 Riwayat Pembayaran Iuran</h4>
+          <div style="overflow-x: auto;">
+            <table id="riwayatIuranTable" class="history-table">
+              <thead>
+                <tr><th>Bulan</th><th>Jumlah</th><th>Metode</th><th>Bukti</th><th>Tanggal Bayar</th></tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
       </div>
 
       <div id="paymentForm" style="display: none;">
@@ -246,7 +275,7 @@
       let currentIuran = 0;
       let currentOccupantName = '';
       let currentOccupantPhone = '';
-      let unpaidMonthsData = []; // menyimpan data bulan tunggakan { year, month }
+      let unpaidMonthsData = [];
 
       // Cek login dan role
       (async () => {
@@ -307,6 +336,49 @@
         return data && data.length > 0 ? data[0] : null;
       }
 
+      // Load riwayat pembayaran iuran untuk rumah tertentu
+      async function loadPaymentHistory(noRumah) {
+        const { data, error } = await supabase
+          .from('transaksi_iuran')
+          .select('bulan, jumlah, metode, bukti_tf, created_at')
+          .eq('no_rumah', noRumah)
+          .order('bulan', { ascending: false })
+          .limit(20);
+        if (error) {
+          console.error('Error loading payment history:', error);
+          return;
+        }
+        const tbody = document.querySelector('#riwayatIuranTable tbody');
+        tbody.innerHTML = '';
+        if (!data || data.length === 0) {
+          const row = tbody.insertRow();
+          const cell = row.insertCell(0);
+          cell.colSpan = 5;
+          cell.innerText = 'Belum ada pembayaran.';
+          cell.style.textAlign = 'center';
+          return;
+        }
+        data.forEach(p => {
+          const row = tbody.insertRow();
+          const bulan = new Date(p.bulan).toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
+          row.insertCell(0).innerText = bulan;
+          row.insertCell(1).innerText = formatRupiah(p.jumlah);
+          row.insertCell(2).innerText = p.metode;
+          const buktiCell = row.insertCell(3);
+          if (p.bukti_tf) {
+            const link = document.createElement('a');
+            link.href = p.bukti_tf;
+            link.target = '_blank';
+            link.innerText = 'Lihat';
+            buktiCell.appendChild(link);
+          } else {
+            buktiCell.innerText = '-';
+          }
+          const tanggalBayar = new Date(p.created_at).toLocaleDateString('id-ID');
+          row.insertCell(4).innerText = tanggalBayar;
+        });
+      }
+
       async function checkHouse(noRumah) {
         if (!noRumah) {
           alert('Masukkan nomor rumah terlebih dahulu.');
@@ -349,6 +421,9 @@
         document.getElementById('iuranPerBulan').innerText = formatRupiah(iuran);
         document.getElementById('statusRumah').innerText = status;
         document.getElementById('houseInfo').style.display = 'block';
+
+        // Load riwayat pembayaran
+        loadPaymentHistory(noRumah);
 
         if (status === 'Dibebaskan') {
           document.getElementById('unpaidMonthsList').innerHTML = '';
@@ -406,7 +481,6 @@
             `;
             container.appendChild(itemDiv);
           });
-          // Reset pilihan
           document.getElementById('paymentForm').style.display = 'none';
         }
       }
@@ -424,7 +498,6 @@
         const manualDiv = document.getElementById('manualMonthInput');
         manualDiv.style.display = isChecked ? 'block' : 'none';
         if (isChecked) {
-          // Nonaktifkan checkbox pada daftar tunggakan
           document.querySelectorAll('#unpaidMonthsList input[type="checkbox"]').forEach(cb => {
             cb.disabled = true;
           });
@@ -433,7 +506,6 @@
           document.querySelectorAll('#unpaidMonthsList input[type="checkbox"]').forEach(cb => {
             cb.disabled = false;
           });
-          // Jika tidak ada checkbox yang dicentang, sembunyikan paymentForm
           const anyChecked = document.querySelectorAll('#unpaidMonthsList input[type="checkbox"]:checked').length > 0;
           if (!anyChecked) document.getElementById('paymentForm').style.display = 'none';
         }
@@ -465,7 +537,6 @@
           }
           const [year, month] = manualMonthVal.split('-');
           selectedMonths = [{ year: parseInt(year), month: parseInt(month) }];
-          // Cek apakah bulan sudah dibayar
           const bulanDate = new Date(year, month-1, 1);
           const { data: existing } = await supabase
             .from('transaksi_iuran')
@@ -477,7 +548,6 @@
             return;
           }
         } else {
-          // Ambil checkbox yang dicentang dari daftar tunggakan
           const checkboxes = document.querySelectorAll('#unpaidMonthsList input[type="checkbox"]:checked');
           if (checkboxes.length === 0) {
             alert('Pilih minimal satu bulan yang akan dibayar.');
@@ -492,7 +562,6 @@
         const metode = document.getElementById('metode').value;
         const file = document.getElementById('buktiFile').files[0];
 
-        // Upload bukti jika ada (hanya sekali, karena bisa untuk beberapa bulan)
         let buktiUrl = null;
         if (file) {
           const fileExt = file.name.split('.').pop();
@@ -508,7 +577,6 @@
           buktiUrl = urlData.publicUrl;
         }
 
-        // Proses setiap bulan yang dipilih
         let successCount = 0;
         for (const monthToPay of selectedMonths) {
           const bulanDate = new Date(monthToPay.year, monthToPay.month - 1, 1);
@@ -517,7 +585,6 @@
 
           const kasId = `IU-${new Date().toISOString().slice(0,10).replace(/-/g,'')}-${Date.now().toString().slice(-6)}-${monthToPay.month}`;
 
-          // Insert transaksi_iuran
           const { error: iuranError } = await supabase
             .from('transaksi_iuran')
             .insert([{
@@ -533,7 +600,6 @@
             continue;
           }
 
-          // Update transaksi_kas (saldo dihitung per transaksi, harus diambil setiap saat)
           const { data: lastSaldo } = await supabase
             .from('transaksi_kas')
             .select('saldo')
@@ -561,7 +627,6 @@
 
         if (successCount > 0) {
           alert(`✅ ${successCount} bulan berhasil dibayar!`);
-          // Reset form
           document.getElementById('searchHouse').value = '';
           document.getElementById('houseInfo').style.display = 'none';
           document.getElementById('paymentForm').style.display = 'none';
