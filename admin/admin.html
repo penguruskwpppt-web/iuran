@@ -2,150 +2,233 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
   <title>Admin Panel - KWP3T</title>
   <link rel="icon" href="../images/logo.webp" type="image/webp">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-  <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-  <!-- html2pdf untuk PDF -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
     body {
       font-family: 'Inter', sans-serif;
       background: #f4f4f4;
+      padding-bottom: 70px; /* space for bottom nav */
     }
-    .navbar {
+
+    /* Header styling */
+    .app-header {
       background: #0b2e4f;
-      padding: 1rem 2rem;
+      color: white;
+      padding: 16px;
       display: flex;
+      align-items: center;
       justify-content: space-between;
-      align-items: center;
       flex-wrap: wrap;
       gap: 10px;
+      border-bottom-left-radius: 20px;
+      border-bottom-right-radius: 20px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
     }
-    .nav-brand {
+    .header-title {
       display: flex;
       align-items: center;
-      gap: 10px;
-      color: white;
-      font-weight: bold;
+      gap: 12px;
+    }
+    .header-title img {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+    .header-title h1 {
       font-size: 1.2rem;
+      font-weight: 600;
     }
-    .nav-brand img { width: 40px; border-radius: 50%; }
-    .nav-links {
+    .header-actions {
       display: flex;
-      gap: 15px;
-      flex-wrap: wrap;
+      gap: 12px;
     }
-    .nav-links a {
+    .header-actions button {
+      background: rgba(255,255,255,0.2);
+      border: none;
       color: white;
-      text-decoration: none;
-      padding: 5px 10px;
-      border-radius: 4px;
-      transition: background 0.3s;
+      padding: 8px 12px;
+      border-radius: 30px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: 0.2s;
     }
-    .nav-links a:hover, .nav-links a.active {
-      background: #1e4f7a;
+    .header-actions button:active {
+      transform: scale(0.96);
     }
+
+    /* Main container */
     .container {
       max-width: 1200px;
       margin: 20px auto;
-      padding: 0 20px;
+      padding: 0 16px;
     }
-    h1 {
+
+    /* Welcome / user info */
+    .welcome-card {
+      background: white;
+      border-radius: 20px;
+      padding: 16px;
       margin-bottom: 20px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+    .welcome-card h2 {
+      font-size: 1.2rem;
+      margin-bottom: 4px;
       color: #0b2e4f;
     }
-    .tabs {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 20px;
-      border-bottom: 1px solid #ddd;
-      padding-bottom: 10px;
-      flex-wrap: wrap;
+    .welcome-card p {
+      color: #64748b;
+      font-size: 0.85rem;
     }
-    .tab-btn {
-      padding: 8px 16px;
-      background: #f0f0f0;
+
+    /* Grid menu for quick actions (mobile friendly) */
+    .menu-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .menu-grid button {
+      background: white;
       border: none;
+      padding: 16px 12px;
+      border-radius: 16px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: #0b2e4f;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
       cursor: pointer;
-      border-radius: 4px;
-      transition: 0.2s;
     }
-    .tab-btn.active {
-      background: #0b2e4f;
-      color: white;
+    .menu-grid button:active {
+      transform: scale(0.96);
+      background: #f0f0f0;
     }
+    .menu-grid button i {
+      font-size: 1.2rem;
+    }
+
+    /* Tab content */
     .tab-content {
       display: none;
     }
     .tab-content.active {
       display: block;
     }
+
+    /* Stats cards */
     .stats-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 20px;
-      margin-top: 20px;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 16px;
+      margin-top: 16px;
     }
     .card {
       background: white;
-      padding: 20px;
-      border-radius: 16px;
+      padding: 16px;
+      border-radius: 20px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.05);
       text-align: center;
       transition: transform 0.2s;
     }
     .card:hover {
-      transform: translateY(-5px);
+      transform: translateY(-4px);
     }
     .card h3 {
-      font-size: 1rem;
+      font-size: 0.85rem;
       color: #64748b;
       margin-bottom: 8px;
+      font-weight: 500;
     }
     .card p {
-      font-size: 1.5rem;
+      font-size: 1.3rem;
       font-weight: 800;
       color: #0b2e4f;
     }
-    table {
-      width: 100%;
-      border-collapse: collapse;
+
+    /* Chart containers */
+    .chart-container {
       background: white;
+      padding: 16px;
+      border-radius: 20px;
       margin: 20px 0;
-      border-radius: 12px;
-      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
     }
-    th, td {
+    .chart-container h3 {
+      margin-bottom: 12px;
+      font-size: 1rem;
+    }
+    canvas {
+      max-height: 250px;
+      width: 100%;
+    }
+
+    /* Forms and tables */
+    .form-card {
+      background: white;
+      border-radius: 20px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+    .form-card h3 {
+      margin-bottom: 16px;
+      color: #0b2e4f;
+    }
+    .form-group {
+      margin-bottom: 16px;
+    }
+    .form-group label {
+      display: block;
+      margin-bottom: 6px;
+      font-weight: 600;
+      font-size: 0.85rem;
+    }
+    .form-group input, .form-group select, .form-group textarea {
+      width: 100%;
+      padding: 10px;
       border: 1px solid #e2e8f0;
-      padding: 12px;
-      text-align: left;
-    }
-    th {
-      background: #0b2e4f;
-      color: white;
+      border-radius: 12px;
+      font-family: inherit;
+      font-size: 0.9rem;
     }
     .btn-primary, .btn-secondary, .btn-danger {
-      padding: 8px 16px;
+      padding: 10px 16px;
       border: none;
-      border-radius: 8px;
-      cursor: pointer;
+      border-radius: 12px;
       font-weight: 600;
-      transition: 0.2s;
+      cursor: pointer;
+      transition: all 0.2s ease;
       display: inline-flex;
       align-items: center;
-      gap: 6px;
+      gap: 8px;
+      font-size: 0.9rem;
     }
     .btn-primary {
       background: #0b2e4f;
       color: white;
     }
-    .btn-primary:hover {
-      background: #1e4f7a;
+    .btn-primary:active {
+      transform: scale(0.96);
     }
     .btn-secondary {
       background: #64748b;
@@ -155,67 +238,138 @@
       background: #e74c3c;
       color: white;
     }
-    .btn-danger:hover {
-      background: #c0392b;
-    }
     .btn-sm {
       padding: 6px 12px;
-      font-size: 0.8rem;
-    }
-    select {
-      padding: 6px;
-      border-radius: 6px;
-      border: 1px solid #ccc;
-    }
-    .info {
-      margin-top: 20px;
-      font-size: 0.85rem;
-      color: #64748b;
-    }
-    .form-card {
-      background: white;
-      border-radius: 20px;
-      padding: 20px;
-      margin-bottom: 20px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-    }
-    .form-card h3 {
-      margin-bottom: 15px;
-      color: #0b2e4f;
-    }
-    .form-group {
-      margin-bottom: 15px;
-    }
-    .form-group label {
-      display: block;
-      margin-bottom: 6px;
-      font-weight: 600;
-    }
-    .form-group input, .form-group select, .form-group textarea {
-      width: 100%;
-      padding: 8px;
-      border: 1px solid #ccc;
-      border-radius: 8px;
+      font-size: 0.75rem;
     }
     .filter-bar {
       display: flex;
       flex-wrap: wrap;
-      gap: 10px;
+      gap: 12px;
       align-items: flex-end;
       margin-bottom: 20px;
       background: white;
       padding: 16px;
-      border-radius: 16px;
+      border-radius: 20px;
     }
     .filter-group {
+      flex: 1;
+      min-width: 120px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      border-radius: 16px;
+      overflow: hidden;
+      font-size: 0.8rem;
+    }
+    th, td {
+      border: 1px solid #e2e8f0;
+      padding: 10px;
+      text-align: left;
+    }
+    th {
+      background: #0b2e4f;
+      color: white;
+    }
+    .info {
+      margin-top: 12px;
+      font-size: 0.75rem;
+      color: #64748b;
+    }
+
+    /* Bottom navigation */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      background: #0b2e4f;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      padding: 8px 0 12px;
+      border-top-left-radius: 20px;
+      border-top-right-radius: 20px;
+      box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+      z-index: 200;
+    }
+    .nav-item {
+      color: rgba(255,255,255,0.7);
+      text-decoration: none;
       display: flex;
       flex-direction: column;
+      align-items: center;
       gap: 4px;
+      font-size: 12px;
+      transition: 0.2s;
     }
-    .filter-group label {
+    .nav-item i {
+      font-size: 20px;
+    }
+    .nav-item.active {
+      color: white;
       font-weight: 600;
-      font-size: 0.85rem;
     }
+    .nav-item:active {
+      transform: scale(0.95);
+    }
+
+    /* Mobile overrides */
+    @media (max-width: 768px) {
+      .container {
+        padding: 0 12px;
+      }
+      .menu-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+      .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .filter-bar {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .filter-group {
+        width: 100%;
+      }
+      .btn-primary, .btn-secondary, .btn-danger {
+        width: 100%;
+        justify-content: center;
+      }
+      table {
+        font-size: 0.7rem;
+      }
+      th, td {
+        padding: 8px;
+      }
+    }
+
+    /* Print & PDF mode */
+    @media print {
+      body {
+        padding-bottom: 0;
+      }
+      .app-header, .bottom-nav, .menu-grid, .filter-bar, .btn-primary, .btn-secondary, .btn-danger, .info, .form-card, .tab-btn, .print-hide {
+        display: none !important;
+      }
+      .container {
+        margin: 0;
+        padding: 0;
+      }
+      .tab-content {
+        display: block !important;
+      }
+      .stats-grid {
+        break-inside: avoid;
+      }
+      .chart-container {
+        break-inside: avoid;
+      }
+    }
+
     /* Loading spinner */
     .btn-loading {
       position: relative;
@@ -239,85 +393,38 @@
     @keyframes spin {
       to { transform: rotate(360deg); }
     }
-    .chart-container {
-      background: white;
-      padding: 20px;
-      border-radius: 16px;
-      margin-top: 20px;
-    }
-    canvas {
-      max-height: 300px;
-      width: 100%;
-    }
-    @media (max-width: 768px) {
-      .navbar { flex-direction: column; align-items: stretch; }
-      .nav-links { justify-content: center; }
-      .container { padding: 0 16px; }
-      .stats-grid { grid-template-columns: 1fr; }
-      table { font-size: 0.85rem; }
-      th, td { padding: 8px; }
-      .tabs { justify-content: center; }
-      .filter-bar { flex-direction: column; align-items: stretch; }
-      .btn-primary, .btn-secondary, .btn-danger { width: 100%; justify-content: center; }
-    }
-    /* Print styles */
-    @media print {
-      body { background: white; padding: 0; margin: 0; }
-      .navbar, .tabs, .filter-bar, .btn-primary, .btn-secondary, .info, .btn-delete, .btn-edit, .btn-save-role, .form-card, #logoutBtn, .tab-btn, .chart-container, .btn-danger, .print-hide {
-        display: none !important;
-      }
-      .container { margin: 0; padding: 0; }
-      table { page-break-inside: avoid; }
-      .print-header {
-        display: block !important;
-        text-align: center;
-        margin-bottom: 20px;
-      }
-      .print-header img {
-        width: 80px;
-        height: 80px;
-        border-radius: 50%;
-        object-fit: cover;
-      }
-      .print-header h2 {
-        margin: 10px 0;
-        color: #0b2e4f;
-      }
-      .print-date {
-        font-size: 12px;
-        color: #666;
-        margin-bottom: 10px;
-      }
-    }
   </style>
 </head>
 <body>
-  <nav class="navbar">
-    <div class="nav-brand">
-      <img src="../images/logo.webp" alt="Logo">
-      <span>Admin KWP3T</span>
+  <!-- Header -->
+  <div class="app-header">
+    <div class="header-title">
+      <img src="../images/logo.webp" alt="Logo KWP3T" onerror="this.src='https://placehold.co/40x40?text=Logo'">
+      <h1>KWP3T Admin</h1>
     </div>
-    <div class="nav-links">
-      <a href="admin.html" class="active">Dashboard</a>
-      <a href="warga.html">Data Warga</a>
-      <a href="riwayat.html">Riwayat Rumah</a>
-      <a href="iuran.html">Bayar Iuran</a>
-      <a href="laporan.html">Laporan Kas</a>      
-      <a href="#" id="logoutBtn">Logout</a>
+    <div class="header-actions">
+      <button id="logoutBtn" class="print-hide"><i class="fas fa-sign-out-alt"></i> Keluar</button>
     </div>
-  </nav>
+  </div>
 
   <div class="container">
-    <h1>Panel Pengurus</h1>
-    <div class="tabs" id="tabsContainer">
-      <button class="tab-btn active" data-tab="stats">Statistik & Grafik</button>
-      <button class="tab-btn" data-tab="backup">Backup Data</button>
-      <button class="tab-btn" data-tab="nonIuran">Transaksi Non-Iuran</button>
-      <button class="tab-btn" data-tab="manageTransactions">Kelola Transaksi</button>
-      <button class="tab-btn" data-tab="tunggakan">Laporan Tunggakan</button>
+    <!-- Welcome Card -->
+    <div class="welcome-card" id="welcomeCard">
+      <h2>Selamat datang, Pengurus</h2>
+      <p>Kelola data warga, iuran, dan laporan keuangan KWP3T</p>
     </div>
 
-    <!-- Statistik & Grafik -->
+    <!-- Quick Action Grid (mobile-friendly) -->
+    <div class="menu-grid" id="menuGrid">
+      <button data-tab="stats"><i class="fas fa-chart-line"></i> Statistik</button>
+      <button data-tab="backup"><i class="fas fa-database"></i> Backup</button>
+      <button data-tab="nonIuran"><i class="fas fa-hand-holding-usd"></i> Non Iuran</button>
+      <button data-tab="manageTransactions"><i class="fas fa-edit"></i> Kelola</button>
+      <button data-tab="tunggakan"><i class="fas fa-clock"></i> Tunggakan</button>
+      <button data-tab="users" id="usersTabBtn" style="display: none;"><i class="fas fa-users"></i> User</button>
+    </div>
+
+    <!-- Tab Contents (same as before, just reorganized) -->
     <div id="tab-stats" class="tab-content active">
       <h2>Statistik & Grafik</h2>
       <div id="stats-data"><p>Memuat data...</p></div>
@@ -331,7 +438,6 @@
       </div>
     </div>
 
-    <!-- Backup Data -->
     <div id="tab-backup" class="tab-content">
       <h2>Backup Data</h2>
       <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px;">
@@ -341,10 +447,9 @@
         <button id="export-riwayat" class="btn-primary">📄 Export Riwayat Kondisi (CSV)</button>
         <button id="export-all" class="btn-secondary">📦 Export Semua Data (CSV terpisah)</button>
       </div>
-      <p class="info">Klik tombol untuk mengunduh file CSV masing-masing tabel. Tombol "Export Semua Data" akan mengunduh semua tabel sekaligus (dalam file terpisah).</p>
+      <p class="info">Klik tombol untuk mengunduh file CSV masing-masing tabel.</p>
     </div>
 
-    <!-- Transaksi Non-Iuran -->
     <div id="tab-nonIuran" class="tab-content">
       <h2>Transaksi Non-Iuran</h2>
       <div class="form-card">
@@ -404,16 +509,13 @@
         <h3>📋 Riwayat Transaksi Non-Iuran Terbaru</h3>
         <div style="overflow-x: auto;">
           <table id="nonIuranTable">
-            <thead>
-              <tr><th>Tanggal</th><th>Jenis</th><th>Keterangan</th><th>Jumlah</th><th>Aksi</th>
-            </thead>
+            <thead><tr><th>Tanggal</th><th>Jenis</th><th>Keterangan</th><th>Jumlah</th><th>Aksi</th></tr></thead>
             <tbody></tbody>
-            </table>
+          </table>
         </div>
       </div>
     </div>
 
-    <!-- Kelola Transaksi -->
     <div id="tab-manageTransactions" class="tab-content">
       <h2>Kelola Semua Transaksi</h2>
       <div class="filter-bar">
@@ -439,16 +541,13 @@
       </div>
       <div style="overflow-x: auto;">
         <table id="allTransactionsTable">
-          <thead>
-            <tr><th>Tanggal</th><th>Jenis</th><th>Keterangan</th><th>Pemasukan</th><th>Pengeluaran</th><th>Saldo</th><th>Aksi</th>
-          </thead>
+          <thead><tr><th>Tanggal</th><th>Jenis</th><th>Keterangan</th><th>Pemasukan</th><th>Pengeluaran</th><th>Saldo</th><th>Aksi</th></tr></thead>
           <tbody></tbody>
         </table>
       </div>
-      <p class="info">⚠️ <strong>Peringatan:</strong> Menghapus transaksi akan <strong>mengubah data historis</strong> tetapi <strong>tidak akan mengoreksi saldo secara otomatis</strong>. Setelah hapus, periksa kembali saldo kas dan gunakan fitur <strong>Pemasukan Lain / Pengeluaran Lain</strong> untuk menambahkan koreksi manual jika diperlukan.</p>
+      <p class="info">⚠️ <strong>Peringatan:</strong> Menghapus transaksi akan <strong>mengubah data historis</strong> tetapi <strong>tidak akan mengoreksi saldo secara otomatis</strong>. Gunakan fitur Pemasukan/Pengeluaran Lain untuk koreksi manual jika diperlukan.</p>
     </div>
 
-    <!-- Laporan Tunggakan -->
     <div id="tab-tunggakan" class="tab-content">
       <h2>Laporan Tunggakan Iuran</h2>
       <div class="filter-bar">
@@ -472,26 +571,31 @@
       </div>
       <div style="overflow-x: auto;" id="tunggakanContainer">
         <table id="tunggakanTable">
-          <thead>
-            <tr><th>No Rumah</th><th>Penghuni</th><th>Iuran/bln</th><th>Koordinator</th><th>Bulan Tunggakan</th><th>Total Tunggakan</th>
-          </thead>
+          <thead><tr><th>No Rumah</th><th>Penghuni</th><th>Iuran/bln</th><th>Koordinator</th><th>Bulan Tunggakan</th><th>Total Tunggakan</th></tr></thead>
           <tbody></tbody>
         </table>
       </div>
       <p class="info">Catatan: Tunggakan dihitung per bulan berdasarkan riwayat status rumah. Bulan dengan status "Dibebaskan" tidak dihitung tunggakan.</p>
     </div>
 
-    <!-- Manajemen User (hanya untuk admin) -->
     <div id="tab-users" class="tab-content" style="display: none;">
       <h2>Daftar User & Role</h2>
       <div style="overflow-x: auto;">
         <table id="users-table">
-          <thead> <th>Email</th><th>Role</th><th>Aksi</th> </thead>
+          <thead><tr><th>Email</th><th>Role</th><th>Aksi</th></tr></thead>
           <tbody></tbody>
         </table>
       </div>
       <p class="info">Catatan: Hanya admin yang bisa mengubah role.</p>
     </div>
+  </div>
+
+  <!-- Bottom Navigation -->
+  <div class="bottom-nav">
+    <a href="admin.html" class="nav-item active"><i class="fas fa-chart-pie"></i><span>Dashboard</span></a>
+    <a href="warga.html" class="nav-item"><i class="fas fa-users"></i><span>Warga</span></a>
+    <a href="iuran.html" class="nav-item"><i class="fas fa-money-bill-wave"></i><span>Iuran</span></a>
+    <a href="laporan.html" class="nav-item"><i class="fas fa-file-alt"></i><span>Laporan</span></a>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -504,7 +608,7 @@
       let userRole = null;
       let iuranChart = null, incomeExpenseChart = null;
 
-      // ========== CEK LOGIN & ROLE ==========
+      // Check login and role
       (async () => {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) {
@@ -529,13 +633,9 @@
           return;
         }
 
+        // Show users tab only for admin
         if (userRole === 'admin') {
-          const tabsContainer = document.getElementById('tabsContainer');
-          const usersTabBtn = document.createElement('button');
-          usersTabBtn.className = 'tab-btn';
-          usersTabBtn.setAttribute('data-tab', 'users');
-          usersTabBtn.innerText = 'Manajemen User';
-          tabsContainer.appendChild(usersTabBtn);
+          document.getElementById('usersTabBtn').style.display = 'flex';
           document.getElementById('tab-users').style.display = 'block';
         }
 
@@ -544,12 +644,12 @@
         initManageTransactions();
         initLaporanTunggakan();
         initCharts();
-        initTabs();
+        initMenuGrid();
         initLogout();
         initExportButtons();
       })();
 
-      // ========== FUNGSI PEMBANTU ==========
+      // Helper functions
       function formatRupiah(angka) {
         if (angka === null || isNaN(angka)) angka = 0;
         return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka);
@@ -572,7 +672,7 @@
         }
       }
 
-      // ========== STATISTIK ==========
+      // Load stats
       async function loadStats() {
         const statsDiv = document.getElementById('stats-data');
         statsDiv.innerHTML = '<p>Memuat data...</p>';
@@ -581,19 +681,14 @@
           const { count: totalPenghuni } = await supabase.from('warga').select('*', { count: 'exact', head: true }).eq('kondisi_terakhir', 'Berpenghuni');
           const { count: totalKosong } = await supabase.from('warga').select('*', { count: 'exact', head: true }).eq('kondisi_terakhir', 'Kosong');
           const { count: totalDibebaskan } = await supabase.from('warga').select('*', { count: 'exact', head: true }).eq('kondisi_terakhir', 'Dibebaskan');
-
           const { data: iuranData } = await supabase.from('transaksi_iuran').select('jumlah');
           let totalIuran = iuranData?.reduce((s,t)=>s+t.jumlah,0) || 0;
-
           const { data: pemasukanLain } = await supabase.from('transaksi_kas').select('pemasukan').eq('jenis','Pemasukan').neq('sumber','Iuran Warga');
           let totalPemasukanLain = pemasukanLain?.reduce((s,t)=>s+t.pemasukan,0) || 0;
-
           const { data: pengeluaranData } = await supabase.from('transaksi_kas').select('pengeluaran').eq('jenis','Pengeluaran');
           let totalPengeluaran = pengeluaranData?.reduce((s,t)=>s+t.pengeluaran,0) || 0;
-
           const { data: saldoData } = await supabase.rpc('get_current_saldo');
           const saldo = saldoData || 0;
-
           const now = new Date();
           const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
           const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString();
@@ -619,9 +714,8 @@
         }
       }
 
-      // ========== GRAFIK ==========
+      // Charts (same as original)
       async function initCharts() {
-        // Grafik iuran per bulan (12 bulan terakhir)
         const now = new Date();
         const months = [];
         const iuranData = [];
@@ -664,7 +758,6 @@
           }
         });
 
-        // Grafik pemasukan & pengeluaran bulan ini
         const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
         const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString();
         const { data: pemasukanBulanIni } = await supabase
@@ -704,13 +797,11 @@
         });
       }
 
-      // ========== EKSPOR CSV (UNIVERSAL) ==========
+      // Export functions (same as original)
       async function exportToCSV(tableName, columns, filename, orderColumn = null) {
         try {
           let query = supabase.from(tableName).select(columns.join(','));
-          if (orderColumn) {
-            query = query.order(orderColumn, { ascending: true });
-          }
+          if (orderColumn) query = query.order(orderColumn, { ascending: true });
           const { data, error } = await query;
           if (error) throw error;
           if (!data || data.length === 0) {
@@ -754,54 +845,7 @@
         alert('Semua data telah diekspor (file CSV terpisah).');
       }
 
-      // ========== MANAJEMEN USER ==========
-      async function loadUsers() {
-        const { data: profiles, error } = await supabase
-          .from('profiles')
-          .select('id, email, role')
-          .order('email');
-        if (error) {
-          console.error(error);
-          alert('Gagal memuat daftar user');
-          return;
-        }
-        const tbody = document.querySelector('#users-table tbody');
-        tbody.innerHTML = '';
-        for (const prof of profiles) {
-          const row = tbody.insertRow();
-          row.insertCell(0).innerText = prof.email;
-          const roleCell = row.insertCell(1);
-          const select = document.createElement('select');
-          const roles = ['admin', 'bendahara', 'sekretaris'];
-          roles.forEach(r => {
-            const opt = document.createElement('option');
-            opt.value = r;
-            opt.textContent = r;
-            if (prof.role === r) opt.selected = true;
-            select.appendChild(opt);
-          });
-          roleCell.appendChild(select);
-          const actionCell = row.insertCell(2);
-          const saveBtn = document.createElement('button');
-          saveBtn.innerText = 'Simpan';
-          saveBtn.className = 'btn-save-role btn-secondary btn-sm';
-          saveBtn.onclick = async () => {
-            const newRole = select.value;
-            const { error: updateError } = await supabase
-              .from('profiles')
-              .update({ role: newRole })
-              .eq('id', prof.id);
-            if (updateError) alert('Gagal update role: ' + updateError.message);
-            else {
-              alert(`Role user ${prof.email} diubah menjadi ${newRole}`);
-              loadUsers();
-            }
-          };
-          actionCell.appendChild(saveBtn);
-        }
-      }
-
-      // ========== TRANSAKSI NON-IURAN (menggunakan RPC) ==========
+      // Non-Iuran logic (same as original)
       function setupCategoryManual(selectId, manualGroupId, manualInputId) {
         const select = document.getElementById(selectId);
         const manualGroup = document.getElementById(manualGroupId);
@@ -826,23 +870,14 @@
           let kategori = document.getElementById('kategori_pemasukan').value;
           if (kategori === 'Lainnya') {
             const manual = document.getElementById('kategori_pemasukan_manual').value.trim();
-            if (!manual) {
-              alert('Harap isi kategori manual.');
-              return;
-            }
+            if (!manual) throw new Error('Harap isi kategori manual.');
             kategori = manual;
           }
           const jumlah = parseInt(document.getElementById('jumlah_pemasukan').value);
           const catatan = document.getElementById('catatan_pemasukan').value.trim();
-
-          if (!kategori || isNaN(jumlah) || jumlah <= 0) {
-            alert('Harap isi kategori dan jumlah dengan benar.');
-            return;
-          }
-
+          if (!kategori || isNaN(jumlah) || jumlah <= 0) throw new Error('Harap isi kategori dan jumlah dengan benar.');
           let keterangan = `${kategori}`;
           if (catatan) keterangan += ` - ${catatan}`;
-
           const kasId = `IN-${new Date().toISOString().slice(0,10).replace(/-/g,'')}-${Date.now().toString().slice(-6)}`;
           const { error } = await supabase.rpc('insert_transaksi', {
             p_kas_id: kasId,
@@ -860,8 +895,8 @@
           loadNonIuranTransactions();
           loadStats();
           initCharts();
-          const activeTab = document.querySelector('.tab-btn.active')?.dataset.tab;
-          if (activeTab === 'manageTransactions') {
+          const activeTab = document.querySelector('.tab-content.active')?.id;
+          if (activeTab === 'tab-manageTransactions') {
             const filterJenis = document.getElementById('filterJenis').value;
             const startDate = document.getElementById('filterStartDate').value;
             const endDate = document.getElementById('filterEndDate').value;
@@ -882,23 +917,14 @@
           let kategori = document.getElementById('kategori_pengeluaran').value;
           if (kategori === 'Lainnya') {
             const manual = document.getElementById('kategori_pengeluaran_manual').value.trim();
-            if (!manual) {
-              alert('Harap isi kategori manual.');
-              return;
-            }
+            if (!manual) throw new Error('Harap isi kategori manual.');
             kategori = manual;
           }
           const jumlah = parseInt(document.getElementById('jumlah_pengeluaran').value);
           const catatan = document.getElementById('catatan_pengeluaran').value.trim();
-
-          if (!kategori || isNaN(jumlah) || jumlah <= 0) {
-            alert('Harap isi kategori dan jumlah dengan benar.');
-            return;
-          }
-
+          if (!kategori || isNaN(jumlah) || jumlah <= 0) throw new Error('Harap isi kategori dan jumlah dengan benar.');
           let keterangan = `${kategori}`;
           if (catatan) keterangan += ` - ${catatan}`;
-
           const kasId = `EX-${new Date().toISOString().slice(0,10).replace(/-/g,'')}-${Date.now().toString().slice(-6)}`;
           const { error } = await supabase.rpc('insert_transaksi', {
             p_kas_id: kasId,
@@ -916,8 +942,8 @@
           loadNonIuranTransactions();
           loadStats();
           initCharts();
-          const activeTab = document.querySelector('.tab-btn.active')?.dataset.tab;
-          if (activeTab === 'manageTransactions') {
+          const activeTab = document.querySelector('.tab-content.active')?.id;
+          if (activeTab === 'tab-manageTransactions') {
             const filterJenis = document.getElementById('filterJenis').value;
             const startDate = document.getElementById('filterStartDate').value;
             const endDate = document.getElementById('filterEndDate').value;
@@ -937,7 +963,6 @@
           .eq('jenis', 'Pengeluaran')
           .order('tanggal', { ascending: false })
           .limit(20);
-
         const { data: pemasukan, error: err2 } = await supabase
           .from('transaksi_kas')
           .select('kas_id, tanggal, keterangan, pemasukan, pengeluaran, sumber')
@@ -945,18 +970,11 @@
           .neq('sumber', 'Iuran Warga')
           .order('tanggal', { ascending: false })
           .limit(20);
-
-        if (err1 || err2) {
-          console.error('Error fetching non-iuran transactions:', err1, err2);
-          return;
-        }
-
+        if (err1 || err2) return;
         const all = [...(pengeluaran || []), ...(pemasukan || [])];
-        all.sort((a, b) => new Date(b.tanggal) - new Date(a.tanggal));
-        const latest = all.slice(0, 20);
-
+        all.sort((a,b) => new Date(b.tanggal) - new Date(a.tanggal));
+        const latest = all.slice(0,20);
         const tbody = document.querySelector('#nonIuranTable tbody');
-        if (!tbody) return;
         tbody.innerHTML = '';
         if (latest.length === 0) {
           const row = tbody.insertRow();
@@ -980,19 +998,16 @@
           delBtn.innerText = 'Hapus';
           delBtn.className = 'btn-danger btn-sm';
           delBtn.onclick = async () => {
-            if (confirm('Hapus transaksi ini? Saldo tidak akan otomatis dikembalikan. Pastikan Anda membuat koreksi manual jika perlu.')) {
-              const { error: delError } = await supabase
-                .from('transaksi_kas')
-                .delete()
-                .eq('kas_id', t.kas_id);
+            if (confirm('Hapus transaksi ini? Saldo tidak akan otomatis dikembalikan.')) {
+              const { error: delError } = await supabase.from('transaksi_kas').delete().eq('kas_id', t.kas_id);
               if (delError) alert('Gagal hapus: ' + delError.message);
               else {
                 alert('Transaksi dihapus');
                 loadNonIuranTransactions();
                 loadStats();
                 initCharts();
-                const activeTab = document.querySelector('.tab-btn.active')?.dataset.tab;
-                if (activeTab === 'manageTransactions') {
+                const activeTab = document.querySelector('.tab-content.active')?.id;
+                if (activeTab === 'tab-manageTransactions') {
                   const filterJenis = document.getElementById('filterJenis').value;
                   const startDate = document.getElementById('filterStartDate').value;
                   const endDate = document.getElementById('filterEndDate').value;
@@ -1005,34 +1020,19 @@
         });
       }
 
-      // ========== KELOLA SEMUA TRANSAKSI ==========
+      // Manage transactions
       async function loadAllTransactions(filterJenis = 'all', startDate = null, endDate = null) {
-        let query = supabase
-          .from('transaksi_kas')
-          .select('kas_id, tanggal, keterangan, pemasukan, pengeluaran, saldo, sumber, jenis')
-          .order('tanggal', { ascending: false });
-
+        let query = supabase.from('transaksi_kas').select('kas_id, tanggal, keterangan, pemasukan, pengeluaran, saldo, sumber, jenis').order('tanggal', { ascending: false });
         if (filterJenis !== 'all') {
-          if (filterJenis === 'Iuran Warga') {
-            query = query.eq('sumber', 'Iuran Warga');
-          } else if (filterJenis === 'Pemasukan Lain') {
-            query = query.eq('sumber', 'Pemasukan Lain');
-          } else if (filterJenis === 'Pengeluaran Lain') {
-            query = query.eq('sumber', 'Pengeluaran Lain');
-          }
+          if (filterJenis === 'Iuran Warga') query = query.eq('sumber', 'Iuran Warga');
+          else if (filterJenis === 'Pemasukan Lain') query = query.eq('sumber', 'Pemasukan Lain');
+          else if (filterJenis === 'Pengeluaran Lain') query = query.eq('sumber', 'Pengeluaran Lain');
         }
         if (startDate) query = query.gte('tanggal', startDate);
         if (endDate) query = query.lte('tanggal', endDate);
-
         const { data, error } = await query;
-        if (error) {
-          console.error("Error loading transactions:", error);
-          alert('Gagal memuat transaksi: ' + error.message);
-          return;
-        }
-
+        if (error) return;
         const tbody = document.querySelector('#allTransactionsTable tbody');
-        if (!tbody) return;
         tbody.innerHTML = '';
         if (data.length === 0) {
           const row = tbody.insertRow();
@@ -1055,11 +1055,8 @@
           delBtn.innerText = 'Hapus';
           delBtn.className = 'btn-danger btn-sm';
           delBtn.onclick = async () => {
-            if (confirm(`Hapus transaksi ini?\n\n⚠️ PERINGATAN: Saldo tidak akan otomatis dikembalikan. Gunakan form Pemasukan/Pengeluaran Lain untuk koreksi manual jika diperlukan.`)) {
-              const { error: delError } = await supabase
-                .from('transaksi_kas')
-                .delete()
-                .eq('kas_id', t.kas_id);
+            if (confirm('Hapus transaksi ini? Saldo tidak akan otomatis dikembalikan.')) {
+              const { error: delError } = await supabase.from('transaksi_kas').delete().eq('kas_id', t.kas_id);
               if (delError) alert('Gagal hapus: ' + delError.message);
               else {
                 alert('Transaksi dihapus');
@@ -1080,10 +1077,7 @@
         const endDate = document.getElementById('filterEndDate');
         const applyBtn = document.getElementById('applyFilterBtn');
         const resetBtn = document.getElementById('resetFilterBtn');
-
-        const load = () => {
-          loadAllTransactions(filterJenis.value, startDate.value, endDate.value);
-        };
+        const load = () => loadAllTransactions(filterJenis.value, startDate.value, endDate.value);
         applyBtn.addEventListener('click', load);
         resetBtn.addEventListener('click', () => {
           filterJenis.value = 'all';
@@ -1094,17 +1088,10 @@
         load();
       }
 
-      // ========== LAPORAN TUNGGAKAN (RPC) ==========
+      // Tunggakan
       async function loadKoordinatorOptions() {
-        const { data, error } = await supabase
-          .from('warga')
-          .select('koordinator')
-          .not('koordinator', 'is', null)
-          .order('koordinator');
-        if (error) {
-          console.error(error);
-          return;
-        }
+        const { data, error } = await supabase.from('warga').select('koordinator').not('koordinator', 'is', null).order('koordinator');
+        if (error) return;
         const unique = [...new Map(data.map(item => [item.koordinator, item])).values()];
         const select = document.getElementById('tunggakanKoordinator');
         select.innerHTML = '<option value="all">Semua Koordinator</option>';
@@ -1121,22 +1108,18 @@
           alert('Pilih rentang bulan terlebih dahulu.');
           return;
         }
-
         const startDateISO = startMonth + '-01';
         const endDateISO = endMonth + '-01';
-
         const { data, error } = await supabase.rpc('get_tunggakan_report', {
           p_start_month: startDateISO,
           p_end_month: endDateISO,
           p_koordinator_filter: koordinatorFilter === 'all' ? null : koordinatorFilter
         });
-
         if (error) {
           console.error(error);
           alert('Gagal mengambil laporan tunggakan: ' + error.message);
           return;
         }
-
         const tbody = document.querySelector('#tunggakanTable tbody');
         tbody.innerHTML = '';
         if (!data || data.length === 0) {
@@ -1166,16 +1149,12 @@
         const filterBtn = document.getElementById('filterTunggakanBtn');
         const resetBtn = document.getElementById('resetTunggakanBtn');
         const printPDF = document.getElementById('printTunggakanPDF');
-
         const now = new Date();
         const defaultStart = '2025-11';
         const defaultEnd = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
         startInput.value = defaultStart;
         endInput.value = defaultEnd;
-
-        const loadReport = () => {
-          generateTunggakanReport(startInput.value, endInput.value, koordSelect.value);
-        };
+        const loadReport = () => generateTunggakanReport(startInput.value, endInput.value, koordSelect.value);
         filterBtn.addEventListener('click', loadReport);
         resetBtn.addEventListener('click', () => {
           startInput.value = defaultStart;
@@ -1197,7 +1176,7 @@
         loadReport();
       }
 
-      // ========== INISIALISASI DASHBOARD ==========
+      // Dashboard init
       function initDashboard() {
         loadStats();
       }
@@ -1210,17 +1189,22 @@
         loadNonIuranTransactions();
       }
 
-      function initTabs() {
-        const tabs = document.querySelectorAll('.tab-btn');
-        const contents = document.querySelectorAll('.tab-content');
-        tabs.forEach(btn => {
+      // Tab switching via menu grid
+      function initMenuGrid() {
+        const buttons = document.querySelectorAll('.menu-grid button');
+        buttons.forEach(btn => {
           btn.addEventListener('click', () => {
             const tabId = btn.dataset.tab;
-            tabs.forEach(b => b.classList.remove('active'));
+            if (!tabId) return;
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            // Show selected tab
+            const activeTab = document.getElementById(`tab-${tabId}`);
+            if (activeTab) activeTab.classList.add('active');
+            // Update active state on buttons (optional)
+            buttons.forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
-            contents.forEach(c => c.classList.remove('active'));
-            document.getElementById(`tab-${tabId}`).classList.add('active');
-
+            // Load specific data if needed
             if (tabId === 'users' && userRole === 'admin') loadUsers();
             if (tabId === 'stats') { loadStats(); initCharts(); }
             if (tabId === 'nonIuran') loadNonIuranTransactions();
@@ -1238,6 +1222,45 @@
             }
           });
         });
+        // Default active: stats
+        const statsBtn = document.querySelector('[data-tab="stats"]');
+        if (statsBtn) statsBtn.click();
+      }
+
+      async function loadUsers() {
+        const { data: profiles, error } = await supabase.from('profiles').select('id, email, role').order('email');
+        if (error) return;
+        const tbody = document.querySelector('#users-table tbody');
+        tbody.innerHTML = '';
+        for (const prof of profiles) {
+          const row = tbody.insertRow();
+          row.insertCell(0).innerText = prof.email;
+          const roleCell = row.insertCell(1);
+          const select = document.createElement('select');
+          const roles = ['admin', 'bendahara', 'sekretaris'];
+          roles.forEach(r => {
+            const opt = document.createElement('option');
+            opt.value = r;
+            opt.textContent = r;
+            if (prof.role === r) opt.selected = true;
+            select.appendChild(opt);
+          });
+          roleCell.appendChild(select);
+          const actionCell = row.insertCell(2);
+          const saveBtn = document.createElement('button');
+          saveBtn.innerText = 'Simpan';
+          saveBtn.className = 'btn-save-role btn-secondary btn-sm';
+          saveBtn.onclick = async () => {
+            const newRole = select.value;
+            const { error: updateError } = await supabase.from('profiles').update({ role: newRole }).eq('id', prof.id);
+            if (updateError) alert('Gagal update role: ' + updateError.message);
+            else {
+              alert(`Role user ${prof.email} diubah menjadi ${newRole}`);
+              loadUsers();
+            }
+          };
+          actionCell.appendChild(saveBtn);
+        }
       }
 
       function initLogout() {
@@ -1256,7 +1279,7 @@
         document.getElementById('export-all').onclick = exportAllData;
       }
 
-      // ========== PWA REGISTRATION (opsional) ==========
+      // PWA registration (optional)
       if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('/sw.js').catch(err => console.log('SW registration failed:', err));
       }
