@@ -246,6 +246,10 @@
       border-radius: 20px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.05);
     }
+    .filter-bar > * {
+      flex: 1;
+      min-width: 120px;
+    }
     .filter-group {
       display: flex;
       flex-direction: column;
@@ -558,7 +562,7 @@
             <tr><th>Tanggal</th><th>Jenis</th><th>Keterangan</th><th>Pemasukan</th><th>Pengeluaran</th><th>Saldo</th><th>Aksi</th>
           </thead>
           <tbody></tbody>
-        </table>
+         </table>
       </div>
       <p class="info">⚠️ <strong>Peringatan:</strong> Menghapus transaksi akan <strong>mengubah data historis</strong> tetapi <strong>tidak akan mengoreksi saldo secara otomatis</strong>. Setelah hapus, periksa kembali saldo kas dan gunakan fitur <strong>Pemasukan Lain / Pengeluaran Lain</strong> untuk menambahkan koreksi manual jika diperlukan.</p>
     </div>
@@ -591,7 +595,7 @@
             <tr><th>No Rumah</th><th>Penghuni</th><th>Iuran/bln</th><th>Koordinator</th><th>Bulan Tunggakan</th><th>Total Tunggakan</th>
           </thead>
           <tbody></tbody>
-        </table>
+         </table>
       </div>
       <p class="info">Catatan: Tunggakan dihitung per bulan berdasarkan riwayat status rumah. Bulan dengan status "Dibebaskan" tidak dihitung tunggakan.</p>
     </div>
@@ -603,7 +607,7 @@
         <table id="users-table">
           <thead> <th>Email</th><th>Role</th><th>Aksi</th> </thead>
           <tbody></tbody>
-        </table>
+         </table>
       </div>
       <p class="info">Catatan: Hanya admin yang bisa mengubah role.</p>
     </div>
@@ -1310,11 +1314,12 @@
         printPDF.addEventListener('click', () => {
           const element = document.getElementById('tunggakanContainer');
           const opt = {
-            margin: 0.5,
+            margin: [0.5, 0.5, 0.5, 0.5],
             filename: `laporan_tunggakan_${startInput.value}_to_${endInput.value}.pdf`,
             image: { type: 'jpeg', quality: 0.98 },
             html2canvas: { scale: 2, letterRendering: true },
-            jsPDF: { unit: 'in', format: 'a4', orientation: 'landscape' }
+            jsPDF: { unit: 'in', format: 'a4', orientation: 'landscape' },
+            pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
           };
           html2pdf().set(opt).from(element).save();
         });
