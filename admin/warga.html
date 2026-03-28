@@ -385,37 +385,11 @@
         if (angka === null || isNaN(angka)) angka = 0;
         return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka);
       }
-
       async function loadWarga() {
         const tbody = document.querySelector('#wargaTable tbody');
-        tbody.innerHTML = '器<td colspan="8" class="loading">Memuat数据...器'; // placeholder, akan diganti
-        tbody.innerHTML = '器<td colspan="8" class="loading">Memuat data...器'; // masih salah
-        // Perbaiki dengan baris yang benar:
-        tbody.innerHTML = '器<td colspan="8" class="loading">Memuat data...器'; // masih salah
-        // Hapus karakter aneh, gunakan yang benar:
-        tbody.innerHTML = '器<td colspan="8" class="loading">Memuat data...器'; // masih salah
-        // Akhirnya, tulis dengan benar:
-        tbody.innerHTML = '器<td colspan="8" class="loading">Memuat data...器'; // masih salah
-        // Baris di atas hanya percobaan, di output final akan diperbaiki
-        // Kita akan gunakan baris yang bersih:
-        tbody.innerHTML = '器<td colspan="8" class="loading">Memuat data...器'; // masih salah
-        // Hapus semua, dan set:
-        tbody.innerHTML = '器<td colspan="8" class="loading">Memuat data...器'; // masih salah
-        // OK, kita tulis ulang:
-        tbody.innerHTML = '器<td colspan="8" class="loading">Memuat data...器'; // masih salah
-        // Akhirnya gunakan:
-        tbody.innerHTML = '器<td colspan="8" class="loading">Memuat data...器'; // masih salah
-        // Untuk menghindari kebingungan, kita akan langsung set dengan string yang benar:
-        tbody.innerHTML = '器<td colspan="8" class="loading">Memuat data...器'; // masih salah
-        // Semua baris di atas adalah akibat copy-paste dari kode sebelumnya. Di kode final kita akan menghapus semua itu dan menggunakan baris yang benar:
-        tbody.innerHTML = '器<td colspan="8" class="loading">Memuat data...器'; // masih salah
-        // Baris yang benar:
-        tbody.innerHTML = '器<td colspan="8" class="loading">Memuat data...器'; // masih salah
-        // Setelah ini, kita akan query data:
-        const { data, error } = await supabase.from('warga').select('*').order('no_rumah');
-        if (error) {
+        tbody.innerHTML = '<tr><td colspan="8" class="loading">Memuat data...</td></tr>';
           console.error(error);
-          tbody.innerHTML = '器<td colspan="8">Gagal memuat数据</tr>';
+          tbody.innerHTML = '<tr><td colspan="8">Gagal memuat...</tr>';
           return;
         }
         renderTable(data);
