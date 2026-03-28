@@ -83,12 +83,11 @@
       color: #0b2e4f;
     }
 
-    /* Filter bar */
+    /* Filter bar - menggunakan grid agar semua elemen sama lebar */
     .filter-bar {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 16px;
-      align-items: flex-end;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 12px;
       margin-bottom: 24px;
       background: white;
       padding: 16px;
@@ -109,6 +108,7 @@
       border: 1px solid #ccc;
       border-radius: 12px;
       font-family: inherit;
+      width: 100%;
     }
     button {
       background: #0b2e4f;
@@ -119,6 +119,7 @@
       font-weight: 600;
       display: inline-flex;
       align-items: center;
+      justify-content: center;
       gap: 6px;
     }
     button:active {
@@ -331,15 +332,8 @@
         padding: 0 12px;
       }
       .filter-bar {
-        flex-direction: column;
-        align-items: stretch;
-      }
-      .filter-group {
-        width: 100%;
-      }
-      button {
-        width: 100%;
-        justify-content: center;
+        grid-template-columns: 1fr; /* mobile: semua item satu kolom */
+        gap: 10px;
       }
       .summary-grid {
         grid-template-columns: repeat(2, 1fr);
@@ -360,11 +354,12 @@
       }
     }
 
-    /* Print */
+    /* Print & PDF */
     @media print {
       body {
         background: white;
         padding-bottom: 0;
+        margin: 0;
       }
       .app-header, .bottom-nav, .filter-bar, .btn-print, .btn-export-excel, .btn-export-pdf, .btn-quick, .chart-container {
         display: none !important;
@@ -372,8 +367,13 @@
       .pdf-header {
         display: block !important;
       }
+      .container {
+        margin: 0;
+        padding: 0;
+      }
       .summary-grid {
         display: grid;
+        margin-bottom: 20px;
       }
       .table-wrapper {
         overflow: visible;
@@ -385,8 +385,7 @@
         display: flex;
       }
       @page {
-        size: A4 landscape;
-        margin: 1.5cm;
+        margin: 0.5cm 1.5cm; /* top margin lebih kecil */
       }
     }
   </style>
@@ -447,7 +446,7 @@
             <tr><th>Tanggal</th><th>Keterangan</th><th>Pemasukan</th><th>Pengeluaran</th><th>Saldo</th><th>Sumber</th>
           </thead>
           <tbody></tbody>
-        </table>
+         </table>
       </div>
 
       <div class="signature-section">
@@ -569,7 +568,7 @@
         loadingDiv.style.display = 'block';
 
         const tbody = document.querySelector('#kasTable tbody');
-        tbody.innerHTML = '<tr><td colspan="6" class="loading">Memuat data ...</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" class="loading">Memuat data ...</td></tr>'; // fix karakter
 
         let query = supabase
           .from('transaksi_kas')
@@ -585,7 +584,7 @@
 
         if (error) {
           console.error(error);
-          tbody.innerHTML = '<tr><td colspan="6">Gagal memuat riwayat</td></tr>';
+          tbody.innerHTML = '<tr><td  colspan="6">Gagal memuat riwayat</td></tr>';
           return;
         }
         currentData = data;
@@ -618,7 +617,7 @@
         const tbody = document.querySelector('#kasTable tbody');
         tbody.innerHTML = '';
         if (data.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="6">Tidak ada transaksi dalam rentang ini</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="6">Tidak ada transaksi dalam rentang ini,</td></tr>';
           return;
         }
         data.forEach(row => {
@@ -740,7 +739,7 @@
 
         const element = document.getElementById('pdfContainer');
         const opt = {
-          margin: [0.5, 0.5, 0.5, 0.5],
+          margin: [0.3, 0.5, 0.5, 0.5], // top margin lebih kecil
           filename: `laporan_kas_${new Date().toISOString().slice(0,10)}.pdf`,
           image: { type: 'jpeg', quality: 0.98 },
           html2canvas: { scale: 2, letterRendering: true },
