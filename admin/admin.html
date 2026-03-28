@@ -89,7 +89,7 @@
       margin-bottom: 20px;
       border-bottom: 1px solid #ddd;
       padding-bottom: 10px;
-      flex-wrap: wrap;
+      flex-wrap: nowrap;
       overflow-x: auto;
       -webkit-overflow-scrolling: touch;
     }
@@ -144,11 +144,14 @@
     }
 
     /* Tables */
+    .table-wrapper {
+      overflow-x: auto;
+      margin: 20px 0;
+    }
     table {
       width: 100%;
       border-collapse: collapse;
       background: white;
-      margin: 20px 0;
       border-radius: 12px;
       overflow: hidden;
     }
@@ -336,7 +339,6 @@
         grid-template-columns: 1fr;
       }
       .tabs {
-        justify-content: flex-start;
         flex-wrap: nowrap;
         overflow-x: auto;
         -webkit-overflow-scrolling: touch;
@@ -367,9 +369,6 @@
       }
       .chart-container {
         padding: 12px;
-      }
-      .btn-primary, .btn-secondary, .btn-danger {
-        width: 100%;
       }
     }
 
@@ -518,13 +517,13 @@
       </div>
       <div class="form-card">
         <h3>📋 Riwayat Transaksi Non-Iuran Terbaru</h3>
-        <div style="overflow-x: auto;">
+        <div class="table-wrapper">
           <table id="nonIuranTable">
             <thead>
               <tr><th>Tanggal</th><th>Jenis</th><th>Keterangan</th><th>Jumlah</th><th>Aksi</th>
             </thead>
             <tbody></tbody>
-          没人
+           </table>
         </div>
       </div>
     </div>
@@ -553,13 +552,13 @@
         <button id="applyFilterBtn" class="btn-primary">Filter</button>
         <button id="resetFilterBtn" class="btn-secondary">Reset</button>
       </div>
-      <div style="overflow-x: auto;">
+      <div class="table-wrapper">
         <table id="allTransactionsTable">
           <thead>
             <tr><th>Tanggal</th><th>Jenis</th><th>Keterangan</th><th>Pemasukan</th><th>Pengeluaran</th><th>Saldo</th><th>Aksi</th>
           </thead>
           <tbody></tbody>
-        实
+        </table>
       </div>
       <p class="info">⚠️ <strong>Peringatan:</strong> Menghapus transaksi akan <strong>mengubah data historis</strong> tetapi <strong>tidak akan mengoreksi saldo secara otomatis</strong>. Setelah hapus, periksa kembali saldo kas dan gunakan fitur <strong>Pemasukan Lain / Pengeluaran Lain</strong> untuk menambahkan koreksi manual jika diperlukan.</p>
     </div>
@@ -586,13 +585,13 @@
         <button id="resetTunggakanBtn" class="btn-secondary">Reset</button>
         <button id="printTunggakanPDF" class="btn-secondary" style="background: #27ae60;">🖨️ Cetak PDF</button>
       </div>
-      <div style="overflow-x: auto;" id="tunggakanContainer">
+      <div class="table-wrapper" id="tunggakanContainer">
         <table id="tunggakanTable">
           <thead>
             <tr><th>No Rumah</th><th>Penghuni</th><th>Iuran/bln</th><th>Koordinator</th><th>Bulan Tunggakan</th><th>Total Tunggakan</th>
           </thead>
           <tbody></tbody>
-        实
+        </table>
       </div>
       <p class="info">Catatan: Tunggakan dihitung per bulan berdasarkan riwayat status rumah. Bulan dengan status "Dibebaskan" tidak dihitung tunggakan.</p>
     </div>
@@ -600,11 +599,11 @@
     <!-- Manajemen User (hanya untuk admin) -->
     <div id="tab-users" class="tab-content" style="display: none;">
       <h2>Daftar User & Role</h2>
-      <div style="overflow-x: auto;">
+      <div class="table-wrapper">
         <table id="users-table">
           <thead> <th>Email</th><th>Role</th><th>Aksi</th> </thead>
           <tbody></tbody>
-        实
+        </table>
       </div>
       <p class="info">Catatan: Hanya admin yang bisa mengubah role.</p>
     </div>
