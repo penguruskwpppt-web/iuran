@@ -4,20 +4,36 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="manifest" href="/manifest.json">
-    <title>Your Title</title>
+    <link rel="icon" type="image/png" sizes="192x192" href="/icon.png">
+    <meta name="theme-color" content="#ffffff">
+    <title>My PWA</title>
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', function() {
                 navigator.serviceWorker.register('/service-worker.js').then(function(registration) {
                     console.log('ServiceWorker registration successful with scope: ', registration.scope);
-                }, function(error) {
-                    console.log('ServiceWorker registration failed: ', error);
+                }, function(err) {
+                    console.log('ServiceWorker registration failed: ', err);
                 });
             });
         }
     </script>
 </head>
 <body>
-    <h1>Your Content Here</h1>
+    <nav>
+        <ul>
+            <li><a href="#home">Home</a></li>
+            <li><a href="#about">About</a></li>
+            <li><a href="#services">Services</a></li>
+            <li><a href="#contact">Contact</a></li>
+        </ul>
+    </nav>
+    <main>
+        <h1>Welcome to My PWA</h1>
+        <p>This is a sample Progressive Web Application structure.</p>
+    </main>
+    <footer>
+        <p>&copy; 2026 My PWA. All rights reserved.</p>
+    </footer>
 </body>
 </html>
