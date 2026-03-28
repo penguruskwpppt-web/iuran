@@ -685,7 +685,7 @@
       <div class="stat-card">
         <div class="stat-icon"><i class="fas fa-clock"></i></div>
         <div class="stat-number" id="totalTunggakan">-</div>
-        <div class="stat-label">Total Tunggakan</div>
+        <div class="stat-label">Total Tunggakan (Estimasi)</div>
       </div>
     </div>
   </div>
@@ -812,7 +812,7 @@
       const totalIuranBulanIni = iuranBulanIni?.reduce((s, t) => s + t.pemasukan, 0) || 0;
       document.getElementById('iuranBulanIni').innerText = formatRupiah(totalIuranBulanIni);
 
-      // Hitung total tunggakan (semua rumah)
+      // Total tunggakan (estimasi sederhana berdasarkan iuran saat ini)
       const { data: wargaList } = await supabase.from('warga').select('no_rumah, kondisi_terakhir, iuran_per_bulan').in('kondisi_terakhir', ['Berpenghuni', 'Kosong']);
       const { data: allPayments } = await supabase.from('transaksi_iuran').select('no_rumah, bulan');
       const paidMap = new Map();
@@ -843,7 +843,7 @@
     }
   }
 
-  // ========== LOGIKA CEK TUNGGAKAN (SAMA SEPERTI iuran.html) ==========
+  // ========== LOGIKA CEK TUNGGAKAN (BERDASARKAN RIWAYAT) ==========
   async function getRiwayatKondisiForHouse(noRumah) {
     const { data, error } = await supabase
       .from('riwayat_kondisi')
@@ -854,10 +854,15 @@
     return data || [];
   }
 
+  // Mendapatkan status dan iuran yang berlaku pada tanggal tertentu
   function getStatusAtDate(histories, targetDateStr) {
     let latest = null;
     for (let h of histories) {
-      const berlakuStr = new Date(h.berlaku_sejak).toISOString().split('T')[0];
+      // Pastikan berlaku_sejak diambil sebagai string tanggal (YYYY-MM-DD)
+      let berlakuStr = h.berlaku_sejak;
+      if (berlakuStr && berlakuStr.includes('T')) {
+        berlakuStr = berlakuStr.split('T')[0];
+      }
       if (berlakuStr <= targetDateStr) {
         if (!latest || berlakuStr > latest.berlakuStr) {
           latest = { berlakuStr, kondisi: h.kondisi, iuran: h.iuran_per_bulan };
@@ -867,18 +872,25 @@
     if (latest) {
       return { kondisi: latest.kondisi, iuran: latest.iuran };
     }
-    // default jika tidak ada riwayat: Berpenghuni dengan iuran 75000
+    // Default jika tidak ada riwayat: Berpenghuni dengan iuran 75000
     return { kondisi: 'Berpenghuni', iuran: 75000 };
   }
 
   async function cekTunggakanByRumah() {
     const noRumah = prompt("Masukkan nomor rumah yang ingin dicek tunggakannya:", "")
     if (!noRumah) return
+
+    // Tampilkan loading (opsional)
+    const btn = document.getElementById('btnCekTunggakan');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memeriksa...';
+    btn.disabled = true;
+
     try {
       // Ambil data warga
       const { data: warga, error: wargaError } = await supabase
         .from('warga')
-        .select('nama_pemilik, kondisi_terakhir, iuran_per_bulan')
+        .select('nama_pemilik, kondisi_terakhir')
         .eq('no_rumah', noRumah)
         .single()
       if (wargaError || !warga) {
@@ -918,6 +930,7 @@
       while (year < endYear || (year === endYear && month <= endMonth)) {
         const dateStr = `${year}-${String(month).padStart(2,'0')}-01`;
         const { kondisi: statusBulan, iuran: iuranBulan } = getStatusAtDate(histories, dateStr);
+        // Skip jika status Dibebaskan atau iuran 0 (tidak wajib bayar)
         if (statusBulan === 'Dibebaskan' || iuranBulan === 0) {
           month++;
           if (month > 12) { month = 1; year++; }
@@ -949,6 +962,9 @@
     } catch (err) {
       console.error(err);
       alert('Gagal memeriksa tunggakan.');
+    } finally {
+      btn.innerHTML = originalText;
+      btn.disabled = false;
     }
   }
 
