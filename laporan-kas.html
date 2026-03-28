@@ -80,7 +80,7 @@
       color: #0b2e4f;
       word-break: break-word;
     }
-    /* Filter Bar */
+    /* Filter Bar - Desktop */
     .filter-bar {
       display: flex;
       flex-wrap: wrap;
@@ -262,7 +262,7 @@
       border-top: 1px solid #eef2f8;
       padding-top: 20px;
     }
-    /* Responsive Breakpoints */
+    /* ========== RESPONSIVE MOBILE ========== */
     @media (max-width: 768px) {
       body {
         padding: 10px;
@@ -270,17 +270,44 @@
       .container {
         padding: 16px;
       }
+      /* Filter bar di mobile: tanggal full-width, tombol grid 2 kolom */
       .filter-bar {
         flex-direction: column;
         align-items: stretch;
+        gap: 12px;
       }
       .filter-group {
         width: 100%;
       }
-      .filter-bar button {
-        width: 100%;
-        justify-content: center;
+      /* Grid untuk tombol: 2 kolom dengan jarak */
+      .filter-bar .btn-primary,
+      .filter-bar .btn-cancel {
+        width: auto;
+        margin: 0;
       }
+      .filter-bar {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+      /* Input tanggal tetap satu kolom (full width) */
+      .filter-group {
+        grid-column: span 2;
+      }
+      /* Tombol ditempatkan secara berurutan di grid */
+      #filterBtn {
+        grid-column: 1 / 2;
+      }
+      #resetBtn {
+        grid-column: 2 / 3;
+      }
+      #pdfBtn {
+        grid-column: 1 / 2;
+      }
+      #excelBtn {
+        grid-column: 2 / 3;
+      }
+      /* Summary cards lebih kecil di HP */
       .summary-card .amount {
         font-size: 1rem;
       }
@@ -307,7 +334,7 @@
         margin: 0 auto;
       }
     }
-    /* Print styling tetap sama */
+    /* Print styling */
     @media print {
       body {
         background: white;
@@ -559,7 +586,6 @@
     });
   }
 
-  // Simple escape to avoid XSS
   function escapeHtml(str) {
     if (!str) return '';
     return str.replace(/[&<>]/g, function(m) {
@@ -567,12 +593,9 @@
       if (m === '<') return '&lt;';
       if (m === '>') return '&gt;';
       return m;
-    }).replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, function(c) {
-      return c;
     });
   }
 
-  // Export Excel
   function exportToExcel() {
     if (!currentData.length) {
       alert('Tidak ada data untuk diekspor');
@@ -592,7 +615,6 @@
     XLSX.writeFile(wb, `laporan_kas_${new Date().toISOString().slice(0,10)}.xlsx`);
   }
 
-  // Export PDF
   function exportToPDF() {
     if (!currentData.length) {
       alert('Tidak ada data untuk dicetak');
@@ -614,11 +636,9 @@
     html2pdf().set(opt).from(element).save();
   }
 
-  // Initial load
   await fetchSaldoAwal();
   await loadKas();
 
-  // Event listeners
   document.getElementById('filterBtn').addEventListener('click', () => {
     const start = document.getElementById('startDate').value;
     const end = document.getElementById('endDate').value;
@@ -632,7 +652,6 @@
   document.getElementById('pdfBtn').addEventListener('click', exportToPDF);
   document.getElementById('excelBtn').addEventListener('click', exportToExcel);
 
-  // Set timestamp footer awal
   const now = new Date();
   const footerTime = now.toLocaleString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' });
   document.getElementById('printTimestamp').innerText = `Dicetak: ${footerTime}`;
