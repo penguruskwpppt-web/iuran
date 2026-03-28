@@ -790,6 +790,18 @@
     return `Lunas: ${day} ${month} ${year}`
   }
 
+  function formatMonthDisplay(monthDate) {
+    const d = new Date(monthDate);
+    return d.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
+  }
+
+  // Fungsi untuk mendapatkan tanggal lokal tanpa timezone issue
+  function getLocalDateString(date) {
+    const offset = date.getTimezoneOffset();
+    const localDate = new Date(date.getTime() - (offset * 60 * 1000));
+    return localDate.toISOString().split('T')[0];
+  }
+
   // ========== DASHBOARD (RINGKASAN KEUANGAN) ==========
   async function loadDashboard() {
     try {
@@ -843,7 +855,7 @@
     }
   }
 
-  // ========== LOGIKA CEK TUNGGAKAN (BERDASARKAN RIWAYAT) ==========
+  // ========== LOGIKA CEK TUNGGAKAN (SAMA SEPERTI iuran.html) ==========
   async function getRiwayatKondisiForHouse(noRumah) {
     const { data, error } = await supabase
       .from('riwayat_kondisi')
@@ -901,7 +913,6 @@
       // Ambil nama penghuni terbaru dari riwayat (untuk ditampilkan)
       let latestOccupant = null;
       if (histories.length > 0) {
-        // cari yang paling baru
         const sorted = [...histories].sort((a,b) => new Date(b.berlaku_sejak) - new Date(a.berlaku_sejak));
         latestOccupant = sorted[0].nama_penghuni;
       }
@@ -990,8 +1001,7 @@
       const container = document.getElementById('historyListContainer');
       container.innerHTML = '';
       payments.forEach(p => {
-        const date = new Date(p.bulan);
-        const monthName = date.toLocaleString('id-ID', { month: 'long', year: 'numeric' });
+        const monthName = formatMonthDisplay(p.bulan);
         const itemDiv = document.createElement('div');
         itemDiv.className = 'resi-item';
         itemDiv.innerHTML = `
