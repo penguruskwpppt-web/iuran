@@ -1,62 +1,27 @@
-// service-worker.js
-
-// Cache version
-const CACHE_NAME = 'v1';
+// Updated service worker for caching files
+const CACHE_NAME = 'my-site-cache-v1';
 const urlsToCache = [
-    '/index.html',  // Add your application's shell
-    '/styles.css',  // Add your styles
-    '/script.js',  // Add your javascript
-    '/offline.html' // Add an offline fallback page
+    '/index.html',
+    '/styles/main.css',
+    '/scripts/main.js',
+    // Add other necessary files for caching
 ];
 
-// Install event
-self.addEventListener('install', (event) => {
+self.addEventListener('install', event => {
     event.waitUntil(
         caches.open(CACHE_NAME)
-            .then((cache) => {
+            .then(cache => {
                 console.log('Opened cache');
                 return cache.addAll(urlsToCache);
             })
     );
 });
 
-// Fetch event
-self.addEventListener('fetch', (event) => {
+self.addEventListener('fetch', event => {
     event.respondWith(
         caches.match(event.request)
-            .then((response) => {
-                // Cache hit - return the response from the cached version
-                if (response) {
-                    return response;
-                }
-                return fetch(event.request)
-                    .catch(() => caches.match('/offline.html'));
+            .then(response => {
+                return response || fetch(event.request);
             })
     );
-});
-
-// Activate event
-self.addEventListener('activate', (event) => {
-    const cacheWhitelist = [CACHE_NAME];
-    event.waitUntil(
-        caches.keys().then((cacheNames) => {
-            return Promise.all(
-                cacheNames.map((cacheName) => {
-                    if (cacheWhitelist.indexOf(cacheName) === -1) {
-                        return caches.delete(cacheName);
-                    }
-                })
-            );
-        })
-    );
-});
-
-// Background Sync
-self.addEventListener('sync', (event) => {
-    if (event.tag == 'sync-updates') {
-        event.waitUntil(
-            // Your sync logic here
-            console.log('Background Sync triggered')
-        );
-    }
 });
