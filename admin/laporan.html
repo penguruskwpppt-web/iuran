@@ -19,7 +19,7 @@
     body {
       font-family: 'Inter', sans-serif;
       background: #f4f4f4;
-      padding-bottom: 70px; /* space for bottom nav */
+      padding-bottom: 70px;
     }
 
     /* Header styling */
@@ -83,7 +83,7 @@
       color: #0b2e4f;
     }
 
-    /* Filter bar - menggunakan grid agar semua elemen sama lebar */
+    /* Filter bar */
     .filter-bar {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
@@ -345,7 +345,7 @@
         padding: 0 12px;
       }
       .filter-bar {
-        grid-template-columns: 1fr; /* mobile: semua item satu kolom */
+        grid-template-columns: 1fr;
         gap: 10px;
       }
       .summary-grid {
@@ -367,7 +367,7 @@
       }
     }
 
-    /* Print & PDF */
+    /* Print */
     @media print {
       body {
         background: white;
@@ -398,13 +398,12 @@
         display: flex;
       }
       @page {
-        margin: 0.5cm 1.5cm; /* top margin lebih kecil */
+        margin: 0.5cm 1.5cm;
       }
     }
   </style>
 </head>
 <body>
-  <!-- Header -->
   <div class="app-header">
     <div class="header-title">
       <img src="../images/logo.webp" alt="Logo KWP3T" onerror="this.src='https://placehold.co/40x40?text=Logo'">
@@ -418,7 +417,6 @@
   <div class="container">
     <h1>Laporan Kas</h1>
 
-    <!-- Summary Cards -->
     <div class="summary-grid">
       <div class="summary-card"><h3>Saldo Awal</h3><div class="amount" id="saldoAwal">-</div></div>
       <div class="summary-card"><h3>Total Pemasukan</h3><div class="amount" id="totalPemasukan">-</div></div>
@@ -426,7 +424,6 @@
       <div class="summary-card"><h3>Saldo Akhir</h3><div class="amount" id="saldoAkhir">-</div></div>
     </div>
 
-    <!-- Filter Bar -->
     <div class="filter-bar">
       <div class="filter-group"><label>Tanggal Mulai</label><input type="date" id="startDate"></div>
       <div class="filter-group"><label>Tanggal Akhir</label><input type="date" id="endDate"></div>
@@ -439,13 +436,11 @@
       <button id="printBtn" class="btn-print"><i class="fas fa-print"></i> Cetak (Browser)</button>
     </div>
 
-    <!-- Chart -->
     <div class="chart-container">
       <canvas id="kasChart"></canvas>
       <div id="chartEmptyMessage" style="display: none; text-align: center; color: #666; padding: 20px;">Tidak ada data untuk ditampilkan</div>
     </div>
 
-    <!-- PDF Container (for export & print) -->
     <div id="pdfContainer">
       <div class="pdf-header">
         <img src="../images/logo.webp" alt="Logo">
@@ -461,7 +456,6 @@
           <tbody></tbody>
         </table>
       </div>
-
       <div class="signature-section">
         <div class="signature-item">
           <div class="title">Direkap oleh,</div>
@@ -485,7 +479,6 @@
           <div class="signature-name">Ramli Munthe</div>
         </div>
       </div>
-
       <div class="footer">
         Sistem KWP3T v3.2026 | Design by Yetno <span id="printTimestamp"></span>
       </div>
@@ -496,7 +489,6 @@
     </div>
   </div>
 
-  <!-- Bottom Navigation -->
   <div class="bottom-nav">
     <a href="admin.html" class="nav-item"><i class="fas fa-chart-pie"></i><span>Dashboard</span></a>
     <a href="warga.html" class="nav-item"><i class="fas fa-users"></i><span>Warga</span></a>
@@ -581,7 +573,7 @@
         loadingDiv.style.display = 'block';
 
         const tbody = document.querySelector('#kasTable tbody');
-        tbody.innerHTML = '<tr><td colspan="6" class="loading">Memuat data...</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" class="loading">Memuat data...</td></tr>'; // fix karakter
 
         let query = supabase
           .from('transaksi_kas')
@@ -597,7 +589,7 @@
 
         if (error) {
           console.error(error);
-          tbody.innerHTML = '<tr><td colspan="6">Gagal memuat data </td></tr> ';
+          tbody.innerHTML = '<tr><td colspan="6">Gagal memuat data</td></tr>';
           return;
         }
         currentData = data;
@@ -630,7 +622,7 @@
         const tbody = document.querySelector('#kasTable tbody');
         tbody.innerHTML = '';
         if (data.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="6">Tidak ada transaksi dalam rentang ini</td>/<tr>';
+          tbody.innerHTML = '<tr><td colspan="6">Tidak ada transaksi dalam rentang ini</td></tr>';
           return;
         }
         data.forEach(row => {
@@ -752,15 +744,20 @@
           printTimestamp.innerText = formatted;
         }
 
-        // Aktifkan mode PDF (sembunyikan elemen tidak perlu)
+        // Aktifkan mode PDF (sembunyikan elemen UI)
         document.body.classList.add('pdf-mode');
 
-        // Beri waktu agar CSS mode PDF diterapkan
-        await new Promise(resolve => setTimeout(resolve, 500));
+        // Tampilkan loading indikator untuk PDF
+        const loadingDiv = document.getElementById('loadingIndicator');
+        loadingDiv.style.display = 'block';
+        loadingDiv.innerHTML = '<div class="loading-spinner"></div> Menyiapkan PDF...';
+
+        // Beri waktu untuk CSS mode PDF diterapkan (terutama di mobile)
+        await new Promise(resolve => setTimeout(resolve, 800));
 
         const element = document.getElementById('pdfContainer');
         const opt = {
-          margin: [0.5, 0.5, 0.5, 0.5], // margin: top, right, bottom, left (dalam inci)
+          margin: [0.5, 0.5, 0.5, 0.5], // top, right, bottom, left (inci)
           filename: `laporan_kas_${new Date().toISOString().slice(0,10)}.pdf`,
           image: { type: 'jpeg', quality: 0.98 },
           html2canvas: { scale: 2, letterRendering: true, useCORS: true },
@@ -776,6 +773,8 @@
         } finally {
           // Kembalikan tampilan normal
           document.body.classList.remove('pdf-mode');
+          loadingDiv.style.display = 'none';
+          loadingDiv.innerHTML = '<div class="loading-spinner"></div> Memuat data...';
         }
       }
 
