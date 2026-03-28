@@ -300,14 +300,16 @@
       color: #64748b;
       font-weight: 500;
     }
-    /* Chart container */
+    /* Chart container – lebih sempit di desktop, tetap responsif */
     .chart-container {
       background: white;
       border-radius: 20px;
       padding: 20px;
-      margin-top: 30px;
+      margin: 30px auto;
       box-shadow: 0 8px 20px rgba(0,0,0,0.05);
       border: 1px solid #eef2f8;
+      width: 100%;
+      max-width: 1000px;       /* batas lebar agar tidak terlalu lebar di desktop */
     }
     .chart-header {
       display: flex;
@@ -328,7 +330,7 @@
       font-size: 0.85rem;
     }
     canvas {
-      max-height: 400px;
+      max-height: 350px;       /* tinggi maksimal agar proporsional */
       width: 100%;
     }
 
@@ -583,6 +585,10 @@
       .chart-select {
         width: 100%;
         text-align: center;
+      }
+      .chart-container {
+        max-width: 100%;       /* di mobile tetap full */
+        margin: 20px 0;
       }
     }
   </style>
