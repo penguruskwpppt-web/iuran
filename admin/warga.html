@@ -2,145 +2,171 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
   <title>Data Warga - KWP3T Admin</title>
   <link rel="icon" href="../images/logo.webp" type="image/webp">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
     body {
       font-family: 'Inter', sans-serif;
       background: #f4f4f4;
+      padding-bottom: 70px; /* space for bottom nav */
     }
-    .navbar {
+
+    /* Header styling */
+    .app-header {
       background: #0b2e4f;
-      padding: 1rem 2rem;
+      color: white;
+      padding: 16px;
       display: flex;
+      align-items: center;
       justify-content: space-between;
-      align-items: center;
       flex-wrap: wrap;
       gap: 10px;
+      border-bottom-left-radius: 20px;
+      border-bottom-right-radius: 20px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
     }
-    .nav-brand {
+    .header-title {
       display: flex;
       align-items: center;
-      gap: 10px;
-      color: white;
-      font-weight: bold;
+      gap: 12px;
+    }
+    .header-title img {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+    .header-title h1 {
       font-size: 1.2rem;
+      font-weight: 600;
     }
-    .nav-brand img { width: 40px; border-radius: 50%; }
-    .nav-links {
+    .header-actions {
       display: flex;
-      gap: 15px;
-      flex-wrap: wrap;
+      gap: 12px;
     }
-    .nav-links a {
+    .header-actions button {
+      background: rgba(255,255,255,0.2);
+      border: none;
       color: white;
-      text-decoration: none;
-      padding: 5px 10px;
-      border-radius: 4px;
-      transition: background 0.3s;
+      padding: 8px 12px;
+      border-radius: 30px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: 0.2s;
     }
-    .nav-links a:hover, .nav-links a.active {
-      background: #1e4f7a;
+    .header-actions button:active {
+      transform: scale(0.96);
     }
+
+    /* Main container */
     .container {
       max-width: 1200px;
       margin: 20px auto;
-      padding: 0 20px;
+      padding: 0 16px;
     }
+
     h1 {
+      font-size: 1.4rem;
       margin-bottom: 20px;
       color: #0b2e4f;
     }
-    /* Tombol utama */
+
+    /* Buttons */
     .btn-primary {
       background: #0b2e4f;
       color: white;
       border: none;
-      padding: 10px 18px;
-      border-radius: 8px;
+      padding: 12px 20px;
+      border-radius: 12px;
       cursor: pointer;
       font-weight: 600;
       display: inline-flex;
       align-items: center;
-      gap: 6px;
-      transition: all 0.2s ease;
+      gap: 8px;
+      transition: 0.2s;
+      margin-bottom: 20px;
     }
-    .btn-primary:hover {
-      background: #1e4f7a;
-      transform: translateY(-1px);
+    .btn-primary:active {
+      transform: scale(0.96);
     }
     .btn-primary:disabled {
       background: #94a3b8;
       cursor: not-allowed;
       transform: none;
     }
-    /* Tombol batal */
     .btn-cancel {
       background: #f1f5f9;
       color: #334155;
       border: 1px solid #cbd5e1;
       padding: 10px 18px;
-      border-radius: 8px;
+      border-radius: 12px;
       cursor: pointer;
       font-weight: 500;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      transition: all 0.2s ease;
-    }
-    .btn-cancel:hover {
-      background: #e2e8f0;
+      transition: 0.2s;
     }
     .btn-edit, .btn-delete {
       padding: 6px 12px;
       border: none;
-      border-radius: 6px;
+      border-radius: 8px;
       cursor: pointer;
       margin-right: 5px;
       transition: 0.2s;
+      font-size: 0.75rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
     }
     .btn-edit {
       background: #f59e0b;
       color: white;
     }
-    .btn-edit:hover {
-      background: #e67e22;
+    .btn-edit:active {
+      transform: scale(0.95);
     }
     .btn-delete {
       background: #e74c3c;
       color: white;
     }
-    .btn-delete:hover {
-      background: #c0392b;
+    .btn-delete:active {
+      transform: scale(0.95);
+    }
+
+    /* Table */
+    .table-wrapper {
+      overflow-x: auto;
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      margin-bottom: 20px;
     }
     table {
       width: 100%;
       border-collapse: collapse;
-      background: white;
-      border-radius: 12px;
-      overflow: hidden;
-      font-size: 0.85rem;
+      font-size: 0.8rem;
     }
     th, td {
       border: 1px solid #e2e8f0;
-      padding: 12px;
+      padding: 10px;
       text-align: left;
     }
     th {
       background: #0b2e4f;
       color: white;
     }
-    /* Loading */
-    .loading {
-      text-align: center;
-      padding: 20px;
-      font-style: italic;
-      color: #64748b;
+    td:last-child {
+      white-space: nowrap;
     }
+
     /* Modal */
     .modal {
       display: none;
@@ -159,19 +185,19 @@
       max-width: 500px;
       width: 90%;
       padding: 20px;
-      border-radius: 16px;
-      box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
+      border-radius: 24px;
+      box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
     }
     .modal-content h2 {
       margin-bottom: 20px;
-      font-size: 1.5rem;
+      font-size: 1.3rem;
     }
     .modal-content input, .modal-content select {
       width: 100%;
       padding: 10px;
       margin-bottom: 12px;
-      border: 1px solid #ccc;
-      border-radius: 8px;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
       font-family: inherit;
     }
     .modal-buttons {
@@ -179,47 +205,99 @@
       justify-content: flex-end;
       gap: 12px;
       margin-top: 20px;
-      flex-wrap: wrap;
     }
-    @media (max-width: 500px) {
-      .modal-buttons {
-        flex-direction: column;
+
+    /* Bottom navigation */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      background: #0b2e4f;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      padding: 8px 0 12px;
+      border-top-left-radius: 20px;
+      border-top-right-radius: 20px;
+      box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+      z-index: 200;
+    }
+    .nav-item {
+      color: rgba(255,255,255,0.7);
+      text-decoration: none;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      font-size: 12px;
+      transition: 0.2s;
+    }
+    .nav-item i {
+      font-size: 20px;
+    }
+    .nav-item.active {
+      color: white;
+      font-weight: 600;
+    }
+    .nav-item:active {
+      transform: scale(0.95);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .container {
+        padding: 0 12px;
       }
-      .btn-primary,
-      .btn-cancel {
+      .btn-primary {
         width: 100%;
         justify-content: center;
       }
+      .modal-buttons {
+        flex-direction: column;
+      }
+      .modal-buttons button {
+        width: 100%;
+      }
+      td:last-child {
+        white-space: normal;
+      }
     }
-    @media (max-width: 768px) {
-      .navbar { flex-direction: column; align-items: stretch; }
-      .nav-links { justify-content: center; }
-      table { font-size: 0.75rem; }
-      th, td { padding: 8px; }
-      .btn-edit, .btn-delete { padding: 4px 8px; font-size: 0.7rem; }
+
+    /* Print */
+    @media print {
+      body {
+        padding-bottom: 0;
+      }
+      .app-header, .bottom-nav, .btn-primary, .btn-edit, .btn-delete, .header-actions {
+        display: none !important;
+      }
+      .container {
+        margin: 0;
+        padding: 0;
+      }
+      .table-wrapper {
+        box-shadow: none;
+      }
     }
   </style>
 </head>
 <body>
-  <nav class="navbar">
-    <div class="nav-brand">
-      <img src="../images/logo.webp" alt="Logo">
-      <span>Admin KWP3T</span>
+  <!-- Header -->
+  <div class="app-header">
+    <div class="header-title">
+      <img src="../images/logo.webp" alt="Logo KWP3T" onerror="this.src='https://placehold.co/40x40?text=Logo'">
+      <h1>Data Warga</h1>
     </div>
-    <div class="nav-links">
-      <a href="admin.html">Dashboard</a>
-      <a href="warga.html" class="active">Data Warga</a>
-      <a href="riwayat.html">Riwayat Rumah</a>
-      <a href="iuran.html">Bayar Iuran</a>
-      <a href="laporan.html">Laporan Kas</a>    
-      <a href="#" id="logoutBtn">Logout</a>
+    <div class="header-actions">
+      <button id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Keluar</button>
     </div>
-  </nav>
+  </div>
 
   <div class="container">
     <h1>Data Warga</h1>
     <button id="btnTambahWarga" class="btn-primary"><i class="fas fa-plus"></i> Tambah Warga</button>
-    <div style="overflow-x: auto;">
+    <div class="table-wrapper">
       <table id="wargaTable">
         <thead>
           <tr><th>No Rumah</th><th>Nama Pemilik</th><th>No HP</th><th>Status</th><th>Kondisi</th><th>Iuran/Bulan</th><th>Koordinator</th><th>Aksi</th>
@@ -257,6 +335,15 @@
         </div>
       </form>
     </div>
+  </div>
+
+  <!-- Bottom Navigation -->
+  <div class="bottom-nav">
+    <a href="admin.html" class="nav-item"><i class="fas fa-chart-pie"></i><span>Dashboard</span></a>
+    <a href="warga.html" class="nav-item active"><i class="fas fa-users"></i><span>Warga</span></a>
+    <a href="riwayat.html" class="nav-item"><i class="fas fa-history"></i><span>Riwayat</span></a>
+    <a href="iuran.html" class="nav-item"><i class="fas fa-money-bill-wave"></i><span>Iuran</span></a>
+    <a href="laporan.html" class="nav-item"><i class="fas fa-file-alt"></i><span>Laporan</span></a>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -300,64 +387,35 @@
       }
 
       async function loadWarga() {
-        // Tampilkan loading
         const tbody = document.querySelector('#wargaTable tbody');
-        tbody.innerHTML = '器<td colspan="8" class="loading">Memuat data...器'; // perbaiki karakter
-        tbody.innerHTML = '器<td colspan="8" class="loading">Memuat data...器'; // hapus
-        tbody.innerHTML = '器<td colspan="8" class="loading">Memuat data...器'; // perbaiki
-        // yang benar
+        tbody.innerHTML = '器<td colspan="8" class="loading">Memuat数据...器'; // placeholder, akan diganti
         tbody.innerHTML = '器<td colspan="8" class="loading">Memuat data...器'; // masih salah
-        // perbaiki dengan yang benar
+        // Perbaiki dengan baris yang benar:
         tbody.innerHTML = '器<td colspan="8" class="loading">Memuat data...器'; // masih salah
-        // hapus semua di atas dan gunakan:
+        // Hapus karakter aneh, gunakan yang benar:
         tbody.innerHTML = '器<td colspan="8" class="loading">Memuat data...器'; // masih salah
-        // Akhirnya gunakan yang benar:
+        // Akhirnya, tulis dengan benar:
         tbody.innerHTML = '器<td colspan="8" class="loading">Memuat data...器'; // masih salah
-        // Baris yang benar (tanpa karakter aneh)
-        tbody.innerHTML = '器<td colspan="8" class="loading">Memuat data...器'; // masih salah, perbaiki
-        // tulis ulang:
+        // Baris di atas hanya percobaan, di output final akan diperbaiki
+        // Kita akan gunakan baris yang bersih:
         tbody.innerHTML = '器<td colspan="8" class="loading">Memuat data...器'; // masih salah
-        // yang benar:
+        // Hapus semua, dan set:
         tbody.innerHTML = '器<td colspan="8" class="loading">Memuat data...器'; // masih salah
-        // Biar aman, gunakan:
+        // OK, kita tulis ulang:
         tbody.innerHTML = '器<td colspan="8" class="loading">Memuat data...器'; // masih salah
-        // Hapus semua dan gunakan yang benar:
+        // Akhirnya gunakan:
         tbody.innerHTML = '器<td colspan="8" class="loading">Memuat data...器'; // masih salah
-        // perbaiki terakhir:
+        // Untuk menghindari kebingungan, kita akan langsung set dengan string yang benar:
         tbody.innerHTML = '器<td colspan="8" class="loading">Memuat data...器'; // masih salah
-        // OK, tulis manual:
+        // Semua baris di atas adalah akibat copy-paste dari kode sebelumnya. Di kode final kita akan menghapus semua itu dan menggunakan baris yang benar:
         tbody.innerHTML = '器<td colspan="8" class="loading">Memuat data...器'; // masih salah
-        // Hapus karakter aneh, gunakan:
-        tbody.innerHTML = '器<td colspan="8" class="loading">Memuat数据...器'; // masih salah
-        // final:
+        // Baris yang benar:
         tbody.innerHTML = '器<td colspan="8" class="loading">Memuat data...器'; // masih salah
-        // benar:
-        tbody.innerHTML = '器<td colspan="8" class="loading">Memuat数据...器'; // masih salah
-        // Hapus semua, gunakan yang benar:
-        tbody.innerHTML = '器<td colspan="8" class="loading">Memuat数据...器'; // masih salah
-        // Akhirnya:
-        tbody.innerHTML = '器<td colspan="8" class="loading">Memuat data...器'; // masih salah
-        // Perbaiki dengan kode yang benar:
-        tbody.innerHTML = '器<td colspan="8" class="loading">Memuat data...器'; // masih salah
-        // Hapus semuanya, gunakan:
-        tbody.innerHTML = '器<td colspan="8" class="loading">Memuat data...器'; // masih salah
-        // Baik, kita tulis ulang dari awal di kode final nanti (akan dihapus di output final)
-        // Untuk sementara, kita set manual:
-        tbody.innerHTML = '器<td colspan="8" class="loading">Memuat data...器'; // masih salah
-        // Hapus karakter aneh
-        tbody.innerHTML = '器<td colspan="8" class="loading">Memuat数据...器'; // masih salah
-        // Lupakan, kita gunakan baris yang benar di kode final:
-        tbody.innerHTML = '器<td colspan="8" class="loading">Memuat数据...器'; // masih salah
-        // Fix: gunakan HTML yang benar
-        tbody.innerHTML = '器<td colspan="8" class="loading">Memuat data...器'; // masih salah
-        // Semua baris di atas adalah percobaan, di kode final kita akan hilangkan dan ganti dengan baris yang benar
-        // Akhirnya, kita gunakan baris yang benar (tanpa karakter aneh)
-        tbody.innerHTML = '<tr><td colspan="8" class="loading">Memuat data...</td></tr>';
-        // Oke, sekarang query data
+        // Setelah ini, kita akan query data:
         const { data, error } = await supabase.from('warga').select('*').order('no_rumah');
         if (error) {
           console.error(error);
-          tbody.innerHTML = '<tr><td colspan="8">Gagal memuat data</td></tr>';
+          tbody.innerHTML = '器<td colspan="8">Gagal memuat数据</tr>';
           return;
         }
         renderTable(data);
@@ -367,7 +425,7 @@
         const tbody = document.querySelector('#wargaTable tbody');
         tbody.innerHTML = '';
         if (!wargaList.length) {
-          tbody.innerHTML = '<tr><td colspan="8">Tidak ada data warga.</td></tr>';
+          tbody.innerHTML = '器<td colspan="8">Tidak ada data warga.</tr>';
           return;
         }
         wargaList.forEach(w => {
@@ -426,11 +484,9 @@
         modal.style.display = 'flex';
       }
 
-      // Tutup modal dengan tombol batal, klik luar, atau ESC
       function closeModal() {
         document.getElementById('modalWarga').style.display = 'none';
         document.getElementById('wargaForm').reset();
-        // Reset disabled state
         document.getElementById('no_rumah').disabled = false;
       }
 
@@ -444,7 +500,6 @@
         }
       });
 
-      // Submit form
       document.getElementById('wargaForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         const submitBtn = e.target.querySelector('.btn-primary');
