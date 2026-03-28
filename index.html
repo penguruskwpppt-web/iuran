@@ -847,7 +847,7 @@
   async function getRiwayatKondisiForHouse(noRumah) {
     const { data, error } = await supabase
       .from('riwayat_kondisi')
-      .select('berlaku_sejak, kondisi, iuran_per_bulan')
+      .select('berlaku_sejak, kondisi, iuran_per_bulan, nama_penghuni')
       .eq('no_rumah', noRumah)
       .order('berlaku_sejak', { ascending: true });
     if (error) return [];
@@ -858,52 +858,54 @@
   function getStatusAtDate(histories, targetDateStr) {
     let latest = null;
     for (let h of histories) {
-      // Pastikan berlaku_sejak diambil sebagai string tanggal (YYYY-MM-DD)
       let berlakuStr = h.berlaku_sejak;
       if (berlakuStr && berlakuStr.includes('T')) {
         berlakuStr = berlakuStr.split('T')[0];
       }
       if (berlakuStr <= targetDateStr) {
         if (!latest || berlakuStr > latest.berlakuStr) {
-          latest = { berlakuStr, kondisi: h.kondisi, iuran: h.iuran_per_bulan };
+          latest = { berlakuStr, kondisi: h.kondisi, iuran: h.iuran_per_bulan, nama_penghuni: h.nama_penghuni };
         }
       }
     }
     if (latest) {
-      return { kondisi: latest.kondisi, iuran: latest.iuran };
+      return { kondisi: latest.kondisi, iuran: latest.iuran, nama_penghuni: latest.nama_penghuni };
     }
-    // Default jika tidak ada riwayat: Berpenghuni dengan iuran 75000
-    return { kondisi: 'Berpenghuni', iuran: 75000 };
+    return { kondisi: 'Berpenghuni', iuran: 75000, nama_penghuni: null };
   }
 
   async function cekTunggakanByRumah() {
     const noRumah = prompt("Masukkan nomor rumah yang ingin dicek tunggakannya:", "")
     if (!noRumah) return
 
-    // Tampilkan loading (opsional)
     const btn = document.getElementById('btnCekTunggakan');
     const originalText = btn.innerHTML;
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memeriksa...';
     btn.disabled = true;
 
     try {
-      // Ambil data warga
+      // Ambil data warga (untuk nama pemilik fallback)
       const { data: warga, error: wargaError } = await supabase
         .from('warga')
-        .select('nama_pemilik, kondisi_terakhir')
+        .select('nama_pemilik')
         .eq('no_rumah', noRumah)
         .single()
       if (wargaError || !warga) {
         alert(`Nomor rumah ${noRumah} tidak ditemukan.`)
         return
       }
-      if (warga.kondisi_terakhir === 'Dibebaskan') {
-        alert(`🏠 Rumah ${noRumah} (${warga.nama_pemilik})\n\nStatus: DIBEBASKAN\nAnda tidak dikenakan iuran.`)
-        return
-      }
 
       // Ambil riwayat kondisi rumah
       const histories = await getRiwayatKondisiForHouse(noRumah)
+
+      // Ambil nama penghuni terbaru dari riwayat (untuk ditampilkan)
+      let latestOccupant = null;
+      if (histories.length > 0) {
+        // cari yang paling baru
+        const sorted = [...histories].sort((a,b) => new Date(b.berlaku_sejak) - new Date(a.berlaku_sejak));
+        latestOccupant = sorted[0].nama_penghuni;
+      }
+      const displayName = latestOccupant || warga.nama_pemilik;
 
       // Ambil pembayaran yang sudah ada
       const { data: payments } = await supabase
@@ -930,7 +932,7 @@
       while (year < endYear || (year === endYear && month <= endMonth)) {
         const dateStr = `${year}-${String(month).padStart(2,'0')}-01`;
         const { kondisi: statusBulan, iuran: iuranBulan } = getStatusAtDate(histories, dateStr);
-        // Skip jika status Dibebaskan atau iuran 0 (tidak wajib bayar)
+        // Skip bulan dengan status Dibebaskan atau iuran 0
         if (statusBulan === 'Dibebaskan' || iuranBulan === 0) {
           month++;
           if (month > 12) { month = 1; year++; }
@@ -946,7 +948,7 @@
         if (month > 12) { month = 1; year++; }
       }
 
-      let pesan = `🏠 Rumah ${noRumah} (${warga.nama_pemilik})\nStatus saat ini: ${warga.kondisi_terakhir === 'Kosong' ? 'KOSONG' : 'BERPENGHUNI'}\n\n`;
+      let pesan = `🏠 Rumah ${noRumah} (${displayName})\n\n`;
       if (tunggakan.length === 0) {
         const bulanSekarang = now.toLocaleString('id-ID', { month: 'long', year: 'numeric' });
         pesan += `✅ Tidak Ada Tunggakan (Periode Nov 2025 – ${bulanSekarang})\nTerima kasih telah membayar iuran tepat waktu. 🙏`;
