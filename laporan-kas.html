@@ -272,27 +272,14 @@
       }
       /* Filter bar di mobile: tanggal full-width, tombol grid 2 kolom */
       .filter-bar {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 12px;
-      }
-      .filter-group {
-        width: 100%;
-      }
-      /* Grid untuk tombol: 2 kolom dengan jarak */
-      .filter-bar .btn-primary,
-      .filter-bar .btn-cancel {
-        width: auto;
-        margin: 0;
-      }
-      .filter-bar {
         display: grid;
         grid-template-columns: 1fr 1fr;
         gap: 12px;
+        align-items: stretch;
       }
-      /* Input tanggal tetap satu kolom (full width) */
       .filter-group {
         grid-column: span 2;
+        width: 100%;
       }
       /* Tombol ditempatkan secara berurutan di grid */
       #filterBtn {
@@ -333,6 +320,18 @@
       .report-header img {
         margin: 0 auto;
       }
+    }
+    /* Mode PDF: paksa tampilkan tabel desktop & sembunyikan kartu + filter */
+    body.pdf-mode .filter-bar,
+    body.pdf-mode .btn-primary,
+    body.pdf-mode .btn-cancel {
+      display: none !important;
+    }
+    body.pdf-mode .table-wrapper {
+      display: block !important;
+    }
+    body.pdf-mode .mobile-cards {
+      display: none !important;
     }
     /* Print styling */
     @media print {
@@ -615,15 +614,23 @@
     XLSX.writeFile(wb, `laporan_kas_${new Date().toISOString().slice(0,10)}.xlsx`);
   }
 
-  function exportToPDF() {
+  async function exportToPDF() {
     if (!currentData.length) {
       alert('Tidak ada data untuk dicetak');
       return;
     }
+
+    // Set timestamp footer
     const now = new Date();
     const formatted = now.toLocaleString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' });
     document.getElementById('printTimestamp').innerText = `Dicetak: ${formatted}`;
-    
+
+    // Tambahkan class pdf-mode untuk memaksa tampilan tabel desktop dan sembunyikan elemen yang tidak perlu
+    document.body.classList.add('pdf-mode');
+
+    // Tunggu sebentar agar CSS diterapkan (opsional)
+    await new Promise(r => setTimeout(r, 100));
+
     const element = document.getElementById('reportContainer');
     const opt = {
       margin: [0.5, 0.5, 0.5, 0.5],
@@ -633,12 +640,23 @@
       jsPDF: { unit: 'in', format: 'a4', orientation: 'landscape' },
       pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
     };
-    html2pdf().set(opt).from(element).save();
+
+    try {
+      await html2pdf().set(opt).from(element).save();
+    } finally {
+      // Hapus class setelah PDF selesai (atau gagal)
+      document.body.classList.remove('pdf-mode');
+      // Kembalikan timestamp ke footer normal (bisa di-reset nanti)
+      const normalTime = new Date().toLocaleString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      document.getElementById('printTimestamp').innerText = `Dicetak: ${normalTime}`;
+    }
   }
 
+  // Initial load
   await fetchSaldoAwal();
   await loadKas();
 
+  // Event listeners
   document.getElementById('filterBtn').addEventListener('click', () => {
     const start = document.getElementById('startDate').value;
     const end = document.getElementById('endDate').value;
@@ -652,6 +670,7 @@
   document.getElementById('pdfBtn').addEventListener('click', exportToPDF);
   document.getElementById('excelBtn').addEventListener('click', exportToExcel);
 
+  // Set initial timestamp footer
   const now = new Date();
   const footerTime = now.toLocaleString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' });
   document.getElementById('printTimestamp').innerText = `Dicetak: ${footerTime}`;
