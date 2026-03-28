@@ -13,7 +13,6 @@
       padding: 0;
       box-sizing: border-box;
     }
-
     body {
       font-family: 'Inter', sans-serif;
       background: #f4f4f4;
@@ -76,13 +75,18 @@
       padding: 0 16px;
     }
 
-    /* Form card */
+    h1 {
+      font-size: 1.4rem;
+      margin-bottom: 20px;
+      color: #0b2e4f;
+    }
+
     .form-card {
       background: white;
       border-radius: 24px;
       padding: 20px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-      margin-bottom: 24px;
+      margin-bottom: 20px;
     }
 
     .form-group {
@@ -139,7 +143,7 @@
       font-size: 0.9rem;
     }
 
-    /* Unpaid months list (like a checklist) */
+    /* Unpaid months list */
     .unpaid-list {
       display: flex;
       flex-direction: column;
@@ -297,6 +301,9 @@
       .history-table th, .history-table td {
         padding: 6px;
       }
+      .btn-secondary, button {
+        width: 100%;
+      }
     }
 
     /* Print */
@@ -322,7 +329,7 @@
       <h1>Bayar Iuran</h1>
     </div>
     <div class="header-actions">
-      <button id="logoutBtn" class="print-hide"><i class="fas fa-sign-out-alt"></i> Keluar</button>
+      <button id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Keluar</button>
     </div>
   </div>
 
@@ -395,10 +402,10 @@
         <div style="overflow-x: auto;">
           <table id="riwayatIuranTable" class="history-table">
             <thead>
-              <tr><th>Bulan</th><th>Jumlah</th><th>Metode</th><th>Bukti</th><th>Tanggal Bayar</th></tr>
+              <tr><th>Bulan</th><th>Jumlah</th><th>Metode</th><th>Bukti</th><th>Tanggal Bayar</th>
             </thead>
             <tbody></tbody>
-          </table>
+          实
         </div>
       </div>
     </div>
@@ -408,6 +415,7 @@
   <div class="bottom-nav">
     <a href="admin.html" class="nav-item"><i class="fas fa-chart-pie"></i><span>Dashboard</span></a>
     <a href="warga.html" class="nav-item"><i class="fas fa-users"></i><span>Warga</span></a>
+    <a href="riwayat.html" class="nav-item"><i class="fas fa-history"></i><span>Riwayat</span></a>
     <a href="iuran.html" class="nav-item active"><i class="fas fa-money-bill-wave"></i><span>Iuran</span></a>
     <a href="laporan.html" class="nav-item"><i class="fas fa-file-alt"></i><span>Laporan</span></a>
   </div>
@@ -606,7 +614,6 @@
           return;
         }
 
-        // Ambil riwayat kondisi
         const { data: histories, error: histError } = await supabase
           .from('riwayat_kondisi')
           .select('berlaku_sejak, kondisi, iuran_per_bulan')
@@ -617,7 +624,6 @@
         }
         rumahRiwayat = histories || [];
 
-        // Ambil pembayaran yang sudah ada
         const { data: payments } = await supabase
           .from('transaksi_iuran')
           .select('bulan')
