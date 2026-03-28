@@ -9,6 +9,7 @@
   <link rel="apple-touch-icon" href="images/logo.webp">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <style>
     /* ========== CSS ========== */
     :root {
@@ -288,7 +289,7 @@
       margin-bottom: 12px;
     }
     .stat-number {
-      font-size: 1.8rem;
+      font-size: 1.2rem;
       font-weight: 800;
       color: var(--dark);
       margin: 8px 0;
@@ -298,6 +299,19 @@
       font-size: 0.85rem;
       color: #64748b;
       font-weight: 500;
+    }
+    /* Chart container */
+    .chart-container {
+      background: white;
+      border-radius: 20px;
+      padding: 20px;
+      margin-top: 30px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.05);
+      border: 1px solid #eef2f8;
+    }
+    canvas {
+      max-height: 400px;
+      width: 100%;
     }
 
    /* Gallery – 3 columns */
@@ -523,13 +537,12 @@
       }
       .nav-links.active { display: flex; }
       .menu-toggle { display: block; }
-      /* Dashboard stats: 1 kolom di mobile */
       .dashboard-stats {
         grid-template-columns: 1fr;
         gap: 16px;
       }
       .stat-number {
-        font-size: 1.4rem;
+        font-size: 1rem;
       }
       .gallery-grid { grid-template-columns: 1fr; }
       .contact-board { grid-template-columns: 1fr; }
@@ -647,8 +660,8 @@
         <button id="btnCekTunggakan" class="finance-btn" style="background: var(--whatsapp);">🔍 Cek Sekarang</button>
       </div>
       <div class="finance-card">
-        <h3>Cek Riwayat</h3>
-        <p>Riwayat pembayaran per rumah</p>
+        <h3>Riwayat Pembayaran</h3>
+        <p>Lihat riwayat pembayaran per rumah</p>
         <button id="btnPaymentHistory" class="finance-btn" style="background: var(--whatsapp);">📜 Lihat Riwayat</button>
       </div>
     </div>
@@ -693,6 +706,12 @@
         <div class="stat-label">Total Tunggakan (Estimasi)</div>
       </div>
     </div>
+  </div>
+
+  <!-- Chart Perkembangan -->
+  <div class="chart-container">
+    <h3 style="margin-bottom: 16px; text-align: center;">📈 Perkembangan Keuangan per Bulan</h3>
+    <canvas id="trendChart"></canvas>
   </div>
 </section>
 
@@ -800,16 +819,18 @@
     return d.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
   }
 
-  // Fungsi untuk mendapatkan tanggal lokal tanpa timezone issue
   function getLocalDateString(date) {
     const offset = date.getTimezoneOffset();
     const localDate = new Date(date.getTime() - (offset * 60 * 1000));
     return localDate.toISOString().split('T')[0];
   }
 
-  // ========== DASHBOARD (RINGKASAN KEUANGAN) ==========
+  // ========== DASHBOARD & CHART ==========
+  let trendChart = null;
+
   async function loadDashboard() {
     try {
+      // Pemasukan & Pengeluaran & Saldo
       const { data: lastKas } = await supabase.from('transaksi_kas').select('saldo').order('tanggal', { ascending: false }).limit(1);
       const saldo = lastKas?.[0]?.saldo || 0;
       document.getElementById('saldoKas').innerText = formatRupiah(saldo);
@@ -829,7 +850,7 @@
       const totalIuranBulanIni = iuranBulanIni?.reduce((s, t) => s + t.pemasukan, 0) || 0;
       document.getElementById('iuranBulanIni').innerText = formatRupiah(totalIuranBulanIni);
 
-      // Total tunggakan (estimasi sederhana berdasarkan iuran saat ini)
+      // Total tunggakan (estimasi sederhana)
       const { data: wargaList } = await supabase.from('warga').select('no_rumah, kondisi_terakhir, iuran_per_bulan').in('kondisi_terakhir', ['Berpenghuni', 'Kosong']);
       const { data: allPayments } = await supabase.from('transaksi_iuran').select('no_rumah, bulan');
       const paidMap = new Map();
@@ -855,8 +876,131 @@
         }
       }
       document.getElementById('totalTunggakan').innerText = formatRupiah(totalTunggakan);
+
+      // Load data untuk chart
+      await loadChartData();
     } catch (err) {
       console.error(err);
+    }
+  }
+
+  // ========== LOAD DATA CHART (Per Bulan) ==========
+  async function loadChartData() {
+    try {
+      // Ambil data yang diperlukan
+      const { data: allKas } = await supabase.from('transaksi_kas').select('tanggal, pemasukan, pengeluaran').order('tanggal', { ascending: true });
+      const { data: allRiwayat } = await supabase.from('riwayat_kondisi').select('*');
+      const { data: allWarga } = await supabase.from('warga').select('no_rumah, kondisi_terakhir, iuran_per_bulan');
+      const { data: allPayments } = await supabase.from('transaksi_iuran').select('no_rumah, bulan');
+
+      // Hitung rentang bulan (dari Nov 2025 sampai bulan ini)
+      const now = new Date();
+      const startDate = new Date(2025, 10, 1);
+      const months = [];
+      let current = new Date(startDate);
+      while (current <= now) {
+        const y = current.getFullYear();
+        const m = current.getMonth() + 1;
+        months.push({ year: y, month: m, date: new Date(y, m-1, 1) });
+        current.setMonth(current.getMonth() + 1);
+      }
+
+      // Kelompokkan pemasukan & pengeluaran per bulan
+      const incomeMap = new Map(); // key: `${year}-${month}`
+      const expenseMap = new Map();
+      allKas?.forEach(k => {
+        const d = new Date(k.tanggal);
+        const key = `${d.getFullYear()}-${d.getMonth()+1}`;
+        incomeMap.set(key, (incomeMap.get(key) || 0) + (k.pemasukan || 0));
+        expenseMap.set(key, (expenseMap.get(key) || 0) + (k.pengeluaran || 0));
+      });
+
+      // Hitung tunggakan per bulan menggunakan logika riwayat
+      const arrearsMap = new Map();
+      // Group riwayat by no_rumah
+      const historyByHouse = new Map();
+      allRiwayat?.forEach(h => {
+        if (!historyByHouse.has(h.no_rumah)) historyByHouse.set(h.no_rumah, []);
+        historyByHouse.get(h.no_rumah).push(h);
+      });
+      // Sorted histories per house by berlaku_sejak
+      for (let [no_rumah, arr] of historyByHouse.entries()) {
+        arr.sort((a,b) => new Date(a.berlaku_sejak) - new Date(b.berlaku_sejak));
+      }
+
+      // Prepare payment map per house
+      const paymentByHouse = new Map();
+      allPayments?.forEach(p => {
+        const d = new Date(p.bulan);
+        const key = `${d.getFullYear()}-${d.getMonth()+1}`;
+        if (!paymentByHouse.has(p.no_rumah)) paymentByHouse.set(p.no_rumah, new Set());
+        paymentByHouse.get(p.no_rumah).add(key);
+      });
+
+      // Untuk setiap rumah, hitung tunggakan per bulan
+      for (const w of allWarga) {
+        const no_rumah = w.no_rumah;
+        const histories = historyByHouse.get(no_rumah) || [];
+        const paidMonths = paymentByHouse.get(no_rumah) || new Set();
+        // Untuk setiap bulan dalam rentang
+        for (const monthObj of months) {
+          const year = monthObj.year;
+          const month = monthObj.month;
+          const dateStr = `${year}-${String(month).padStart(2,'0')}-01`;
+          // Dapatkan status & iuran yang berlaku
+          let latest = null;
+          for (let h of histories) {
+            let berlakuStr = h.berlaku_sejak;
+            if (berlakuStr && berlakuStr.includes('T')) berlakuStr = berlakuStr.split('T')[0];
+            if (berlakuStr <= dateStr) {
+              if (!latest || berlakuStr > latest.berlakuStr) latest = { berlakuStr, kondisi: h.kondisi, iuran: h.iuran_per_bulan };
+            }
+          }
+          let iuran = latest ? latest.iuran : (w.kondisi_terakhir === 'Dibebaskan' ? 0 : w.iuran_per_bulan);
+          let kondisi = latest ? latest.kondisi : w.kondisi_terakhir;
+          if (kondisi?.toLowerCase() === 'dibebaskan' || iuran === 0) continue;
+          const key = `${year}-${month}`;
+          const isPaid = paidMonths.has(key);
+          if (!isPaid && iuran > 0) {
+            arrearsMap.set(key, (arrearsMap.get(key) || 0) + iuran);
+          }
+        }
+      }
+
+      // Siapkan data untuk chart
+      const labels = months.map(m => {
+        return m.date.toLocaleDateString('id-ID', { month: 'short', year: 'numeric' });
+      });
+      const incomeData = months.map(m => incomeMap.get(`${m.year}-${m.month}`) || 0);
+      const expenseData = months.map(m => expenseMap.get(`${m.year}-${m.month}`) || 0);
+      const arrearsData = months.map(m => arrearsMap.get(`${m.year}-${m.month}`) || 0);
+
+      // Render chart
+      const ctx = document.getElementById('trendChart').getContext('2d');
+      if (trendChart) trendChart.destroy();
+      trendChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [
+            { label: 'Pemasukan', data: incomeData, borderColor: '#2ecc71', backgroundColor: 'rgba(46,204,113,0.1)', tension: 0.2, fill: true },
+            { label: 'Pengeluaran', data: expenseData, borderColor: '#e74c3c', backgroundColor: 'rgba(231,76,60,0.1)', tension: 0.2, fill: true },
+            { label: 'Tunggakan', data: arrearsData, borderColor: '#f39c12', backgroundColor: 'rgba(243,156,18,0.1)', tension: 0.2, fill: true, borderDash: [5, 5] }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: true,
+          plugins: {
+            tooltip: { callbacks: { label: (ctx) => formatRupiah(ctx.raw) } }
+          },
+          scales: {
+            y: { ticks: { callback: (val) => formatRupiah(val) } }
+          }
+        }
+      });
+    } catch (err) {
+      console.error('Gagal memuat data chart:', err);
     }
   }
 
@@ -871,7 +1015,6 @@
     return data || [];
   }
 
-  // Mendapatkan status dan iuran yang berlaku pada tanggal tertentu
   function getStatusAtDate(histories, targetDateStr) {
     let latest = null;
     for (let h of histories) {
@@ -901,7 +1044,6 @@
     btn.disabled = true;
 
     try {
-      // Ambil data warga (untuk nama pemilik fallback)
       const { data: warga, error: wargaError } = await supabase
         .from('warga')
         .select('nama_pemilik')
@@ -912,10 +1054,7 @@
         return
       }
 
-      // Ambil riwayat kondisi rumah
       const histories = await getRiwayatKondisiForHouse(noRumah)
-
-      // Ambil nama penghuni terbaru dari riwayat (untuk ditampilkan)
       let latestOccupant = null;
       if (histories.length > 0) {
         const sorted = [...histories].sort((a,b) => new Date(b.berlaku_sejak) - new Date(a.berlaku_sejak));
@@ -923,7 +1062,6 @@
       }
       const displayName = latestOccupant || warga.nama_pemilik;
 
-      // Ambil pembayaran yang sudah ada
       const { data: payments } = await supabase
         .from('transaksi_iuran')
         .select('bulan')
@@ -934,7 +1072,6 @@
         paidSet.add(`${date.getFullYear()}-${date.getMonth()+1}`);
       });
 
-      // Hitung tunggakan dari Nov 2025 sampai bulan ini
       const startDate = new Date(2025, 10, 1);
       const now = new Date();
       const endYear = now.getFullYear();
@@ -948,8 +1085,8 @@
       while (year < endYear || (year === endYear && month <= endMonth)) {
         const dateStr = `${year}-${String(month).padStart(2,'0')}-01`;
         const { kondisi: statusBulan, iuran: iuranBulan } = getStatusAtDate(histories, dateStr);
-        // Skip bulan dengan status Dibebaskan atau iuran 0
-        if (statusBulan === 'Dibebaskan' || iuranBulan === 0) {
+        const isDibebaskan = statusBulan && statusBulan.trim().toLowerCase() === 'dibebaskan';
+        if (isDibebaskan || iuranBulan === 0) {
           month++;
           if (month > 12) { month = 1; year++; }
           continue;
