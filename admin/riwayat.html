@@ -509,7 +509,9 @@
       }
 
       async function loadRiwayat(filterNoRumah = null) {
-        renderTable(null);
+        const tbody = document.querySelector('#riwayatTable tbody');        
+        tbody.innerHTML = '<tr><td colspan="8" class="loading">Memuat data...</td></tr>';
+        // Sudah benar, lanjut query
         let query = supabase.from('riwayat_kondisi').select('*').order('no_rumah', { ascending: true }).order('berlaku_sejak', { ascending: false });
         if (filterNoRumah) {
           query = query.eq('no_rumah', filterNoRumah);
@@ -518,16 +520,7 @@
         if (error) {
           console.error(error);
           alert('Gagal memuat riwayat');
-          renderTable([]);
-          return;
-        }
-        renderTable(data || []);
-      }
-
-      function renderTable(riwayat) {
-        const tbody = document.querySelector('#riwayatTable tbody');
-        if (riwayat === null) {         
-         tbody.innerHTML = '<tr><td colspan="8" class="loading">Memuat data...</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="8">Gagal memuat riwayat</td>';
           return;
         }
         renderTable(data || []);
