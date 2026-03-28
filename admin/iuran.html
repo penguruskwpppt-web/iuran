@@ -2,66 +2,89 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
   <title>Bayar Iuran - KWP3T Admin</title>
   <link rel="icon" href="../images/logo.webp" type="image/webp">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
     body {
       font-family: 'Inter', sans-serif;
       background: #f4f4f4;
+      padding-bottom: 70px; /* space for bottom nav */
     }
-    .navbar {
+
+    /* Header styling */
+    .app-header {
       background: #0b2e4f;
-      padding: 1rem 2rem;
+      color: white;
+      padding: 16px;
       display: flex;
+      align-items: center;
       justify-content: space-between;
-      align-items: center;
       flex-wrap: wrap;
       gap: 10px;
+      border-bottom-left-radius: 20px;
+      border-bottom-right-radius: 20px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
     }
-    .nav-brand {
+    .header-title {
       display: flex;
       align-items: center;
-      gap: 10px;
-      color: white;
-      font-weight: bold;
+      gap: 12px;
+    }
+    .header-title img {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+    .header-title h1 {
       font-size: 1.2rem;
+      font-weight: 600;
     }
-    .nav-brand img { width: 40px; border-radius: 50%; }
-    .nav-links {
+    .header-actions {
       display: flex;
-      gap: 15px;
-      flex-wrap: wrap;
+      gap: 12px;
     }
-    .nav-links a {
+    .header-actions button {
+      background: rgba(255,255,255,0.2);
+      border: none;
       color: white;
-      text-decoration: none;
-      padding: 5px 10px;
-      border-radius: 4px;
-      transition: background 0.3s;
+      padding: 8px 12px;
+      border-radius: 30px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: 0.2s;
     }
-    .nav-links a:hover, .nav-links a.active {
-      background: #1e4f7a;
+    .header-actions button:active {
+      transform: scale(0.96);
     }
+
+    /* Main container */
     .container {
       max-width: 1000px;
       margin: 20px auto;
-      padding: 0 20px;
+      padding: 0 16px;
     }
-    h1 {
-      margin-bottom: 20px;
-      color: #0b2e4f;
-    }
+
+    /* Form card */
     .form-card {
       background: white;
-      border-radius: 20px;
-      padding: 24px;
+      border-radius: 24px;
+      padding: 20px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-      margin-bottom: 20px;
+      margin-bottom: 24px;
     }
+
     .form-group {
       margin-bottom: 20px;
     }
@@ -69,13 +92,15 @@
       display: block;
       margin-bottom: 8px;
       font-weight: 600;
+      font-size: 0.85rem;
     }
     input, select, textarea {
       width: 100%;
       padding: 12px;
-      border: 1px solid #ccc;
+      border: 1px solid #e2e8f0;
       border-radius: 12px;
-      font-size: 1rem;
+      font-size: 0.95rem;
+      font-family: inherit;
     }
     button {
       background: #0b2e4f;
@@ -87,46 +112,54 @@
       cursor: pointer;
       width: 100%;
       transition: 0.2s;
+      font-size: 0.9rem;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
     }
-    button:hover {
-      background: #1e4f7a;
+    button:active {
+      transform: scale(0.96);
     }
     button:disabled {
       opacity: 0.6;
-      cursor: not-allowed;
+      transform: none;
     }
     .btn-secondary {
       background: #f59e0b;
-      margin-bottom: 10px;
-    }
-    .btn-secondary:hover {
-      background: #e67e22;
     }
     .info-box {
       background: #eef2f8;
-      padding: 12px;
-      border-radius: 12px;
-      margin: 12px 0;
+      padding: 16px;
+      border-radius: 16px;
+      margin: 16px 0;
     }
+    .info-box p {
+      margin: 6px 0;
+      font-size: 0.9rem;
+    }
+
+    /* Unpaid months list (like a checklist) */
     .unpaid-list {
       display: flex;
       flex-direction: column;
-      gap: 10px;
-      max-height: 250px;
+      gap: 8px;
+      max-height: 300px;
       overflow-y: auto;
-      margin-top: 8px;
       border: 1px solid #e2e8f0;
-      border-radius: 12px;
+      border-radius: 16px;
       padding: 12px;
+      margin-top: 8px;
     }
     .unpaid-item {
       display: flex;
       align-items: center;
       gap: 12px;
-      padding: 8px;
-      border-bottom: 1px solid #e2e8f0;
+      padding: 10px 8px;
+      border-bottom: 1px solid #eef2f8;
       cursor: pointer;
       transition: background 0.2s;
+      border-radius: 12px;
     }
     .unpaid-item:hover {
       background: #f8fafc;
@@ -135,40 +168,70 @@
       border-bottom: none;
     }
     .unpaid-item input {
-      width: auto;
-      margin: 0;
+      width: 20px;
+      height: 20px;
       cursor: pointer;
+      margin: 0;
+      accent-color: #0b2e4f;
     }
     .unpaid-item label {
       margin: 0;
       font-weight: normal;
       flex: 1;
       cursor: pointer;
+      font-size: 0.9rem;
     }
+
     .action-buttons {
       display: flex;
       gap: 12px;
-      margin: 12px 0;
+      margin: 16px 0;
     }
     .action-buttons button {
       flex: 1;
       margin: 0;
     }
+
     .checkbox-group {
       display: flex;
       align-items: center;
-      gap: 10px;
-      margin-top: 10px;
+      gap: 12px;
+      margin: 12px 0;
     }
     .checkbox-group input {
       width: auto;
       margin: 0;
     }
+
+    /* Preview detail */
+    .preview-detail {
+      background: #f0fdf4;
+      border-left: 4px solid #27ae60;
+      padding: 16px;
+      border-radius: 16px;
+      margin: 16px 0;
+    }
+    .preview-detail strong {
+      display: block;
+      margin-bottom: 8px;
+    }
+    .preview-detail ul {
+      margin-left: 20px;
+      margin-top: 5px;
+    }
+    .preview-total {
+      font-weight: bold;
+      margin-top: 12px;
+      border-top: 1px solid #ccc;
+      padding-top: 8px;
+    }
+
+    /* History table */
     .history-table {
-      margin-top: 20px;
       width: 100%;
       border-collapse: collapse;
-      font-size: 0.85rem;
+      font-size: 0.8rem;
+      margin-top: 12px;
     }
     .history-table th, .history-table td {
       border: 1px solid #e2e8f0;
@@ -179,75 +242,119 @@
       background: #0b2e4f;
       color: white;
     }
-    .preview-detail {
-      background: #f0fdf4;
-      border-left: 4px solid #27ae60;
-      padding: 12px;
-      border-radius: 8px;
-      margin: 12px 0;
+
+    /* Bottom navigation */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      background: #0b2e4f;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      padding: 8px 0 12px;
+      border-top-left-radius: 20px;
+      border-top-right-radius: 20px;
+      box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+      z-index: 200;
     }
-    .preview-detail ul {
-      margin-left: 20px;
-      margin-top: 5px;
+    .nav-item {
+      color: rgba(255,255,255,0.7);
+      text-decoration: none;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      font-size: 12px;
+      transition: 0.2s;
     }
-    .preview-total {
-      font-weight: bold;
-      margin-top: 8px;
-      border-top: 1px solid #ccc;
-      padding-top: 8px;
+    .nav-item i {
+      font-size: 20px;
     }
+    .nav-item.active {
+      color: white;
+      font-weight: 600;
+    }
+    .nav-item:active {
+      transform: scale(0.95);
+    }
+
+    /* Responsive */
     @media (max-width: 768px) {
-      .navbar { flex-direction: column; align-items: stretch; }
-      .nav-links { justify-content: center; }
-      .form-card { padding: 16px; }
-      .action-buttons { flex-direction: column; }
-      .history-table th, .history-table td { padding: 6px; }
+      .container {
+        padding: 0 12px;
+      }
+      .form-card {
+        padding: 16px;
+      }
+      .action-buttons {
+        flex-direction: column;
+      }
+      .unpaid-list {
+        max-height: 250px;
+      }
+      .history-table th, .history-table td {
+        padding: 6px;
+      }
+    }
+
+    /* Print */
+    @media print {
+      body {
+        padding-bottom: 0;
+      }
+      .app-header, .bottom-nav, .btn-secondary, button, .checkbox-group, .action-buttons, .header-actions {
+        display: none !important;
+      }
+      .container {
+        margin: 0;
+        padding: 0;
+      }
     }
   </style>
 </head>
 <body>
-  <nav class="navbar">
-    <div class="nav-brand">
-      <img src="../images/logo.webp" alt="Logo">
-      <span>Admin KWP3T</span>
+  <!-- Header -->
+  <div class="app-header">
+    <div class="header-title">
+      <img src="../images/logo.webp" alt="Logo KWP3T" onerror="this.src='https://placehold.co/40x40?text=Logo'">
+      <h1>Bayar Iuran</h1>
     </div>
-    <div class="nav-links">
-      <a href="admin.html">Dashboard</a>
-      <a href="warga.html">Data Warga</a>
-      <a href="riwayat.html">Riwayat Rumah</a>
-      <a href="iuran.html" class="active">Bayar Iuran</a>
-      <a href="laporan.html">Laporan Kas</a>      
-      <a href="#" id="logoutBtn">Logout</a>
+    <div class="header-actions">
+      <button id="logoutBtn" class="print-hide"><i class="fas fa-sign-out-alt"></i> Keluar</button>
     </div>
-  </nav>
+  </div>
 
   <div class="container">
-    <h1>Pembayaran Iuran Bulanan</h1>
     <div class="form-card">
       <div class="form-group">
-        <label>Nomor Rumah</label>
+        <label><i class="fas fa-home"></i> Nomor Rumah</label>
         <input type="text" id="searchHouse" placeholder="Ketik nomor rumah... (contoh: P1, A10, B22)" list="houseList" autocomplete="off">
         <datalist id="houseList"></datalist>
-        <button id="checkHouseBtn" style="margin-top: 10px; background: #f59e0b;">Cek Rumah</button>
+        <button id="checkHouseBtn" style="margin-top: 12px; background: #f59e0b;"><i class="fas fa-search"></i> Cek Rumah</button>
       </div>
 
       <div id="houseInfo" style="display: none;">
         <div class="info-box">
-          <p><strong>Nama Penghuni:</strong> <span id="namaPenghuni"></span></p>
-          <p><strong>No HP Penghuni:</strong> <span id="noHpPenghuni"></span></p>
-          <p><strong>Iuran per Bulan:</strong> <span id="iuranPerBulan"></span></p>
-          <p><strong>Status Rumah:</strong> <span id="statusRumah"></span></p>
+          <p><strong><i class="fas fa-user"></i> Nama Penghuni:</strong> <span id="namaPenghuni"></span></p>
+          <p><strong><i class="fas fa-phone"></i> No HP:</strong> <span id="noHpPenghuni"></span></p>
+          <p><strong><i class="fas fa-money-bill-wave"></i> Iuran per Bulan:</strong> <span id="iuranPerBulan"></span></p>
+          <p><strong><i class="fas fa-tag"></i> Status Rumah:</strong> <span id="statusRumah"></span></p>
         </div>
+
         <div class="form-group">
-          <label>Pilih Bulan yang Akan Dibayar</label>
+          <label><i class="fas fa-calendar-alt"></i> Pilih Bulan yang Akan Dibayar</label>
           <div id="unpaidMonthsList" class="unpaid-list"></div>
           <div id="noUnpaidMessage" style="display: none; color: #27ae60; text-align: center; padding: 12px;">
             ✅ Tidak ada tunggakan. Semua iuran sudah lunas.
           </div>
         </div>
+
         <div class="action-buttons" id="bulkActions" style="display: none;">
-          <button id="selectAllBtn" class="btn-secondary">📅 Bayar Semua Tunggakan</button>
+          <button id="selectAllBtn" class="btn-secondary"><i class="fas fa-check-double"></i> Bayar Semua Tunggakan</button>
         </div>
+
         <div class="checkbox-group">
           <input type="checkbox" id="manualMonthCheckbox">
           <label for="manualMonthCheckbox" style="font-weight: normal;">Bayar bulan lain (bukan dari tunggakan)</label>
@@ -278,23 +385,31 @@
             <label>Bukti Transfer (opsional)</label>
             <input type="file" id="buktiFile" accept="image/*">
           </div>
-          <button id="submitPaymentBtn">Proses Pembayaran</button>
+          <button id="submitPaymentBtn"><i class="fas fa-credit-card"></i> Proses Pembayaran</button>
         </div>
       </div>
 
       <!-- Riwayat Pembayaran -->
       <div id="riwayatSection" style="margin-top: 30px;">
-        <h4>📜 Riwayat Pembayaran Iuran</h4>
+        <h4><i class="fas fa-history"></i> Riwayat Pembayaran Iuran</h4>
         <div style="overflow-x: auto;">
           <table id="riwayatIuranTable" class="history-table">
             <thead>
-              <tr><th>Bulan</th><th>Jumlah</th><th>Metode</th><th>Bukti</th><th>Tanggal Bayar</th>
+              <tr><th>Bulan</th><th>Jumlah</th><th>Metode</th><th>Bukti</th><th>Tanggal Bayar</th></tr>
             </thead>
             <tbody></tbody>
           </table>
         </div>
       </div>
     </div>
+  </div>
+
+  <!-- Bottom Navigation -->
+  <div class="bottom-nav">
+    <a href="admin.html" class="nav-item"><i class="fas fa-chart-pie"></i><span>Dashboard</span></a>
+    <a href="warga.html" class="nav-item"><i class="fas fa-users"></i><span>Warga</span></a>
+    <a href="iuran.html" class="nav-item active"><i class="fas fa-money-bill-wave"></i><span>Iuran</span></a>
+    <a href="laporan.html" class="nav-item"><i class="fas fa-file-alt"></i><span>Laporan</span></a>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -355,7 +470,6 @@
         }
       }
 
-      // Fungsi untuk mendapatkan tanggal lokal tanpa timezone issue
       function getLocalDateString(date) {
         const offset = date.getTimezoneOffset();
         const localDate = new Date(date.getTime() - (offset * 60 * 1000));
@@ -438,7 +552,7 @@
         if (latest) {
           return { kondisi: latest.kondisi, iuran: latest.iuran };
         }
-        return { kondisi: currentOccupant ? currentOccupant.kondisi : 'Berpenghuni', iuran: currentIuran };
+        return { kondisi: selectedOccupant ? selectedOccupant.kondisi : 'Berpenghuni', iuran: currentIuran };
       }
 
       async function checkHouse(noRumah) {
@@ -510,7 +624,7 @@
           .eq('no_rumah', noRumah);
         paidSet.clear();
         payments?.forEach(p => {
-          const dateStr = p.bulan; // sudah YYYY-MM-DD
+          const dateStr = p.bulan;
           paidSet.add(dateStr);
         });
 
@@ -568,9 +682,7 @@
           bulkActions.style.display = 'none';
         }
 
-        // Isi daftar bulan manual (multi-select)
         fillManualMonthOptions(paidSet, rumahRiwayat);
-        // Reset preview
         updatePreviewDetail();
       }
 
@@ -665,7 +777,6 @@
         const manualDiv = document.getElementById('manualMonthInput');
         manualDiv.style.display = isChecked ? 'block' : 'none';
 
-        // Reset semua checkbox
         document.querySelectorAll('#unpaidMonthsList input[type="checkbox"]').forEach(cb => cb.checked = false);
         document.querySelectorAll('#manualMonthsList input[type="checkbox"]').forEach(cb => cb.checked = false);
 
@@ -679,7 +790,6 @@
         updatePreviewDetail();
       });
 
-      // Event listener untuk perubahan checkbox di kedua list
       document.addEventListener('change', (e) => {
         if (e.target && e.target.type === 'checkbox' && (e.target.closest('#unpaidMonthsList') || e.target.closest('#manualMonthsList'))) {
           updatePreviewDetail();
@@ -756,24 +866,22 @@
           buktiUrl = urlData.publicUrl;
         }
 
-        // Disable tombol
         const btn = document.getElementById('submitPaymentBtn');
         btn.disabled = true;
         const originalText = btn.innerText;
         btn.innerText = 'Memproses...';
 
         try {
-          // Di dalam event listener submitPaymentBtn, setelah buktiUrl didapat
-const kasIdPrefix = `IU-${Date.now()}-${Math.random().toString(36).substring(2,8)}`;
-const { error: rpcError } = await supabase.rpc('insert_pembayaran_iuran_batch', {
-  p_kas_id_prefix: kasIdPrefix,
-  p_no_rumah: selectedHouse.no_rumah,
-  p_bulan_list: selectedDates,
-  p_jumlah_list: selectedIurans,
-  p_metode: metode,
-  p_bukti_tf: buktiUrl,
-  p_nama_penghuni: currentOccupantName   // nama penghuni saat ini
-});
+          const kasIdPrefix = `IU-${Date.now()}-${Math.random().toString(36).substring(2,8)}`;
+          const { error: rpcError } = await supabase.rpc('insert_pembayaran_iuran_batch', {
+            p_kas_id_prefix: kasIdPrefix,
+            p_no_rumah: selectedHouse.no_rumah,
+            p_bulan_list: selectedDates,
+            p_jumlah_list: selectedIurans,
+            p_metode: metode,
+            p_bukti_tf: buktiUrl,
+            p_nama_penghuni: currentOccupantName
+          });
           if (rpcError) {
             if (rpcError.message.includes('Duplicate payment')) {
               alert(`⚠️ Salah satu bulan sudah pernah dibayar. Proses dibatalkan.`);
@@ -782,9 +890,7 @@ const { error: rpcError } = await supabase.rpc('insert_pembayaran_iuran_batch', 
             }
           } else {
             alert(`✅ ${selectedDates.length} bulan berhasil dibayar!`);
-            // Reload data rumah
             await checkHouse(selectedHouse.no_rumah);
-            // Reset form
             document.getElementById('buktiFile').value = '';
             document.getElementById('manualMonthCheckbox').checked = false;
             document.getElementById('manualMonthInput').style.display = 'none';
