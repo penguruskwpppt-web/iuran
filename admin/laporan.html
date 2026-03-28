@@ -326,6 +326,19 @@
       transform: scale(0.95);
     }
 
+    /* Mode PDF - menyembunyikan elemen yang tidak perlu saat cetak */
+    body.pdf-mode .app-header,
+    body.pdf-mode .bottom-nav,
+    body.pdf-mode .filter-bar,
+    body.pdf-mode .chart-container,
+    body.pdf-mode .header-actions,
+    body.pdf-mode .btn-print,
+    body.pdf-mode .btn-export-excel,
+    body.pdf-mode .btn-export-pdf,
+    body.pdf-mode .btn-quick {
+      display: none !important;
+    }
+
     /* Responsive */
     @media (max-width: 768px) {
       .container {
@@ -446,7 +459,7 @@
             <tr><th>Tanggal</th><th>Keterangan</th><th>Pemasukan</th><th>Pengeluaran</th><th>Saldo</th><th>Sumber</th>
           </thead>
           <tbody></tbody>
-         </table>
+        </table>
       </div>
 
       <div class="signature-section">
@@ -568,7 +581,7 @@
         loadingDiv.style.display = 'block';
 
         const tbody = document.querySelector('#kasTable tbody');
-        tbody.innerHTML = '<tr><td colspan="6" class="loading">Memuat data ...</td></tr>'; // fix karakter
+        tbody.innerHTML = '<tr><td colspan="6" class="loading">Memuat data...</td></tr>';
 
         let query = supabase
           .from('transaksi_kas')
@@ -584,7 +597,7 @@
 
         if (error) {
           console.error(error);
-          tbody.innerHTML = '<tr><td  colspan="6">Gagal memuat riwayat</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="6">Gagal memuat data </td></tr> ';
           return;
         }
         currentData = data;
@@ -617,7 +630,7 @@
         const tbody = document.querySelector('#kasTable tbody');
         tbody.innerHTML = '';
         if (data.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="6">Tidak ada transaksi dalam rentang ini,</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="6">Tidak ada transaksi dalam rentang ini</td>/<tr>';
           return;
         }
         data.forEach(row => {
@@ -717,6 +730,8 @@
           alert('Tidak ada data untuk dicetak');
           return;
         }
+
+        // Siapkan data untuk summary PDF
         const saldoAwal = document.getElementById('saldoAwal').innerText;
         const totalPemasukan = document.getElementById('totalPemasukan').innerText;
         const totalPengeluaran = document.getElementById('totalPengeluaran').innerText;
@@ -737,16 +752,31 @@
           printTimestamp.innerText = formatted;
         }
 
+        // Aktifkan mode PDF (sembunyikan elemen tidak perlu)
+        document.body.classList.add('pdf-mode');
+
+        // Beri waktu agar CSS mode PDF diterapkan
+        await new Promise(resolve => setTimeout(resolve, 500));
+
         const element = document.getElementById('pdfContainer');
         const opt = {
-          margin: [0.3, 0.5, 0.5, 0.5], // top margin lebih kecil
+          margin: [0.5, 0.5, 0.5, 0.5], // margin: top, right, bottom, left (dalam inci)
           filename: `laporan_kas_${new Date().toISOString().slice(0,10)}.pdf`,
           image: { type: 'jpeg', quality: 0.98 },
-          html2canvas: { scale: 2, letterRendering: true },
+          html2canvas: { scale: 2, letterRendering: true, useCORS: true },
           jsPDF: { unit: 'in', format: 'a4', orientation: 'landscape' },
           pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
         };
-        html2pdf().set(opt).from(element).save();
+
+        try {
+          await html2pdf().set(opt).from(element).save();
+        } catch (err) {
+          console.error('PDF Error:', err);
+          alert('Gagal membuat PDF. Silakan coba lagi.');
+        } finally {
+          // Kembalikan tampilan normal
+          document.body.classList.remove('pdf-mode');
+        }
       }
 
       function setupEventListeners() {
