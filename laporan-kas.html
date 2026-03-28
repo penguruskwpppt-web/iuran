@@ -221,15 +221,14 @@
     .signature-section {
       margin-top: 40px;
       display: flex;
-      justify-content: space-between;
+      justify-content: center;
       flex-wrap: wrap;
-      gap: 24px;
+      gap: 32px;
       page-break-inside: avoid;
     }
     .signature-item {
-      flex: 1;
+      flex: 0 1 200px;
       text-align: center;
-      min-width: 160px;
     }
     .signature-item .title {
       font-weight: 600;
@@ -262,7 +261,7 @@
       border-top: 1px solid #eef2f8;
       padding-top: 20px;
     }
-    /* ========== RESPONSIVE MOBILE - FULL WIDTH INPUTS & BUTTONS ========== */
+    /* ========== RESPONSIVE MOBILE ========== */
     @media (max-width: 768px) {
       body {
         padding: 10px;
@@ -270,7 +269,7 @@
       .container {
         padding: 16px;
       }
-      /* Filter bar jadi flex column, semua elemen full width */
+      /* Filter bar: semua elemen full width dengan gap 12px */
       .filter-bar {
         display: flex;
         flex-direction: column;
@@ -288,7 +287,6 @@
         width: 100%;
         height: 44px;
       }
-      /* Summary cards lebih kecil di HP */
       .summary-card .amount {
         font-size: 1rem;
       }
@@ -303,9 +301,11 @@
       .signature-section {
         flex-direction: column;
         align-items: center;
+        gap: 24px;
       }
       .signature-item {
         width: 100%;
+        max-width: 280px;
       }
       .report-header {
         justify-content: center;
@@ -315,7 +315,7 @@
         margin: 0 auto;
       }
     }
-    /* Mode PDF: paksa tampilkan tabel desktop & sembunyikan kartu + filter */
+    /* ========== MODE PDF ========== */
     body.pdf-mode .filter-bar,
     body.pdf-mode .btn-primary,
     body.pdf-mode .btn-cancel {
@@ -329,6 +329,25 @@
     }
     body.pdf-mode {
       background: white;
+    }
+    /* PDF: header rata kiri */
+    body.pdf-mode .report-header {
+      justify-content: flex-start;
+      text-align: left;
+    }
+    body.pdf-mode .report-header img {
+      margin: 0;
+    }
+    /* PDF: tanda tangan 3 kolom di tengah */
+    body.pdf-mode .signature-section {
+      display: flex;
+      flex-direction: row;
+      justify-content: center;
+      gap: 48px;
+      flex-wrap: wrap;
+    }
+    body.pdf-mode .signature-item {
+      flex: 0 1 200px;
     }
     /* Print styling */
     @media print {
@@ -356,8 +375,18 @@
       .desktop-table {
         min-width: 100%;
       }
-      .signature-section, .footer {
-        page-break-inside: avoid;
+      .report-header {
+        justify-content: flex-start;
+        text-align: left;
+      }
+      .signature-section {
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        gap: 48px;
+      }
+      .signature-item {
+        flex: 0 1 200px;
       }
       @page {
         size: A4;
@@ -628,10 +657,7 @@
     });
     document.getElementById('printTimestamp').innerText = `Dicetak: ${formatted}`;
 
-    // Aktifkan mode PDF untuk memastikan tabel desktop muncul
     document.body.classList.add('pdf-mode');
-
-    // Beri waktu untuk rendering ulang
     await new Promise(resolve => setTimeout(resolve, 500));
 
     const element = document.getElementById('reportContainer');
@@ -666,7 +692,6 @@
       alert('Gagal membuat PDF. Silakan coba lagi.');
     } finally {
       document.body.classList.remove('pdf-mode');
-      // Kembalikan timestamp ke format biasa
       const normalTime = new Date().toLocaleString('id-ID', {
         weekday: 'long',
         year: 'numeric',
@@ -698,7 +723,6 @@
   document.getElementById('pdfBtn').addEventListener('click', exportToPDF);
   document.getElementById('excelBtn').addEventListener('click', exportToExcel);
 
-  // Set initial timestamp footer
   const now = new Date();
   const footerTime = now.toLocaleString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' });
   document.getElementById('printTimestamp').innerText = `Dicetak: ${footerTime}`;
