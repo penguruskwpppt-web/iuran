@@ -151,10 +151,10 @@
       cursor: pointer;
       margin-right: 5px;
       transition: 0.2s;
+      font-size: 0.75rem;
       display: inline-flex;
       align-items: center;
       gap: 4px;
-      font-size: 0.75rem;
     }
     .btn-edit {
       background: #f59e0b;
@@ -509,9 +509,7 @@
       }
 
       async function loadRiwayat(filterNoRumah = null) {
-        const tbody = document.querySelector('#riwayatTable tbody');
-        tbody.innerHTML = '得到<td colspan="8" class="loading">Memuat data...</td>';
-
+        renderTable(null);
         let query = supabase.from('riwayat_kondisi').select('*').order('no_rumah', { ascending: true }).order('berlaku_sejak', { ascending: false });
         if (filterNoRumah) {
           query = query.eq('no_rumah', filterNoRumah);
@@ -520,7 +518,16 @@
         if (error) {
           console.error(error);
           alert('Gagal memuat riwayat');
-          tbody.innerHTML = '<tr><td colspan="8">Gagal memuat data</td></tr>';
+          renderTable([]);
+          return;
+        }
+        renderTable(data || []);
+      }
+
+      function renderTable(riwayat) {
+        const tbody = document.querySelector('#riwayatTable tbody');
+        if (riwayat === null) {         
+         tbody.innerHTML = '<tr><td colspan="8" class="loading">Memuat data...</td></tr>';
           return;
         }
         renderTable(data || []);
