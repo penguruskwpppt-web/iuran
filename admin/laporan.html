@@ -385,7 +385,7 @@
         display: flex;
       }
       @page {
-        margin: 0.5cm 1.5cm; /* top margin lebih kecil */
+        margin: 0.5cm 1.5cm;
       }
     }
   </style>
@@ -568,7 +568,14 @@
         loadingDiv.style.display = 'block';
 
         const tbody = document.querySelector('#kasTable tbody');
-        tbody.innerHTML = '<tr><td colspan="6" class="loading">Memuat data ...</td></tr>'; // fix karakter
+
+tbody.innerHTML = `
+  <tr>
+    <td colspan="6" class="loading" style="text-align:center; padding:16px;">
+      Memuat data...
+    </td>
+  </tr>
+`;
 
         let query = supabase
           .from('transaksi_kas')
@@ -583,10 +590,16 @@
         loadingDiv.style.display = 'none';
 
         if (error) {
-          console.error(error);
-          tbody.innerHTML = '<tr><td  colspan="6">Gagal memuat riwayat</td></tr>';
-          return;
-        }
+  console.error(error);
+  tbody.innerHTML = `
+    <tr>
+      <td colspan="6" style="text-align:center;">
+        Gagal memuat riwayat
+      </td>
+    </tr>
+  `;
+  return;
+}
         currentData = data;
 
         let saldoAwal = 0;
@@ -617,8 +630,15 @@
         const tbody = document.querySelector('#kasTable tbody');
         tbody.innerHTML = '';
         if (data.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="6">Tidak ada transaksi dalam rentang ini,</td></tr>';
-          return;
+  tbody.innerHTML = `
+    <tr>
+      <td colspan="6" style="text-align:center;">
+        Tidak ada transaksi dalam rentang ini
+      </td>
+    </tr>
+  `;
+  return;
+}
         }
         data.forEach(row => {
           const tr = tbody.insertRow();
@@ -717,25 +737,24 @@
           alert('Tidak ada data untuk dicetak');
           return;
         }
-        const saldoAwal = document.getElementById('saldoAwal').innerText;
-        const totalPemasukan = document.getElementById('totalPemasukan').innerText;
-        const totalPengeluaran = document.getElementById('totalPengeluaran').innerText;
-        const saldoAkhir = document.getElementById('saldoAkhir').innerText;
-        const summaryHtml = `
-          <div class="summary-card"><h3>Saldo Awal</h3><div class="amount">${saldoAwal}</div></div>
-          <div class="summary-card"><h3>Total Pemasukan</h3><div class="amount">${totalPemasukan}</div></div>
-          <div class="summary-card"><h3>Total Pengeluaran</h3><div class="amount">${totalPengeluaran}</div></div>
-          <div class="summary-card"><h3>Saldo Akhir</h3><div class="amount">${saldoAkhir}</div></div>
-        `;
-        document.getElementById('summaryForPdf').innerHTML = summaryHtml;
+
+        // 1. Update summary untuk PDF dari summary grid yang tampil
+        const summaryGrid = document.querySelector('.summary-grid');
+        document.getElementById('summaryForPdf').innerHTML = summaryGrid.innerHTML;
+
+        // 2. Update tanggal cetak
         document.getElementById('pdfDate').innerText = `Periode: ${currentStart || 'Semua'} s/d ${currentEnd || 'Semua'} | Dicetak: ${new Date().toLocaleString('id-ID')}`;
 
+        // 3. Update timestamp di footer
         const printTimestamp = document.getElementById('printTimestamp');
         if (printTimestamp) {
           const now = new Date();
           const formatted = now.toLocaleString('id-ID', { dateStyle: 'full', timeStyle: 'short' });
           printTimestamp.innerText = formatted;
         }
+
+        // 4. Pastikan tabel yang di-capture adalah yang terbaru (sudah dirender oleh renderTable)
+        // Tidak perlu mengubah tabel karena sudah terisi
 
         const element = document.getElementById('pdfContainer');
         const opt = {
