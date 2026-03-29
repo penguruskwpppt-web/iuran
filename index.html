@@ -637,18 +637,37 @@
       <p><strong>No. Rekening:</strong> 0852-1867-2008</p>
       <p><strong>Atas Nama:</strong> Didiek Fahrizal</p>
       <p><strong>Wajib:</strong> Cantumkan nomor rumah pada keterangan transfer.</p>
-      <p>Setelah transfer, kirimkan bukti transfer ke group WhatsApp KWP3T melalui WhatsApp di bawah.</p>
+      <p>Setelah transfer, kirimkan bukti transfer ke group WhatsApp melalui tombol di bawah.</p>
     </div>
     <div class="cash-details">
       <strong>💰 Setor Tunai ke Koordinator Lorong</strong>
       <p>Serahkan iuran langsung kepada Koordinator Lorong masing‑masing. Daftar koordinator tersedia di bagian <a href="#kontak">Kontak & Lokasi</a>.</p>
     </div>
+
+    <!-- ========== BAGIAN KONFIRMASI (DIPERBARUI) ========== -->
     <p><strong>Konfirmasi Pembayaran Transfer:</strong></p>
-    <div style="display: flex; justify-content: center; gap: 12px; flex-wrap: wrap;">
-      <a href="https://wa.me/6285218672008?text=Assalamualaikum%2C%20saya%20telah%20melakukan%20transfer%20iuran" class="modal-wa" target="_blank"><i class="fab fa-whatsapp"></i> Konfirmasi ke Bendahara</a>
-      <a href="https://wa.me/6285262143721?text=Assalamualaikum%2C%20saya%20telah%20melakukan%20transfer%20iuran" class="modal-wa" target="_blank"><i class="fab fa-whatsapp"></i> Konfirmasi ke Sekretaris</a>
+    <div style="text-align: center; margin: 15px 0 10px;">
+      <a href="https://chat.whatsapp.com/EAtl3hU82X19htpA8OyKJ4" 
+         target="_blank" 
+         rel="noopener noreferrer"
+         style="display: inline-flex; align-items: center; gap: 12px; background: #25D366; color: white; font-weight: 600; font-size: 1rem; padding: 12px 28px; border-radius: 60px; text-decoration: none; box-shadow: 0 4px 12px rgba(37,211,102,0.3); transition: all 0.2s ease;">
+        <i class="fab fa-whatsapp" style="font-size: 1.2rem;"></i> Kirim Bukti Transfer ke Grup
+      </a>
+
+      <div style="margin-top: 16px; font-size: 0.85rem; color: #4b5563; text-align: center; max-width: 400px; margin-left: auto; margin-right: auto;">
+        <strong>📌 Format kirim:</strong><br>
+        Nama / No Rumah<br>
+        Bulan / Tahun Bayar<br>
+        <span style="background: #eef2ff; padding: 2px 8px; border-radius: 12px; display: inline-block; margin: 4px 0;">Contoh: A25 / 4 / 2026</span><br>
+        <span style="background: #eef2ff; padding: 2px 8px; border-radius: 12px; display: inline-block; margin-top: 6px;">Lampirkan bukti transfer</span>
+      </div>
+
+      <p style="font-size:0.75rem; margin-top: 12px; color: #555; background: #fff3e0; padding: 6px 12px; border-radius: 12px; display: inline-block;">
+        ⚠️ Pencatatan iuran hanya dilakukan oleh Sekretaris/Bendahara.
+      </p>
     </div>
-    <p style="font-size:0.8rem; margin-top:16px;">Pencatatan iuran hanya dilakukan oleh Sekretaris/Bendahara. Gunakan tombol di atas untuk konfirmasi.</p>
+    <!-- ========== AKHIR PERUBAHAN ========== -->
+
   </div>
 </div>
 
@@ -878,45 +897,31 @@
 
   async function loadDashboard() {
     try {
-      // Ambil semua pemasukan
-      const { data: allPemasukan } = await supabase
-        .from('transaksi_kas')
-        .select('pemasukan')
-        .eq('jenis', 'Pemasukan');
-      const totalPem = allPemasukan?.reduce((s, t) => s + (t.pemasukan || 0), 0) || 0;
-      document.getElementById('totalPemasukan').innerText = formatRupiah(totalPem);
-
-      // Ambil semua pengeluaran
-      const { data: allPengeluaran } = await supabase
-        .from('transaksi_kas')
-        .select('pengeluaran')
-        .eq('jenis', 'Pengeluaran');
-      const totalPeng = allPengeluaran?.reduce((s, t) => s + (t.pengeluaran || 0), 0) || 0;
-      document.getElementById('totalPengeluaran').innerText = formatRupiah(totalPeng);
-
-      // Hitung saldo dari total pemasukan - total pengeluaran (sama seperti laporan kas)
-      const saldo = totalPem - totalPeng;
+      // Pemasukan & Pengeluaran & Saldo
+      const { data: lastKas } = await supabase.from('transaksi_kas').select('saldo').order('tanggal', { ascending: false }).limit(1);
+      const saldo = lastKas?.[0]?.saldo || 0;
       document.getElementById('saldoKas').innerText = formatRupiah(saldo);
 
-      // Ambil iuran bulan ini
+      const { data: allPemasukan } = await supabase.from('transaksi_kas').select('pemasukan').eq('jenis', 'Pemasukan');
+      const totalPem = allPemasukan?.reduce((s, t) => s + t.pemasukan, 0) || 0;
+      document.getElementById('totalPemasukan').innerText = formatRupiah(totalPem);
+
+      const { data: allPengeluaran } = await supabase.from('transaksi_kas').select('pengeluaran').eq('jenis', 'Pengeluaran');
+      const totalPeng = allPengeluaran?.reduce((s, t) => s + t.pengeluaran, 0) || 0;
+      document.getElementById('totalPengeluaran').innerText = formatRupiah(totalPeng);
+
       const now = new Date();
       const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
       const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString();
-      const { data: iuranBulanIni } = await supabase
-        .from('transaksi_kas')
-        .select('pemasukan')
-        .eq('jenis', 'Pemasukan')
-        .eq('sumber', 'Iuran Warga')
-        .gte('tanggal', firstDay)
-        .lte('tanggal', lastDay);
+      const { data: iuranBulanIni } = await supabase.from('transaksi_kas').select('pemasukan').eq('jenis', 'Pemasukan').eq('sumber', 'Iuran Warga').gte('tanggal', firstDay).lte('tanggal', lastDay);
       const totalIuranBulanIni = iuranBulanIni?.reduce((s, t) => s + t.pemasukan, 0) || 0;
       document.getElementById('iuranBulanIni').innerText = formatRupiah(totalIuranBulanIni);
 
-      // Hitung total tunggakan (tetap menggunakan fungsi yang sudah ada)
+      // Hitung total tunggakan dengan metode yang sama seperti chart (detail per rumah per bulan)
       const totalTunggakan = await computeTotalArrears();
       document.getElementById('totalTunggakan').innerText = formatRupiah(totalTunggakan);
 
-      // Load data untuk chart
+      // Load data untuk chart (tetap dilakukan)
       await loadChartData();
     } catch (err) {
       console.error(err);
