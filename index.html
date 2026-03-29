@@ -11,7 +11,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <style>
-    /* ========== CSS ========== */
+    /* ========== CSS (sama seperti sebelumnya) ========== */
     :root {
       --primary: #0b2e4f;
       --accent: #f59e0b;
@@ -637,18 +637,37 @@
       <p><strong>No. Rekening:</strong> 0852-1867-2008</p>
       <p><strong>Atas Nama:</strong> Didiek Fahrizal</p>
       <p><strong>Wajib:</strong> Cantumkan nomor rumah pada keterangan transfer.</p>
-      <p>Setelah transfer, kirimkan bukti ke Bendahara atau Sekretaris melalui WhatsApp di bawah.</p>
+      <p>Setelah transfer, kirimkan bukti transfer ke group WhatsApp melalui tombol di bawah.</p>
     </div>
     <div class="cash-details">
       <strong>💰 Setor Tunai ke Koordinator Lorong</strong>
       <p>Serahkan iuran langsung kepada Koordinator Lorong masing‑masing. Daftar koordinator tersedia di bagian <a href="#kontak">Kontak & Lokasi</a>.</p>
     </div>
+
+    <!-- ========== BAGIAN KONFIRMASI (DIPERBARUI) ========== -->
     <p><strong>Konfirmasi Pembayaran Transfer:</strong></p>
-    <div style="display: flex; justify-content: center; gap: 12px; flex-wrap: wrap;">
-      <a href="https://wa.me/6285218672008?text=Assalamualaikum%2C%20saya%20telah%20melakukan%20transfer%20iuran" class="modal-wa" target="_blank"><i class="fab fa-whatsapp"></i> Konfirmasi ke Bendahara</a>
-      <a href="https://wa.me/6285262143721?text=Assalamualaikum%2C%20saya%20telah%20melakukan%20transfer%20iuran" class="modal-wa" target="_blank"><i class="fab fa-whatsapp"></i> Konfirmasi ke Sekretaris</a>
+    <div style="text-align: center; margin: 15px 0 10px;">
+      <a href="https://chat.whatsapp.com/EAtl3hU82X19htpA8OyKJ4" 
+         target="_blank" 
+         rel="noopener noreferrer"
+         style="display: inline-flex; align-items: center; gap: 12px; background: #25D366; color: white; font-weight: 600; font-size: 1rem; padding: 12px 28px; border-radius: 60px; text-decoration: none; box-shadow: 0 4px 12px rgba(37,211,102,0.3); transition: all 0.2s ease;">
+        <i class="fab fa-whatsapp" style="font-size: 1.2rem;"></i> Kirim Bukti Transfer ke Grup
+      </a>
+
+      <div style="margin-top: 16px; font-size: 0.85rem; color: #4b5563; text-align: center; max-width: 400px; margin-left: auto; margin-right: auto;">
+        <strong>📌 Format kirim:</strong><br>
+        Nama / No Rumah<br>
+        Bulan / Tahun Bayar<br>
+        <span style="background: #eef2ff; padding: 2px 8px; border-radius: 12px; display: inline-block; margin: 4px 0;">Contoh: A25 / 4 / 2026</span><br>
+        <span style="background: #eef2ff; padding: 2px 8px; border-radius: 12px; display: inline-block; margin-top: 6px;">Lampirkan bukti transfer</span>
+      </div>
+
+      <p style="font-size:0.75rem; margin-top: 12px; color: #555; background: #fff3e0; padding: 6px 12px; border-radius: 12px; display: inline-block;">
+        ⚠️ Pencatatan iuran hanya dilakukan oleh Sekretaris/ Bendahara.
+      </p>
     </div>
-    <p style="font-size:0.8rem; margin-top:16px;">Pencatatan iuran hanya dilakukan oleh Sekretaris/Bendahara. Gunakan tombol di atas untuk konfirmasi.</p>
+    <!-- ========== AKHIR PERUBAHAN ========== -->
+
   </div>
 </div>
 
@@ -743,7 +762,7 @@
       <div class="stat-card">
         <div class="stat-icon"><i class="fas fa-clock"></i></div>
         <div class="stat-number" id="totalTunggakan">-</div>
-        <div class="stat-label">Total Tunggakan (Estimasi)</div>
+        <div class="stat-label">Total Tunggakan</div>
       </div>
     </div>
   </div>
@@ -768,7 +787,7 @@
     <div class="gallery-grid">
       <div class="gallery-item">
         <img src="images/thr.webp" alt="Pembagian THR" width="600" height="400" loading="lazy">
-        <div class="gallery-caption">Pembagian THR Petugas Keamanan</div>
+        <div class="gallery-caption">Pembagian THR Security</div>
       </div>
       <div class="gallery-item">
         <img src="images/gotong.webp" alt="Gotong Royong" width="600" height="400" loading="lazy">
@@ -776,7 +795,7 @@
       </div>
       <div class="gallery-item">
         <img src="images/tiang.webp" alt="Pemindahan Tiang" width="600" height="400" loading="lazy">
-        <div class="gallery-caption">Pemindahan Tiang PLN </div>
+        <div class="gallery-caption">Pemindahan Tiang PLN</div>
       </div>
     </div>
   </div>
@@ -786,9 +805,9 @@
   <div class="container">
     <h2 class="title">Pengumuman Terbaru</h2>
     <div class="announcement-list">
-      <div class="announcement"><h4>📢 Rapat Warga Bulan Maret 2026</h4><div class="announcement-date">15 Maret 2026 | 19.00 WIB</div><p>Rapat akan membahas laporan keuangan Februari dan persiapan kegiatan HUT RI.</p></div>
-      <div class="announcement"><h4>📢 Jadwal Gotong Royong</h4><div class="announcement-date">10 Maret 2026</div><p>Gotong royong pembersihan lingkungan akan dilaksanakan pada hari Minggu, 15 Maret 2026 pukul 07.00 WIB. Seluruh warga diharapkan hadir.</p></div>
-      <div class="announcement"><h4>📢 Rapat Koordinasi Komplek</h4><div class="announcement-date">5 Maret 2026</div><p>Rapat koordinasi perawatan jalan dan lampu lingkungan akan diadakan pada 20 Maret 2026. Undangan sudah dibagikan ke perwakilan lorong.</p></div>
+      <div class="announcement"><h4>📢 Rapat Pengurus KWP3T dengan Petugas Keamanan</h4><div class="announcement-date">15 Nopember 2025 | 20.00 WIB</div><p>Rapat pengurus KWP3T dengan Petugas Keamanan akan membahas SOP kerja dan lainnya.</p></div>
+      <div class="announcement"><h4>📢 Gotong Royong Warga</h4><div class="announcement-date">19 Oktober 2025</div><p>Gotong royong pembersihan lingkungan akan dilaksanakan pada hari Minggu, 19 Oktober 2025 08.00 WIB. Seluruh warga diharapkan hadir.</p></div>
+      <div class="announcement"><h4>📢 Rapat Pembentukan Pengurus KWP3T 2025/2027</h4><div class="announcement-date">01 Nopember 2025</div><p>Rapat Pembentukan dan Pemilihan Pengurus KWP3T Priode 2025/2027 di Lapangan Komplek.</p></div>
     </div>
   </div>
 </section>
@@ -876,105 +895,112 @@
   let trendChart = null;
   let currentChartData = { labels: [], datasets: [] };
 
-  // ========== LOAD DASHBOARD (Perbaikan total tunggakan) ==========
-async function loadDashboard() {
-  try {
-    // 1. Ambil data pemasukan, pengeluaran, saldo (tidak berubah)
-    const { data: lastKas } = await supabase.from('transaksi_kas').select('saldo').order('tanggal', { ascending: false }).limit(1);
-    const saldo = lastKas?.[0]?.saldo || 0;
-    document.getElementById('saldoKas').innerText = formatRupiah(saldo);
+  async function loadDashboard() {
+    try {
+      // Pemasukan & Pengeluaran & Saldo
+      const { data: lastKas } = await supabase.from('transaksi_kas').select('saldo').order('tanggal', { ascending: false }).limit(1);
+      const saldo = lastKas?.[0]?.saldo || 0;
+      document.getElementById('saldoKas').innerText = formatRupiah(saldo);
 
-    const { data: allPemasukan } = await supabase.from('transaksi_kas').select('pemasukan').eq('jenis', 'Pemasukan');
-    const totalPem = allPemasukan?.reduce((s, t) => s + t.pemasukan, 0) || 0;
-    document.getElementById('totalPemasukan').innerText = formatRupiah(totalPem);
+      const { data: allPemasukan } = await supabase.from('transaksi_kas').select('pemasukan').eq('jenis', 'Pemasukan');
+      const totalPem = allPemasukan?.reduce((s, t) => s + t.pemasukan, 0) || 0;
+      document.getElementById('totalPemasukan').innerText = formatRupiah(totalPem);
 
-    const { data: allPengeluaran } = await supabase.from('transaksi_kas').select('pengeluaran').eq('jenis', 'Pengeluaran');
-    const totalPeng = allPengeluaran?.reduce((s, t) => s + t.pengeluaran, 0) || 0;
-    document.getElementById('totalPengeluaran').innerText = formatRupiah(totalPeng);
+      const { data: allPengeluaran } = await supabase.from('transaksi_kas').select('pengeluaran').eq('jenis', 'Pengeluaran');
+      const totalPeng = allPengeluaran?.reduce((s, t) => s + t.pengeluaran, 0) || 0;
+      document.getElementById('totalPengeluaran').innerText = formatRupiah(totalPeng);
 
-    const now = new Date();
-    const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-    const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString();
-    const { data: iuranBulanIni } = await supabase.from('transaksi_kas').select('pemasukan').eq('jenis', 'Pemasukan').eq('sumber', 'Iuran Warga').gte('tanggal', firstDay).lte('tanggal', lastDay);
-    const totalIuranBulanIni = iuranBulanIni?.reduce((s, t) => s + t.pemasukan, 0) || 0;
-    document.getElementById('iuranBulanIni').innerText = formatRupiah(totalIuranBulanIni);
+      const now = new Date();
+      const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+      const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString();
+      const { data: iuranBulanIni } = await supabase.from('transaksi_kas').select('pemasukan').eq('jenis', 'Pemasukan').eq('sumber', 'Iuran Warga').gte('tanggal', firstDay).lte('tanggal', lastDay);
+      const totalIuranBulanIni = iuranBulanIni?.reduce((s, t) => s + t.pemasukan, 0) || 0;
+      document.getElementById('iuranBulanIni').innerText = formatRupiah(totalIuranBulanIni);
 
-    // ========== PERHITUNGAN TOTAL TUNGGAKAN DENGAN RIWAYAT KONDISI ==========
-    // Ambil data semua warga (tanpa filter, karena riwayat akan menentukan status per bulan)
-    const { data: allWarga } = await supabase.from('warga').select('no_rumah, kondisi_terakhir, iuran_per_bulan');
-    // Ambil data riwayat perubahan kondisi
-    const { data: allRiwayat } = await supabase.from('riwayat_kondisi').select('no_rumah, berlaku_sejak, kondisi, iuran_per_bulan');
-    // Ambil data pembayaran iuran yang sudah dilakukan
-    const { data: allPayments } = await supabase.from('transaksi_iuran').select('no_rumah, bulan');
+      // Hitung total tunggakan dengan metode yang sama seperti chart (detail per rumah per bulan)
+      const totalTunggakan = await computeTotalArrears();
+      document.getElementById('totalTunggakan').innerText = formatRupiah(totalTunggakan);
 
-    // Group riwayat per rumah
-    const historyByHouse = new Map();
-    allRiwayat?.forEach(h => {
-      if (!historyByHouse.has(h.no_rumah)) historyByHouse.set(h.no_rumah, []);
-      historyByHouse.get(h.no_rumah).push(h);
-    });
-    // Urutkan riwayat per rumah berdasarkan berlaku_sejak
-    for (let [no_rumah, arr] of historyByHouse.entries()) {
-      arr.sort((a, b) => new Date(a.berlaku_sejak) - new Date(b.berlaku_sejak));
+      // Load data untuk chart (tetap dilakukan)
+      await loadChartData();
+    } catch (err) {
+      console.error(err);
     }
-
-    // Group pembayaran per rumah
-    const paymentByHouse = new Map();
-    allPayments?.forEach(p => {
-      const d = new Date(p.bulan);
-      const key = `${d.getFullYear()}-${d.getMonth() + 1}`;
-      if (!paymentByHouse.has(p.no_rumah)) paymentByHouse.set(p.no_rumah, new Set());
-      paymentByHouse.get(p.no_rumah).add(key);
-    });
-
-    const startDate = new Date(2025, 10, 1); // November 2025
-    const endYear = now.getFullYear();
-    const endMonth = now.getMonth() + 1;
-    let totalTunggakan = 0;
-
-    // Loop setiap rumah
-    for (const w of allWarga) {
-      const no_rumah = w.no_rumah;
-      const histories = historyByHouse.get(no_rumah) || [];
-      const paidSet = paymentByHouse.get(no_rumah) || new Set();
-
-      let year = startDate.getFullYear();
-      let month = startDate.getMonth() + 1;
-      while (year < endYear || (year === endYear && month <= endMonth)) {
-        const dateStr = `${year}-${String(month).padStart(2, '0')}-01`;
-        // Cari riwayat yang berlaku pada bulan ini
-        let latest = null;
-        for (let h of histories) {
-          let berlakuStr = h.berlaku_sejak;
-          if (berlakuStr && berlakuStr.includes('T')) berlakuStr = berlakuStr.split('T')[0];
-          if (berlakuStr <= dateStr) {
-            if (!latest || berlakuStr > latest.berlakuStr) {
-              latest = { berlakuStr, kondisi: h.kondisi, iuran: h.iuran_per_bulan };
-            }
-          }
-        }
-        let iuran = latest ? latest.iuran : w.iuran_per_bulan;
-        let kondisi = latest ? latest.kondisi : w.kondisi_terakhir;
-
-        // Jika status dibebaskan atau iuran 0, lewati
-        if (kondisi?.toLowerCase() !== 'dibebaskan' && iuran > 0) {
-          const key = `${year}-${month}`;
-          if (!paidSet.has(key)) {
-            totalTunggakan += iuran;
-          }
-        }
-        month++;
-        if (month > 12) { month = 1; year++; }
-      }
-    }
-    document.getElementById('totalTunggakan').innerText = formatRupiah(totalTunggakan);
-
-    // ========== SISANYA TIDAK BERUBAH ==========
-    await loadChartData();
-  } catch (err) {
-    console.error(err);
   }
 
+  // Fungsi untuk menghitung total tunggakan (mirip dengan logika di loadChartData)
+  async function computeTotalArrears() {
+    try {
+      const { data: allWarga } = await supabase.from('warga').select('no_rumah, kondisi_terakhir, iuran_per_bulan');
+      const { data: allRiwayat } = await supabase.from('riwayat_kondisi').select('*');
+      const { data: allPayments } = await supabase.from('transaksi_iuran').select('no_rumah, bulan');
+
+      const now = new Date();
+      const startDate = new Date(2025, 10, 1);
+      const months = [];
+      let current = new Date(startDate);
+      while (current <= now) {
+        const y = current.getFullYear();
+        const m = current.getMonth() + 1;
+        months.push({ year: y, month: m });
+        current.setMonth(current.getMonth() + 1);
+      }
+
+      // Group riwayat by no_rumah
+      const historyByHouse = new Map();
+      allRiwayat?.forEach(h => {
+        if (!historyByHouse.has(h.no_rumah)) historyByHouse.set(h.no_rumah, []);
+        historyByHouse.get(h.no_rumah).push(h);
+      });
+      for (let [no_rumah, arr] of historyByHouse.entries()) {
+        arr.sort((a,b) => new Date(a.berlaku_sejak) - new Date(b.berlaku_sejak));
+      }
+
+      // Group pembayaran by no_rumah
+      const paymentByHouse = new Map();
+      allPayments?.forEach(p => {
+        const d = new Date(p.bulan);
+        const key = `${d.getFullYear()}-${d.getMonth()+1}`;
+        if (!paymentByHouse.has(p.no_rumah)) paymentByHouse.set(p.no_rumah, new Set());
+        paymentByHouse.get(p.no_rumah).add(key);
+      });
+
+      let totalArrears = 0;
+
+      for (const w of allWarga) {
+        const no_rumah = w.no_rumah;
+        const histories = historyByHouse.get(no_rumah) || [];
+        const paidMonths = paymentByHouse.get(no_rumah) || new Set();
+
+        for (const monthObj of months) {
+          const year = monthObj.year;
+          const month = monthObj.month;
+          const dateStr = `${year}-${String(month).padStart(2,'0')}-01`;
+          // Dapatkan status & iuran yang berlaku
+          let latest = null;
+          for (let h of histories) {
+            let berlakuStr = h.berlaku_sejak;
+            if (berlakuStr && berlakuStr.includes('T')) berlakuStr = berlakuStr.split('T')[0];
+            if (berlakuStr <= dateStr) {
+              if (!latest || berlakuStr > latest.berlakuStr) latest = { berlakuStr, kondisi: h.kondisi, iuran: h.iuran_per_bulan };
+            }
+          }
+          let iuran = latest ? latest.iuran : (w.kondisi_terakhir === 'Dibebaskan' ? 0 : w.iuran_per_bulan);
+          let kondisi = latest ? latest.kondisi : w.kondisi_terakhir;
+          if (kondisi?.toLowerCase() === 'dibebaskan' || iuran === 0) continue;
+          const key = `${year}-${month}`;
+          const isPaid = paidMonths.has(key);
+          if (!isPaid && iuran > 0) {
+            totalArrears += iuran;
+          }
+        }
+      }
+      return totalArrears;
+    } catch (err) {
+      console.error('Error computing total arrears:', err);
+      return 0;
+    }
+  }
 
   // ========== LOAD DATA CHART (Per Bulan) ==========
   async function loadChartData() {
