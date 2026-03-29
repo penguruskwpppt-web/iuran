@@ -5,13 +5,21 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
   <title>KWP3T – Komunitas Warga Perumahan Pondok Payung Teduh</title>
   <meta name="description" content="KWP3T adalah komunitas warga Perumahan Pondok Payung Teduh yang mengelola iuran untuk keamanan, kebersihan, dan perawatan komplek secara transparan.">
+  
+  <!-- PWA Meta Tags -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0b2e4f">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="KWP3T">
+  <link rel="apple-touch-icon" href="images/logo-192.webp">
+  
   <link rel="icon" href="images/logo.webp" type="image/webp">
-  <link rel="apple-touch-icon" href="images/logo.webp">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <style>
-    /* ========== CSS (sama seperti sebelumnya) ========== */
+    /* ========== CSS (sama seperti sebelumnya, tidak ada perubahan) ========== */
     :root {
       --primary: #0b2e4f;
       --accent: #f59e0b;
@@ -625,7 +633,7 @@
   </div>
 </header>
 
-<!-- Modal Info Pembayaran -->
+<!-- Modal Info Pembayaran (sama seperti sebelumnya, tidak ada perubahan) -->
 <div id="paymentModal" class="modal">
   <div class="modal-content">
     <span class="close-modal">&times;</span>
@@ -815,7 +823,7 @@
 <section id="faq">
   <div class="container">
     <h2 class="title">Pertanyaan Umum (FAQ)</h2>
-    <div class="faq-item"><div class="faq-question">Bagaimana cara membayar iuran bulanan? <i>▼</i></div><div class="faq-answer"><p>Iuran dapat dibayarkan melalui transfer ke rekening Bendahara atau setor tunai kepada masing-masing Koordinator Lorong. Untuk pembayaran transfer, kirimkan bukti transfer ke group Whatsapp KWP3T. Pastikan mencantumkan nomor rumah sebagai keterangan.</p></div></div>
+    <div class="faq-item"><div class="faq-question">Bagaimana cara membayar iuran bulanan? <i>▼</i></div><div class="faq-answer"><p>Iuran dapat dibayarkan melalui transfer ke rekening Bendahara atau setor tunai kepada masing-masing Koordinator Lorong. Untuk pembayaran transfer, kirimkan bukti transfer ke group WhatsApp KWP3T. Pastikan mencantumkan nomor rumah sebagai keterangan.</p></div></div>
     <div class="faq-item"><div class="faq-question">Apakah laporan keuangan dapat diakses publik? <i>▼</i></div><div class="faq-answer"><p>Ya, laporan keuangan dirilis setiap bulan dan dapat diakses oleh seluruh warga melalui tautan "Laporan Kas Bulanan". Jika ada pertanyaan, hubungi Bendahara.</p></div></div>
     <div class="faq-item"><div class="faq-question">Apa saja yang didanai dari iuran warga? <i>▼</i></div><div class="faq-answer"><p>Iuran digunakan untuk keamanan (security), kebersihan lingkungan, dan perawatan fasilitas umum (jalan, lampu, taman) dan fasilitas lainnya.</p></div></div>
   </div>
@@ -897,31 +905,45 @@
 
   async function loadDashboard() {
     try {
-      // Pemasukan & Pengeluaran & Saldo
-      const { data: lastKas } = await supabase.from('transaksi_kas').select('saldo').order('tanggal', { ascending: false }).limit(1);
-      const saldo = lastKas?.[0]?.saldo || 0;
-      document.getElementById('saldoKas').innerText = formatRupiah(saldo);
-
-      const { data: allPemasukan } = await supabase.from('transaksi_kas').select('pemasukan').eq('jenis', 'Pemasukan');
-      const totalPem = allPemasukan?.reduce((s, t) => s + t.pemasukan, 0) || 0;
+      // Ambil semua pemasukan
+      const { data: allPemasukan } = await supabase
+        .from('transaksi_kas')
+        .select('pemasukan')
+        .eq('jenis', 'Pemasukan');
+      const totalPem = allPemasukan?.reduce((s, t) => s + (t.pemasukan || 0), 0) || 0;
       document.getElementById('totalPemasukan').innerText = formatRupiah(totalPem);
 
-      const { data: allPengeluaran } = await supabase.from('transaksi_kas').select('pengeluaran').eq('jenis', 'Pengeluaran');
-      const totalPeng = allPengeluaran?.reduce((s, t) => s + t.pengeluaran, 0) || 0;
+      // Ambil semua pengeluaran
+      const { data: allPengeluaran } = await supabase
+        .from('transaksi_kas')
+        .select('pengeluaran')
+        .eq('jenis', 'Pengeluaran');
+      const totalPeng = allPengeluaran?.reduce((s, t) => s + (t.pengeluaran || 0), 0) || 0;
       document.getElementById('totalPengeluaran').innerText = formatRupiah(totalPeng);
 
+      // Hitung saldo dari total pemasukan - total pengeluaran (sama seperti laporan kas)
+      const saldo = totalPem - totalPeng;
+      document.getElementById('saldoKas').innerText = formatRupiah(saldo);
+
+      // Ambil iuran bulan ini
       const now = new Date();
       const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
       const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString();
-      const { data: iuranBulanIni } = await supabase.from('transaksi_kas').select('pemasukan').eq('jenis', 'Pemasukan').eq('sumber', 'Iuran Warga').gte('tanggal', firstDay).lte('tanggal', lastDay);
+      const { data: iuranBulanIni } = await supabase
+        .from('transaksi_kas')
+        .select('pemasukan')
+        .eq('jenis', 'Pemasukan')
+        .eq('sumber', 'Iuran Warga')
+        .gte('tanggal', firstDay)
+        .lte('tanggal', lastDay);
       const totalIuranBulanIni = iuranBulanIni?.reduce((s, t) => s + t.pemasukan, 0) || 0;
       document.getElementById('iuranBulanIni').innerText = formatRupiah(totalIuranBulanIni);
 
-      // Hitung total tunggakan dengan metode yang sama seperti chart (detail per rumah per bulan)
+      // Hitung total tunggakan (tetap menggunakan fungsi yang sudah ada)
       const totalTunggakan = await computeTotalArrears();
       document.getElementById('totalTunggakan').innerText = formatRupiah(totalTunggakan);
 
-      // Load data untuk chart (tetap dilakukan)
+      // Load data untuk chart
       await loadChartData();
     } catch (err) {
       console.error(err);
@@ -1355,6 +1377,13 @@
       });
     });
     document.getElementById('year').textContent = new Date().getFullYear();
+
+    // ========== REGISTRASI SERVICE WORKER (PWA) ==========
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js')
+        .then(reg => console.log('Service Worker registered', reg))
+        .catch(err => console.error('Service Worker registration failed', err));
+    }
   });
 </script>
 </body>
