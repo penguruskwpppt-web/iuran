@@ -1,0 +1,24 @@
+{
+  "name": "KWP3T - Komunitas Warga Pondok Payung Teduh",
+  "short_name": "KWP3T",
+  "description": "Komunitas warga Perumahan Pondok Payung Teduh yang mengelola iuran untuk keamanan, kebersihan, dan perawatan komplek secara transparan.",
+  "start_url": "/",
+  "display": "standalone",
+  "theme_color": "#0b2e4f",
+  "background_color": "#ffffff",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "images/logo-192.webp",
+      "sizes": "192x192",
+      "type": "image/webp",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "images/logo-512.webp",
+      "sizes": "512x512",
+      "type": "image/webp",
+      "purpose": "any maskable"
+    }
+  ]
+}
