@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Offline - KWP3T</title>
+  <meta name="theme-color" content="#0b2e4f">
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="icon" href="/images/logo.webp" type="image/webp">
+  <link rel="apple-touch-icon" href="/images/logo-192.webp">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #0b2e4f 0%, #1e4f7a 100%);
+      color: white;
+      min-height: 100vh;
+      min-height: 100dvh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 24px;
+      overflow: hidden;
+    }
+
+    /* Animasi background */
+    body::before {
+      content: '';
+      position: fixed;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle, rgba(245, 158, 11, 0.08) 0%, transparent 60%);
+      animation: rotate 30s linear infinite;
+      pointer-events: none;
+      z-index: 0;
+    }
+    @keyframes rotate {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    .container {
+      position: relative;
+      z-index: 1;
+      max-width: 440px;
+      width: 100%;
+      animation: fadeInUp 0.6s ease-out;
+    }
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Logo */
+    .logo-wrapper {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 28px;
+    }
+    .logo-wrapper img {
+      width: 90px;
+      height: 90px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 3px solid rgba(255, 255, 255, 0.15);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+      animation: pulse 2.5s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+
+    /* Icon offline */
+    .offline-icon {
+      font-size: 4rem;
+      margin-bottom: 16px;
+      display: inline-block;
+      animation: wave 2s ease-in-out infinite;
+    }
+    @keyframes wave {
+      0%, 100% { transform: rotate(0deg); }
+      25% { transform: rotate(-10deg); }
+      75% { transform: rotate(10deg); }
+    }
+
+    h1 {
+      font-size: 1.75rem;
+      font-weight: 800;
+      margin-bottom: 14px;
+      letter-spacing: -0.02em;
+      color: #ffffff;
+    }
+
+    p {
+      font-size: 1rem;
+      color: #cbd5e1;
+      line-height: 1.65;
+      margin-bottom: 32px;
+      padding: 0 8px;
+    }
+
+    /* Tombol */
+    .btn-group {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      max-width: 280px;
+      margin: 0 auto;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 14px 28px;
+      border-radius: 50px;
+      font-weight: 700;
+      font-size: 1rem;
+      text-decoration: none;
+      border: none;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      font-family: inherit;
+    }
+    .btn-primary {
+      background: #f59e0b;
+      color: #000;
+      box-shadow: 0 6px 20px rgba(245, 158, 11, 0.35);
+    }
+    .btn-primary:hover {
+      background: #e67e22;
+      transform: translateY(-3px);
+      box-shadow: 0 10px 25px rgba(245, 158, 11, 0.5);
+    }
+    .btn-primary:active {
+      transform: translateY(-1px);
+    }
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.1);
+      color: white;
+      border: 1.5px solid rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(10px);
+    }
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.18);
+      transform: translateY(-3px);
+      border-color: rgba(255, 255, 255, 0.35);
+    }
+    .btn i {
+      font-size: 1.1rem;
+    }
+
+    /* Status indicator */
+    .status-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 32px;
+      padding: 8px 18px;
+      background: rgba(231, 76, 60, 0.15);
+      border: 1px solid rgba(231, 76, 60, 0.3);
+      border-radius: 50px;
+      font-size: 0.85rem;
+      color: #ff8b7b;
+      font-weight: 600;
+    }
+    .status-indicator.online {
+      background: rgba(46, 204, 113, 0.15);
+      border-color: rgba(46, 204, 113, 0.3);
+      color: #6ee7a7;
+    }
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #e74c3c;
+      animation: blink 1.5s ease-in-out infinite;
+    }
+    .status-indicator.online .status-dot {
+      background: #2ecc71;
+      animation: none;
+    }
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    /* Footer */
+    .footer-note {
+      margin-top: 36px;
+      font-size: 0.75rem;
+      color: rgba(203, 213, 225, 0.5);
+      line-height: 1.5;
+    }
+
+    /* Mobile */
+    @media (max-width: 480px) {
+      h1 { font-size: 1.5rem; }
+      p { font-size: 0.9rem; }
+      .logo-wrapper img { width: 75px; height: 75px; }
+      .offline-icon { font-size: 3.5rem; }
+      .btn { padding: 13px 24px; font-size: 0.95rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <!-- Logo KWP3T -->
+    <div class="logo-wrapper">
+      <img src="/images/logo.webp" 
+           alt="Logo KWP3T" 
+           onerror="this.style.display='none'">
+    </div>
+
+    <!-- Icon + Judul -->
+    <div class="offline-icon">📡</div>
+    <h1>Anda Sedang Offline</h1>
+    <p>
+      Koneksi internet Anda terputus.<br>
+      Silakan periksa jaringan Anda, lalu coba lagi.
+    </p>
+
+    <!-- Tombol aksi -->
+    <div class="btn-group">
+      <button class="btn btn-primary" onclick="window.location.reload()">
+        <i>🔄</i> Coba Lagi
+      </button>
+      <a href="/" class="btn btn-secondary">
+        <i>🏠</i> Ke Halaman Utama
+      </a>
+    </div>
+
+    <!-- Status koneksi -->
+    <div class="status-indicator" id="statusIndicator">
+      <span class="status-dot"></span>
+      <span id="statusText">Koneksi Terputus</span>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer-note">
+      Halaman yang pernah Anda buka masih bisa diakses offline.<br>
+      © <span id="year"></span> KWP3T - Bersama Kita Bisa
+    </div>
+
+  </div>
+
+  <script>
+    // Update tahun
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    // Deteksi status online/offline secara real-time
+    const statusIndicator = document.getElementById('statusIndicator');
+    const statusText = document.getElementById('statusText');
+
+    function checkConnection() {
+      if (navigator.onLine) {
+        statusIndicator.classList.add('online');
+        statusText.textContent = 'Koneksi Kembali Online';
+        // Auto-reload setelah 1.5 detik jika online kembali
+        setTimeout(() => {
+          window.location.href = '/';
+        }, 1500);
+      } else {
+        statusIndicator.classList.remove('online');
+        statusText.textContent = 'Koneksi Terputus';
+      }
+    }
+
+    window.addEventListener('online', checkConnection);
+    window.addEventListener('offline', checkConnection);
+    checkConnection();
+  </script>
+</body>
+</html>
