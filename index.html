@@ -889,14 +889,8 @@
     return d.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
   }
 
-  function getLocalDateString(date) {
-    const offset = date.getTimezoneOffset();
-    const localDate = new Date(date.getTime() - (offset * 60 * 1000));
-    return localDate.toISOString().split('T')[0];
-  }
-
   // Helper: deteksi baris Saldo Awal (case-insensitive)
-  // Saldo Awal BUKAN pemasukan — hanya posisi kas awal, tidak boleh masuk SUM(pemasukan)
+  // Saldo Awal BUKAN pemasukan — hanya posisi kas awal.
   function isSaldoAwal(row) {
     return (row.sumber || '').toLowerCase() === 'saldo awal';
   }
@@ -907,17 +901,17 @@
 
   async function loadDashboard() {
     try {
-      // Ambil SEMUA transaksi, urut tanggal + kas_id (stabil)
+      // Ambil SEMUA transaksi (limit besar supaya tidak terpotong default 1000 baris)
       const { data: allKas, error } = await supabase
         .from('transaksi_kas')
         .select('tanggal, pemasukan, pengeluaran, saldo, jenis, sumber')
+        .limit(100000)
         .order('tanggal', { ascending: true })
         .order('kas_id',  { ascending: true });
 
       if (error) throw error;
 
       // Total Pemasukan: EXCLUDE Saldo Awal
-      // Saldo Awal tersimpan sebagai `pemasukan` di database, tapi secara akuntansi BUKAN pemasukan.
       const totalPem = (allKas || [])
         .filter(r => !isSaldoAwal(r))
         .reduce((s, t) => s + (t.pemasukan || 0), 0);
@@ -929,7 +923,7 @@
         .reduce((s, t) => s + (t.pengeluaran || 0), 0);
       document.getElementById('totalPengeluaran').innerText = formatRupiah(totalPeng);
 
-      // Saldo Kas: ambil `saldo` dari baris TERAKHIR (nilai ledger yang sudah tersimpan)
+      // Saldo Kas: dari kolom `saldo` baris terakhir (ledger)
       const saldo = (allKas && allKas.length > 0)
         ? allKas[allKas.length - 1].saldo
         : 0;
@@ -986,6 +980,7 @@
       const { data: allKas } = await supabase
         .from('transaksi_kas')
         .select('tanggal, pemasukan, pengeluaran, sumber')
+        .limit(100000)
         .order('tanggal', { ascending: true })
         .order('kas_id',  { ascending: true });
 
@@ -1101,7 +1096,7 @@
     trendChart = new Chart(ctx, config);
   }
 
-  // ========== LOGIKA CEK TUNGGAKAN (via RPC, sama dengan admin.html) ==========
+  // ========== LOGIKA CEK TUNGGAKAN (via RPC) ==========
   async function cekTunggakanByRumah() {
     const noRumah = prompt("Masukkan nomor rumah yang ingin dicek tunggakannya:", "")
     if (!noRumah) return
@@ -1171,6 +1166,7 @@
         .from('transaksi_iuran')
         .select('bulan, jumlah, metode, created_at')
         .eq('no_rumah', noRumah)
+        .limit(100000)
         .order('bulan', { ascending: false });
       if (error || !payments || payments.length === 0) {
         alert(`Tidak ditemukan riwayat pembayaran untuk rumah ${noRumah}.`);
