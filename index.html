@@ -2,19 +2,22 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
   <title>KWP3T – Komunitas Warga Perumahan Pondok Payung Teduh</title>
   <meta name="description" content="KWP3T adalah komunitas warga Perumahan Pondok Payung Teduh yang mengelola iuran untuk keamanan, kebersihan, dan perawatan komplek secara transparan.">
   
-  <!-- PWA Meta Tags -->
-  <link rel="manifest" href="manifest.json">
+  <!-- ========== PWA META TAGS ========== -->
+  <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#0b2e4f">
+  <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="KWP3T">
-  <link rel="apple-touch-icon" href="images/logo-192.webp">
+  <link rel="apple-touch-icon" href="/images/logo-192.webp">
+  <link rel="apple-touch-icon" sizes="152x152" href="/images/logo-192.webp">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/logo-192.webp">
+  <link rel="icon" href="/images/logo.webp" type="image/webp">
   
-  <link rel="icon" href="images/logo.webp" type="image/webp">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -78,6 +81,7 @@
     .nav-links {
       display: flex;
       gap: 24px;
+      align-items: center;
     }
     .nav-links a {
       color: #e2e8f0;
@@ -135,6 +139,31 @@
     .btn-wa:hover {
       background: var(--whatsapp-dark);
       transform: translateY(-2px);
+    }
+
+    /* PWA Install Button */
+    #pwaInstallBtn {
+      display: none;
+      align-items: center;
+      gap: 6px;
+      background: var(--accent);
+      color: #000;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 30px;
+      font-weight: 700;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: 0.2s;
+      animation: pulse-install 2s ease-in-out infinite;
+    }
+    #pwaInstallBtn:hover {
+      background: #e67e22;
+      transform: translateY(-2px);
+    }
+    @keyframes pulse-install {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7); }
+      50% { box-shadow: 0 0 0 10px rgba(245, 158, 11, 0); }
     }
 
     /* Modal */
@@ -549,6 +578,26 @@
       text-align: right;
     }
 
+    /* Offline indicator */
+    .offline-badge {
+      display: none;
+      position: fixed;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #e74c3c;
+      color: white;
+      padding: 8px 20px;
+      border-radius: 30px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      z-index: 3000;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+    body.is-offline .offline-badge {
+      display: block;
+    }
+
     /* Mobile adjustments */
     @media (max-width: 768px) {
       .hero h1 { font-size: 2rem; }
@@ -602,11 +651,14 @@
 </head>
 <body>
 
+<!-- ========== OFFLINE INDICATOR ========== -->
+<div class="offline-badge">📡 Anda sedang offline</div>
+
 <header>
   <div class="container">
     <div class="navbar">
       <a href="index.html" class="logo">
-        <img src="images/logo.webp" alt="Logo KWP3T">
+        <img src="/images/logo.webp" alt="Logo KWP3T">
         <h1>KWP3T</h1>
       </a>
       <button class="menu-toggle" id="menuToggle">☰</button>
@@ -617,6 +669,7 @@
         <a href="#pengumuman">Pengumuman</a>
         <a href="#faq">FAQ</a>
         <a href="#kontak">Kontak</a>
+        <button id="pwaInstallBtn">📲 Install App</button>
         <a href="admin/login.html" target="_blank">🔐 Admin</a>
       </div>
     </div>
@@ -671,7 +724,6 @@
         ⚠️ Pencatatan iuran hanya dilakukan oleh Sekretaris/Bendahara.
       </p>
     </div>
-
   </div>
 </div>
 
@@ -889,20 +941,13 @@
     return d.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
   }
 
-  function getLocalDateString(date) {
-    const offset = date.getTimezoneOffset();
-    const localDate = new Date(date.getTime() - (offset * 60 * 1000));
-    return localDate.toISOString().split('T')[0];
-  }
-
   // ========== DASHBOARD & CHART ==========
   let trendChart = null;
   let currentChartData = { labels: [], datasets: [] };
 
   async function loadDashboard() {
     try {
-      // ===== DISAMAKAN DENGAN laporan-kas.html =====
-      // Ambil SEMUA transaksi, urutkan by tanggal (tanpa filter jenis apapun)
+      // Ambil SEMUA transaksi (persis laporan-kas.html)
       const { data: allKas, error } = await supabase
         .from('transaksi_kas')
         .select('tanggal, pemasukan, pengeluaran, saldo')
@@ -910,22 +955,16 @@
 
       if (error) throw error;
 
-      // Total Pemasukan: jumlahkan SEMUA kolom pemasukan
       const totalPem = allKas?.reduce((s, t) => s + (t.pemasukan || 0), 0) || 0;
       document.getElementById('totalPemasukan').innerText = formatRupiah(totalPem);
 
-      // Total Pengeluaran: jumlahkan SEMUA kolom pengeluaran
       const totalPeng = allKas?.reduce((s, t) => s + (t.pengeluaran || 0), 0) || 0;
       document.getElementById('totalPengeluaran').innerText = formatRupiah(totalPeng);
 
-      // Saldo Kas: ambil field `saldo` dari transaksi TERAKHIR (persis laporan-kas.html)
-      const saldo = (allKas && allKas.length > 0)
-        ? allKas[allKas.length - 1].saldo
-        : 0;
+      const saldo = (allKas && allKas.length > 0) ? allKas[allKas.length - 1].saldo : 0;
       document.getElementById('saldoKas').innerText = formatRupiah(saldo);
-      // ===== SELESAI DISAMAKAN =====
 
-      // Ambil iuran bulan ini
+      // Iuran bulan ini
       const now = new Date();
       const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
       const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString();
@@ -939,18 +978,17 @@
       const totalIuranBulanIni = iuranBulanIni?.reduce((s, t) => s + t.pemasukan, 0) || 0;
       document.getElementById('iuranBulanIni').innerText = formatRupiah(totalIuranBulanIni);
 
-      // Hitung total tunggakan (via RPC - sama dengan admin.html)
+      // Tunggakan via RPC (sama dengan admin.html)
       const totalTunggakan = await computeTotalArrears();
       document.getElementById('totalTunggakan').innerText = formatRupiah(totalTunggakan);
 
-      // Load data untuk chart
       await loadChartData();
     } catch (err) {
       console.error(err);
     }
   }
 
-  // ========== TOTAL TUNGGAKAN (SAMA DENGAN admin.html via RPC) ==========
+  // ========== TOTAL TUNGGAKAN (via RPC) ==========
   async function computeTotalArrears() {
     try {
       const now = new Date();
@@ -960,13 +998,11 @@
       const { data, error } = await supabase.rpc('get_tunggakan_report', {
         p_start_month: defaultStart + '-01',
         p_end_month:   defaultEnd   + '-01',
-        p_koordinator_filter: null   // null = semua koordinator (default admin.html)
+        p_koordinator_filter: null
       });
 
       if (error) throw error;
       if (!data || data.length === 0) return 0;
-
-      // Jumlahkan seluruh total_tunggakan dari setiap rumah
       return data.reduce((sum, r) => sum + (r.total_tunggakan || 0), 0);
     } catch (err) {
       console.error('Error computing total arrears:', err);
@@ -974,7 +1010,7 @@
     }
   }
 
-  // ========== LOAD DATA CHART (Per Bulan) ==========
+  // ========== LOAD DATA CHART ==========
   async function loadChartData() {
     try {
       const { data: allKas } = await supabase.from('transaksi_kas').select('tanggal, pemasukan, pengeluaran').order('tanggal', { ascending: true });
@@ -999,7 +1035,7 @@
         expenseMap.set(key, (expenseMap.get(key) || 0) + (k.pengeluaran || 0));
       });
 
-      // ===== Tunggakan per bulan via RPC (sama dengan admin.html) =====
+      // Tunggakan per bulan via RPC
       const arrearsMap = new Map();
       for (const m of months) {
         const monthStr = `${m.year}-${String(m.month).padStart(2, '0')}`;
@@ -1010,22 +1046,17 @@
             p_koordinator_filter: null
           });
           if (rpcErr) {
-            console.warn('RPC tunggakan gagal untuk', monthStr, rpcErr);
             arrearsMap.set(`${m.year}-${m.month}`, 0);
             continue;
           }
           const total = (reportData || []).reduce((s, r) => s + (r.total_tunggakan || 0), 0);
           arrearsMap.set(`${m.year}-${m.month}`, total);
         } catch (e) {
-          console.warn('RPC tunggakan error untuk', monthStr, e);
           arrearsMap.set(`${m.year}-${m.month}`, 0);
         }
       }
-      // ===== SELESAI =====
 
-      const labels = months.map(m => {
-        return m.date.toLocaleDateString('id-ID', { month: 'short', year: 'numeric' });
-      });
+      const labels = months.map(m => m.date.toLocaleDateString('id-ID', { month: 'short', year: 'numeric' }));
       const incomeData = months.map(m => incomeMap.get(`${m.year}-${m.month}`) || 0);
       const expenseData = months.map(m => expenseMap.get(`${m.year}-${m.month}`) || 0);
       const arrearsData = months.map(m => arrearsMap.get(`${m.year}-${m.month}`) || 0);
@@ -1066,31 +1097,17 @@
 
     if (type === 'lineFilled') {
       config.type = 'line';
-      config.data.datasets = config.data.datasets.map(ds => ({
-        ...ds,
-        fill: true,
-        backgroundColor: ds.backgroundColor
-      }));
+      config.data.datasets = config.data.datasets.map(ds => ({ ...ds, fill: true, backgroundColor: ds.backgroundColor }));
     } else if (type === 'line') {
-      config.data.datasets = config.data.datasets.map(ds => ({
-        ...ds,
-        fill: false,
-        backgroundColor: 'transparent'
-      }));
+      config.data.datasets = config.data.datasets.map(ds => ({ ...ds, fill: false, backgroundColor: 'transparent' }));
     } else if (type === 'bar') {
-      config.data.datasets = config.data.datasets.map(ds => ({
-        ...ds,
-        fill: false,
-        backgroundColor: ds.borderColor,
-        borderColor: ds.borderColor,
-        borderRadius: 4
-      }));
+      config.data.datasets = config.data.datasets.map(ds => ({ ...ds, fill: false, backgroundColor: ds.borderColor, borderColor: ds.borderColor, borderRadius: 4 }));
     }
 
     trendChart = new Chart(ctx, config);
   }
 
-  // ========== LOGIKA CEK TUNGGAKAN (via RPC, sama dengan admin.html) ==========
+  // ========== CEK TUNGGAKAN PER RUMAH (via RPC) ==========
   async function cekTunggakanByRumah() {
     const noRumah = prompt("Masukkan nomor rumah yang ingin dicek tunggakannya:", "")
     if (!noRumah) return
@@ -1101,7 +1118,6 @@
     btn.disabled = true;
 
     try {
-      // Ambil info warga untuk nama
       const { data: warga, error: wargaError } = await supabase
         .from('warga')
         .select('nama_pemilik')
@@ -1112,7 +1128,6 @@
         return
       }
 
-      // Panggil RPC dengan filter koordinator null (semua), tapi kita filter sendiri hasilnya per rumah
       const now = new Date();
       const defaultStart = '2025-11';
       const defaultEnd = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
@@ -1125,7 +1140,6 @@
 
       if (rpcErr) throw rpcErr;
 
-      // Cari baris untuk rumah ini
       const row = (reportData || []).find(r => r.no_rumah === noRumah);
 
       let pesan = `🏠 Rumah ${noRumah} (${warga.nama_pemilik})\n\n`;
@@ -1134,7 +1148,6 @@
         pesan += `✅ Tidak Ada Tunggakan (Periode Nov 2025 – ${bulanSekarang})\nTerima kasih telah membayar iuran tepat waktu. 🙏`;
       } else {
         pesan += `⚠️ Tunggakan:\n${row.bulan_tunggakan || '-'}\n\nTotal: ${formatRupiah(row.total_tunggakan)}\n\n`;
-        // Hitung jumlah bulan dari string bulan_tunggakan (dipisah koma)
         const jumlahBulan = (row.bulan_tunggakan || '').split(',').filter(x => x.trim()).length;
         if (jumlahBulan >= 2) {
           pesan += `⚠️ PERINGATAN! Jika tunggakan >2 bulan, layanan kebersihan akan dihentikan sementara.`;
@@ -1197,9 +1210,7 @@
     document.getElementById('btnPaymentHistory').addEventListener('click', (e) => { e.preventDefault(); showPaymentHistory(); });
 
     const chartTypeSelect = document.getElementById('chartTypeSelect');
-    chartTypeSelect.addEventListener('change', (e) => {
-      renderChart(e.target.value);
-    });
+    chartTypeSelect.addEventListener('change', (e) => renderChart(e.target.value));
 
     const paymentModal = document.getElementById('paymentModal');
     const btnInfo = document.getElementById('btnInfoPembayaran');
@@ -1227,13 +1238,73 @@
       });
     });
     document.getElementById('year').textContent = new Date().getFullYear();
-
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js')
-        .then(reg => console.log('Service Worker registered', reg))
-        .catch(err => console.error('Service Worker registration failed', err));
-    }
   });
+</script>
+
+<!-- ========== PWA REGISTRATION & INSTALL PROMPT ========== -->
+<script>
+  // ===== Register Service Worker =====
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/sw.js')
+        .then((reg) => {
+          console.log('[PWA] Service Worker registered:', reg.scope);
+
+          // Cek update SW
+          reg.addEventListener('updatefound', () => {
+            const newWorker = reg.installing;
+            newWorker.addEventListener('statechange', () => {
+              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                if (confirm('Versi terbaru KWP3T tersedia. Muat ulang sekarang?')) {
+                  newWorker.postMessage({ type: 'SKIP_WAITING' });
+                  window.location.reload();
+                }
+              }
+            });
+          });
+        })
+        .catch((err) => console.warn('[PWA] SW registration failed:', err));
+    });
+  }
+
+  // ===== Install Prompt (A2HS) =====
+  let deferredPrompt = null;
+  const installBtn = document.getElementById('pwaInstallBtn');
+
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    if (installBtn) installBtn.style.display = 'inline-flex';
+  });
+
+  if (installBtn) {
+    installBtn.addEventListener('click', async () => {
+      if (!deferredPrompt) return;
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      console.log('[PWA] User choice:', outcome);
+      deferredPrompt = null;
+      installBtn.style.display = 'none';
+    });
+  }
+
+  // Sembunyikan tombol kalau sudah di-install
+  window.addEventListener('appinstalled', () => {
+    console.log('[PWA] App installed');
+    if (installBtn) installBtn.style.display = 'none';
+  });
+
+  // ===== Offline / Online indicator =====
+  function updateOnlineStatus() {
+    if (navigator.onLine) {
+      document.body.classList.remove('is-offline');
+    } else {
+      document.body.classList.add('is-offline');
+    }
+  }
+  window.addEventListener('online', updateOnlineStatus);
+  window.addEventListener('offline', updateOnlineStatus);
+  updateOnlineStatus();
 </script>
 </body>
 </html>
