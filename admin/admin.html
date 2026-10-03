@@ -83,50 +83,34 @@
     .btn-wa-tagih:hover { background: #128C7E; }
     .badge-bulan { display: inline-block; background: #fee2e2; color: #991b1b; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 700; margin-left: 4px; }
 
-    /* === PDF Print Header/Footer (hanya tampil saat cetak) === */
-    .pdf-print-header,
-    .pdf-print-footer {
-      display: none;
-      text-align: center;
-    }
-    .pdf-print-header img {
-      width: 70px;
-      height: 70px;
-      border-radius: 50%;
-      object-fit: cover;
-      margin-bottom: 8px;
-    }
-    .pdf-print-header h2 {
-      color: #0b2e4f;
-      font-size: 1.3rem;
-      margin: 6px 0;
-    }
-    .pdf-print-header .pdf-print-subtitle {
-      color: #64748b;
-      font-size: 0.85rem;
-      margin-bottom: 4px;
-    }
-    .pdf-print-header .pdf-print-date {
-      color: #333;
-      font-size: 0.8rem;
-      margin-bottom: 20px;
-      padding-bottom: 12px;
-      border-bottom: 2px solid #0b2e4f;
-    }
-    .pdf-print-footer {
-      margin-top: 30px;
-      padding-top: 12px;
-      border-top: 1px solid #ccc;
-      font-size: 0.7rem;
-      color: #666;
-    }
-    .pdf-print-footer p { margin: 2px 0; }
-    .print-section-title {
-      margin-top: 24px;
-      color: #0b2e4f;
-    }
+    /* === Log Aktivitas === */
+    .log-badge { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; }
+    .log-badge.login    { background: #d1fae5; color: #065f46; }
+    .log-badge.logout   { background: #e5e7eb; color: #374151; }
+    .log-badge.insert   { background: #dbeafe; color: #1e40af; }
+    .log-badge.delete   { background: #fee2e2; color: #991b1b; }
+    .log-badge.update   { background: #fef3c7; color: #92400e; }
+    .log-badge.view     { background: #ede9fe; color: #5b21b6; }
+    .log-badge.export   { background: #cffafe; color: #155e75; }
+    .log-time { font-size: 0.75rem; color: #64748b; }
+    .log-user { font-weight: 600; color: #0b2e4f; font-size: 0.85rem; }
+    .log-detail { font-size: 0.8rem; color: #334155; word-break: break-word; }
+    .log-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 20px; }
+    .log-stats .ls-card { background: white; border-radius: 12px; padding: 14px; text-align: center; box-shadow: 0 2px 6px rgba(0,0,0,0.04); border-left: 3px solid #0b2e4f; }
+    .log-stats .ls-label { font-size: 0.7rem; color: #64748b; font-weight: 600; margin-bottom: 4px; }
+    .log-stats .ls-value { font-size: 1.1rem; font-weight: 800; color: #0b2e4f; }
 
-    /* === Mode PDF (aktif saat export) === */
+    /* === PDF Print Header/Footer === */
+    .pdf-print-header,
+    .pdf-print-footer { display: none; text-align: center; }
+    .pdf-print-header img { width: 70px; height: 70px; border-radius: 50%; object-fit: cover; margin-bottom: 8px; }
+    .pdf-print-header h2 { color: #0b2e4f; font-size: 1.3rem; margin: 6px 0; }
+    .pdf-print-header .pdf-print-subtitle { color: #64748b; font-size: 0.85rem; margin-bottom: 4px; }
+    .pdf-print-header .pdf-print-date { color: #333; font-size: 0.8rem; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 2px solid #0b2e4f; }
+    .pdf-print-footer { margin-top: 30px; padding-top: 12px; border-top: 1px solid #ccc; font-size: 0.7rem; color: #666; }
+    .pdf-print-footer p { margin: 2px 0; }
+    .print-section-title { margin-top: 24px; color: #0b2e4f; }
+
     body.pdf-mode .app-header,
     body.pdf-mode .bottom-nav,
     body.pdf-mode .tabs,
@@ -139,63 +123,21 @@
     body.pdf-mode .btn-secondary,
     body.pdf-mode .btn-danger,
     body.pdf-mode #logoutBtn,
-    body.pdf-mode .tab-btn {
-      display: none !important;
-    }
-    body.pdf-mode {
-      background: white !important;
-      padding-bottom: 0 !important;
-    }
-    body.pdf-mode .container {
-      max-width: 100% !important;
-      padding: 0 !important;
-      margin: 0 !important;
-    }
-    body.pdf-mode #tunggakanPrintArea {
-      display: block !important;
-    }
+    body.pdf-mode .tab-btn { display: none !important; }
+    body.pdf-mode { background: white !important; padding-bottom: 0 !important; }
+    body.pdf-mode .container { max-width: 100% !important; padding: 0 !important; margin: 0 !important; }
+    body.pdf-mode #tunggakanPrintArea { display: block !important; }
     body.pdf-mode .pdf-print-header,
-    body.pdf-mode .pdf-print-footer {
-      display: block !important;
-    }
-    body.pdf-mode .tunggakan-summary {
-      grid-template-columns: repeat(4, 1fr) !important;
-      gap: 12px !important;
-    }
-    body.pdf-mode .tunggakan-summary .ts-card {
-      box-shadow: none !important;
-      border: 1px solid #ccc !important;
-      page-break-inside: avoid;
-    }
-    body.pdf-mode .tunggakan-summary .ts-card.danger {
-      border-left: 4px solid #e74c3c !important;
-    }
-    body.pdf-mode .prioritas-section {
-      background: #fff !important;
-      border: 1px solid #c0392b !important;
-      border-left: 5px solid #e74c3c !important;
-      page-break-inside: avoid;
-    }
-    body.pdf-mode .prioritas-table th {
-      background: #c0392b !important;
-      color: white !important;
-      -webkit-print-color-adjust: exact;
-      print-color-adjust: exact;
-    }
-    body.pdf-mode table {
-      page-break-inside: auto;
-      font-size: 0.75rem;
-    }
-    body.pdf-mode tr {
-      page-break-inside: avoid;
-      page-break-after: auto;
-    }
-    body.pdf-mode thead {
-      display: table-header-group;
-    }
-    body.pdf-mode tfoot {
-      display: table-footer-group;
-    }
+    body.pdf-mode .pdf-print-footer { display: block !important; }
+    body.pdf-mode .tunggakan-summary { grid-template-columns: repeat(4, 1fr) !important; gap: 12px !important; }
+    body.pdf-mode .tunggakan-summary .ts-card { box-shadow: none !important; border: 1px solid #ccc !important; page-break-inside: avoid; }
+    body.pdf-mode .tunggakan-summary .ts-card.danger { border-left: 4px solid #e74c3c !important; }
+    body.pdf-mode .prioritas-section { background: #fff !important; border: 1px solid #c0392b !important; border-left: 5px solid #e74c3c !important; page-break-inside: avoid; }
+    body.pdf-mode .prioritas-table th { background: #c0392b !important; color: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    body.pdf-mode table { page-break-inside: auto; font-size: 0.75rem; }
+    body.pdf-mode tr { page-break-inside: avoid; page-break-after: auto; }
+    body.pdf-mode thead { display: table-header-group; }
+    body.pdf-mode tfoot { display: table-footer-group; }
 
     @media (max-width: 768px) {
       .container { padding: 0 12px; }
@@ -212,18 +154,18 @@
       .tunggakan-summary { grid-template-columns: repeat(2, 1fr); }
       .prioritas-table { font-size: 0.72rem; }
       .prioritas-table th, .prioritas-table td { padding: 6px 8px; }
+      .log-stats { grid-template-columns: repeat(2, 1fr); }
     }
 
     @media print {
       body { padding-bottom: 0; }
-      .app-header, .bottom-nav, .tabs, .filter-bar, .btn-primary, .btn-secondary, .btn-danger, #logoutBtn, .chart-container, .form-card, .btn-wa-tagih, .btn-delete, .btn-edit, .btn-save-role { display: none !important; }
+      .app-header, .bottom-nav, .tabs, .filter-bar, .btn-primary, .btn-secondary, .btn-danger, #logoutBtn, .chart-container, .form-card, .btn-wa-tagih { display: none !important; }
       .container { margin: 0; padding: 0; }
       .table-wrapper { overflow: visible; }
       table { page-break-inside: auto; }
       tr { page-break-inside: avoid; }
       .pdf-print-header, .pdf-print-footer { display: block !important; }
       .pdf-print-header img { margin: 0 auto 8px; }
-      .pdf-print-header h2 { margin: 6px 0; }
       .tunggakan-summary { grid-template-columns: repeat(4, 1fr) !important; }
       .prioritas-section { page-break-inside: avoid; }
       @page { margin: 0.5cm 1cm; }
@@ -367,7 +309,6 @@
       </div>
     </div>
 
-    <!-- ============ TAB LAPORAN TUNGGAKAN ============ -->
     <div id="tab-tunggakan" class="tab-content">
       <h2>Laporan Tunggakan Iuran</h2>
 
@@ -383,9 +324,7 @@
         <button id="printTunggakanPDF" class="btn-secondary" style="background:#27ae60;">🖨️ Cetak PDF</button>
       </div>
 
-      <!-- ====== AREA YANG DICETAK PDF ====== -->
       <div id="tunggakanPrintArea">
-        <!-- PDF Header (hanya muncul saat cetak) -->
         <div class="pdf-print-header">
           <img src="../images/logo.webp" alt="Logo KWP3T" onerror="this.src='https://placehold.co/80x80?text=Logo'">
           <h2>Laporan Tunggakan Iuran KWP3T</h2>
@@ -393,13 +332,9 @@
           <p class="pdf-print-date" id="pdfPrintDate">-</p>
         </div>
 
-        <!-- Summary Cards -->
         <div id="tunggakanSummary"></div>
-
-        <!-- Prioritas ≥ 2 Bulan -->
         <div id="tunggakanPrioritas"></div>
 
-        <!-- Tabel Lengkap -->
         <h3 class="print-section-title">📋 Daftar Lengkap Tunggakan</h3>
         <div class="table-wrapper" id="tunggakanContainer">
           <table id="tunggakanTable">
@@ -410,15 +345,65 @@
           </table>
         </div>
 
-        <!-- PDF Footer (hanya muncul saat cetak) -->
         <div class="pdf-print-footer">
           <p>Dicetak dari Sistem KWP3T v3.2026 | Design by Yetno</p>
           <p>Tanggal cetak: <span id="pdfPrintTimestamp">-</span></p>
         </div>
       </div>
-      <!-- ====== END PDF AREA ====== -->
 
       <p class="info">Catatan: Tunggakan dihitung per bulan berdasarkan riwayat status rumah. Bulan dengan status "Dibebaskan" tidak dihitung tunggakan.</p>
+    </div>
+
+    <!-- ============ TAB LOG AKTIVITAS (BARU) ============ -->
+    <div id="tab-log" class="tab-content">
+      <h2>📋 Log Aktivitas</h2>
+      <p class="info" style="margin-top:0; margin-bottom:16px;">
+        Catatan otomatis semua aksi pengurus. Log bersifat <strong>immutable</strong> (tidak bisa diubah/dihapus) dan hanya bisa dilihat oleh admin.
+      </p>
+
+      <div class="log-stats" id="logStats"></div>
+
+      <div class="filter-bar">
+        <div class="filter-group">
+          <label>Filter Aksi</label>
+          <select id="logFilterAction">
+            <option value="all">Semua Aksi</option>
+            <option value="LOGIN">Login</option>
+            <option value="LOGOUT">Logout</option>
+            <option value="INSERT_TRANSAKSI">Tambah Transaksi</option>
+            <option value="DELETE_TRANSAKSI">Hapus Transaksi</option>
+            <option value="UPDATE_ROLE">Ubah Role</option>
+            <option value="VIEW_LAPORAN">Lihat Laporan</option>
+            <option value="EXPORT_CSV">Export CSV</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label>Tanggal Mulai</label>
+          <input type="date" id="logFilterStart">
+        </div>
+        <div class="filter-group">
+          <label>Tanggal Akhir</label>
+          <input type="date" id="logFilterEnd">
+        </div>
+        <button id="logApplyFilter" class="btn-primary">Filter</button>
+        <button id="logResetFilter" class="btn-secondary">Reset</button>
+        <button id="logExportCsv" class="btn-secondary" style="background:#27ae60;">📄 Export Log (CSV)</button>
+      </div>
+
+      <div class="table-wrapper">
+        <table id="logTable">
+          <thead>
+            <tr>
+              <th style="width:170px;">Waktu</th>
+              <th style="width:170px;">User</th>
+              <th style="width:130px;">Role</th>
+              <th style="width:150px;">Aksi</th>
+              <th>Detail</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
     </div>
 
     <div id="tab-users" class="tab-content" style="display: none;">
@@ -448,11 +433,33 @@
       const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
       let userRole = null;
+      let currentUser = null;
       let iuranChart = null, incomeExpenseChart = null;
       let wargaHpMap = null;
 
       function isSaldoAwal(row) {
         return (row.sumber || '').toLowerCase() === 'saldo awal';
+      }
+
+      // ========== AUDIT LOG HELPER ==========
+      async function logActivity(action, opts = {}) {
+        try {
+          if (!currentUser) return;
+          const payload = {
+            user_id: currentUser.id,
+            user_email: currentUser.email || null,
+            user_role: userRole || null,
+            action: action,
+            target_table: opts.target_table || null,
+            target_id: opts.target_id ? String(opts.target_id) : null,
+            detail: opts.detail || null,
+            user_agent: navigator.userAgent ? navigator.userAgent.slice(0, 200) : null
+          };
+          const { error } = await supabase.from('activity_log').insert(payload);
+          if (error) console.warn('logActivity gagal:', error.message);
+        } catch (err) {
+          console.warn('logActivity exception:', err);
+        }
       }
 
       // ========== CEK LOGIN ==========
@@ -466,12 +473,19 @@
           return;
         }
         userRole = profile.role;
+        currentUser = { id: user.id, email: user.email };
         const allowedRoles = ['admin', 'bendahara', 'sekretaris'];
         if (!allowedRoles.includes(userRole)) {
           alert('Akses ditolak.');
           window.location.href = '../index.html';
           return;
         }
+
+        // Catat LOGIN
+        await logActivity('LOGIN', {
+          detail: `Login sebagai ${userRole}`
+        });
+
         if (userRole === 'admin') {
           const tabsContainer = document.getElementById('tabsContainer');
           const usersTabBtn = document.createElement('button');
@@ -480,7 +494,16 @@
           usersTabBtn.innerText = 'Manajemen User';
           tabsContainer.appendChild(usersTabBtn);
           document.getElementById('tab-users').style.display = 'block';
+
+          // Tambah tab Log Aktivitas (hanya admin)
+          const logTabBtn = document.createElement('button');
+          logTabBtn.className = 'tab-btn';
+          logTabBtn.setAttribute('data-tab', 'log');
+          logTabBtn.innerText = '📋 Log Aktivitas';
+          tabsContainer.appendChild(logTabBtn);
+          document.getElementById('tab-log').style.display = 'block';
         }
+
         initDashboard();
         initNonIuran();
         initManageTransactions();
@@ -497,6 +520,13 @@
       }
       function formatDate(iso) {
         return new Date(iso).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' });
+      }
+      function formatDateTime(iso) {
+        const d = new Date(iso);
+        return d.toLocaleString('id-ID', {
+          day: '2-digit', month: 'short', year: 'numeric',
+          hour: '2-digit', minute: '2-digit'
+        });
       }
       async function setLoading(btnElement, isLoading) {
         if (isLoading) {
@@ -635,6 +665,7 @@
           link.href = url; link.download = filename;
           document.body.appendChild(link); link.click(); document.body.removeChild(link);
           URL.revokeObjectURL(url);
+          await logActivity('EXPORT_CSV', { target_table: tableName, detail: `Export ${tableName} → ${filename}` });
         } catch (err) { console.error(err); alert('Gagal ekspor: ' + err.message); }
       }
 
@@ -675,9 +706,19 @@
           saveBtn.innerText = 'Simpan';
           saveBtn.className = 'btn-secondary btn-sm';
           saveBtn.onclick = async () => {
-            const { error: updateError } = await supabase.from('profiles').update({ role: select.value }).eq('id', prof.id);
+            const oldRole = prof.role;
+            const newRole = select.value;
+            const { error: updateError } = await supabase.from('profiles').update({ role: newRole }).eq('id', prof.id);
             if (updateError) alert('Gagal update role: ' + updateError.message);
-            else { alert(`Role diubah menjadi ${select.value}`); loadUsers(); }
+            else {
+              await logActivity('UPDATE_ROLE', {
+                target_table: 'profiles',
+                target_id: prof.email,
+                detail: `Role ${prof.email}: ${oldRole} → ${newRole}`
+              });
+              alert(`Role diubah menjadi ${newRole}`);
+              loadUsers();
+            }
           };
           actionCell.appendChild(saveBtn);
         }
@@ -717,6 +758,11 @@
             p_jenis: 'Pemasukan', p_sumber: 'Pemasukan Lain'
           });
           if (error) throw error;
+          await logActivity('INSERT_TRANSAKSI', {
+            target_table: 'transaksi_kas',
+            target_id: kasId,
+            detail: `Pemasukan Lain: ${keterangan} - ${formatRupiah(jumlah)}`
+          });
           alert('✅ Pemasukan ditambahkan');
           document.getElementById('formPemasukanLain').reset();
           document.getElementById('kategori_pemasukan_manual_group').style.display = 'none';
@@ -747,6 +793,11 @@
             p_jenis: 'Pengeluaran', p_sumber: 'Pengeluaran Lain'
           });
           if (error) throw error;
+          await logActivity('INSERT_TRANSAKSI', {
+            target_table: 'transaksi_kas',
+            target_id: kasId,
+            detail: `Pengeluaran Lain: ${keterangan} - ${formatRupiah(jumlah)}`
+          });
           alert('✅ Pengeluaran ditambahkan');
           document.getElementById('formPengeluaranLain').reset();
           document.getElementById('kategori_pengeluaran_manual_group').style.display = 'none';
@@ -783,7 +834,14 @@
             if (confirm('Hapus transaksi ini? Saldo tidak otomatis dikembalikan.')) {
               const { error: delError } = await supabase.from('transaksi_kas').delete().eq('kas_id', t.kas_id);
               if (delError) alert('Gagal: ' + delError.message);
-              else { alert('Dihapus'); loadNonIuranTransactions(); loadStats(); initCharts(); }
+              else {
+                await logActivity('DELETE_TRANSAKSI', {
+                  target_table: 'transaksi_kas',
+                  target_id: t.kas_id,
+                  detail: `Hapus: ${t.keterangan} (${formatRupiah(t.pemasukan || t.pengeluaran)})`
+                });
+                alert('Dihapus'); loadNonIuranTransactions(); loadStats(); initCharts();
+              }
             }
           };
           actionCell.appendChild(delBtn);
@@ -826,7 +884,14 @@
             if (confirm('Hapus transaksi ini?')) {
               const { error: delError } = await supabase.from('transaksi_kas').delete().eq('kas_id', t.kas_id);
               if (delError) alert('Gagal: ' + delError.message);
-              else { alert('Dihapus'); loadAllTransactions(filterJenis, startDate, endDate); loadStats(); initCharts(); loadNonIuranTransactions(); }
+              else {
+                await logActivity('DELETE_TRANSAKSI', {
+                  target_table: 'transaksi_kas',
+                  target_id: t.kas_id,
+                  detail: `Hapus: ${t.keterangan} (${formatRupiah(t.pemasukan || t.pengeluaran)})`
+                });
+                alert('Dihapus'); loadAllTransactions(filterJenis, startDate, endDate); loadStats(); initCharts(); loadNonIuranTransactions();
+              }
             }
           };
           actionCell.appendChild(delBtn);
@@ -889,6 +954,11 @@
         });
         if (error) { alert('Gagal: ' + error.message); return; }
         const rows = data || [];
+
+        await logActivity('VIEW_LAPORAN', {
+          target_table: 'get_tunggakan_report',
+          detail: `Periode ${startMonth} – ${endMonth}, Koord: ${koordinatorFilter === 'all' ? 'Semua' : koordinatorFilter}`
+        });
 
         const totalTunggakan = rows.reduce((s, r) => s + (r.total_tunggakan || 0), 0);
         const totalRumah = rows.length;
@@ -1013,64 +1083,145 @@
           startInput.value = defaultStart; endInput.value = defaultEnd; koordSelect.value = 'all'; loadReport();
         });
 
-        // ==== CETAK PDF (Ringkasan + Prioritas + Tabel) ====
         document.getElementById('printTunggakanPDF').addEventListener('click', async () => {
           const printArea = document.getElementById('tunggakanPrintArea');
-          if (!printArea) {
-            alert('Area cetak tidak ditemukan.');
-            return;
-          }
+          if (!printArea) { alert('Area cetak tidak ditemukan.'); return; }
 
-          // Set tanggal cetak di header & footer PDF
           const now = new Date();
-          const tglCetak = now.toLocaleDateString('id-ID', {
-            weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
-          });
-          const waktuCetak = now.toLocaleString('id-ID', {
-            day: '2-digit', month: 'short', year: 'numeric',
-            hour: '2-digit', minute: '2-digit'
-          });
+          const tglCetak = now.toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+          const waktuCetak = now.toLocaleString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
           const pdfDateEl = document.getElementById('pdfPrintDate');
           const pdfTsEl   = document.getElementById('pdfPrintTimestamp');
           if (pdfDateEl) pdfDateEl.textContent = `Periode: ${startInput.value} s/d ${endInput.value} | Dicetak: ${tglCetak}`;
           if (pdfTsEl)   pdfTsEl.textContent   = waktuCetak;
 
-          // Aktifkan mode PDF (sembunyikan elemen non-cetak)
           document.body.classList.add('pdf-mode');
-
-          // Tunggu CSS mode PDF diterapkan
           await new Promise(resolve => setTimeout(resolve, 500));
 
           const opt = {
             margin: [0.4, 0.4, 0.5, 0.4],
             filename: `laporan_tunggakan_${startInput.value}_to_${endInput.value}.pdf`,
             image: { type: 'jpeg', quality: 0.95 },
-            html2canvas: {
-              scale: 2,
-              letterRendering: true,
-              useCORS: true,
-              scrollY: 0,
-              logging: false
-            },
-            jsPDF: {
-              unit: 'in',
-              format: 'a4',
-              orientation: 'portrait'
-            },
+            html2canvas: { scale: 2, letterRendering: true, useCORS: true, scrollY: 0, logging: false },
+            jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' },
             pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
           };
 
           try {
             await html2pdf().set(opt).from(printArea).save();
+            await logActivity('EXPORT_CSV', {
+              target_table: 'laporan_tunggakan',
+              detail: `Cetak PDF periode ${startInput.value} – ${endInput.value}`
+            });
           } catch (err) {
             console.error('PDF Error:', err);
-            alert('Gagal membuat PDF. Silakan coba lagi.');
+            alert('Gagal membuat PDF.');
           } finally {
             document.body.classList.remove('pdf-mode');
           }
         });
 
         loadReport();
+      }
+
+      // ========== LOG AKTIVITAS ==========
+      let logCache = [];
+
+      async function loadLogs(filterAction = 'all', startDate = null, endDate = null) {
+        const tbody = document.querySelector('#logTable tbody');
+        if (!tbody) return;
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Memuat log...</td></tr>';
+
+        let query = supabase
+          .from('activity_log')
+          .select('*')
+          .limit(2000)
+          .order('created_at', { ascending: false });
+
+        if (filterAction !== 'all') query = query.eq('action', filterAction);
+        if (startDate) query = query.gte('created_at', startDate + 'T00:00:00');
+        if (endDate)   query = query.lte('created_at', endDate + 'T23:59:59');
+
+        const { data, error } = await query;
+        if (error) {
+          tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#e74c3c;">Gagal memuat log: ${error.message}</td></tr>`;
+          return;
+        }
+
+        logCache = data || [];
+
+        // Stats
+        const totalLog = logCache.length;
+        const loginHariIni = logCache.filter(l => l.action === 'LOGIN' && new Date(l.created_at).toDateString() === new Date().toDateString()).length;
+        const insertHariIni = logCache.filter(l => l.action === 'INSERT_TRANSAKSI' && new Date(l.created_at).toDateString() === new Date().toDateString()).length;
+        const deleteHariIni = logCache.filter(l => l.action === 'DELETE_TRANSAKSI' && new Date(l.created_at).toDateString() === new Date().toDateString()).length;
+
+        document.getElementById('logStats').innerHTML = `
+          <div class="ls-card"><div class="ls-label">Total Log (maks 2000)</div><div class="ls-value">${totalLog}</div></div>
+          <div class="ls-card"><div class="ls-label">Login Hari Ini</div><div class="ls-value">${loginHariIni}</div></div>
+          <div class="ls-card"><div class="ls-label">Tambah Transaksi Hari Ini</div><div class="ls-value">${insertHariIni}</div></div>
+          <div class="ls-card"><div class="ls-label">Hapus Transaksi Hari Ini</div><div class="ls-value">${deleteHariIni}</div></div>
+        `;
+
+        if (!logCache.length) {
+          tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Belum ada log aktivitas.</td></tr>';
+          return;
+        }
+
+        tbody.innerHTML = logCache.map(l => {
+          const actionClass = (l.action || '').toLowerCase().includes('login') ? 'login'
+                            : (l.action || '').toLowerCase().includes('logout') ? 'logout'
+                            : (l.action || '').toLowerCase().includes('delete') ? 'delete'
+                            : (l.action || '').toLowerCase().includes('update') ? 'update'
+                            : (l.action || '').toLowerCase().includes('insert') ? 'insert'
+                            : (l.action || '').toLowerCase().includes('export') ? 'export'
+                            : 'view';
+          return `
+            <tr>
+              <td><span class="log-time">${formatDateTime(l.created_at)}</span></td>
+              <td><span class="log-user">${l.user_email || '-'}</span></td>
+              <td>${l.user_role || '-'}</td>
+              <td><span class="log-badge ${actionClass}">${l.action || '-'}</span></td>
+              <td>
+                <div class="log-detail">${l.detail || '-'}</div>
+                ${l.target_table ? `<div class="log-time" style="margin-top:2px;">Tabel: ${l.target_table}${l.target_id ? ' • ID: ' + l.target_id : ''}</div>` : ''}
+              </td>
+            </tr>`;
+        }).join('');
+      }
+
+      function initLogs() {
+        const filterAction = document.getElementById('logFilterAction');
+        const startDate = document.getElementById('logFilterStart');
+        const endDate = document.getElementById('logFilterEnd');
+
+        const load = () => loadLogs(filterAction.value, startDate.value, endDate.value);
+
+        document.getElementById('logApplyFilter').addEventListener('click', load);
+        document.getElementById('logResetFilter').addEventListener('click', () => {
+          filterAction.value = 'all'; startDate.value = ''; endDate.value = ''; load();
+        });
+        document.getElementById('logExportCsv').addEventListener('click', () => {
+          if (!logCache.length) { alert('Tidak ada log untuk diekspor.'); return; }
+          const cols = ['created_at', 'user_email', 'user_role', 'action', 'target_table', 'target_id', 'detail'];
+          const headers = cols.join(',');
+          const rows = logCache.map(l => cols.map(c => {
+            let v = l[c];
+            if (v === null || v === undefined) v = '';
+            if (typeof v === 'string' && (v.includes(',') || v.includes('"'))) v = `"${v.replace(/"/g, '""')}"`;
+            return v;
+          }).join(','));
+          const csv = [headers, ...rows].join('\n');
+          const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+          const link = document.createElement('a');
+          link.href = URL.createObjectURL(blob);
+          link.download = `log_aktivitas_${new Date().toISOString().slice(0,10)}.csv`;
+          document.body.appendChild(link); link.click(); document.body.removeChild(link);
+          URL.revokeObjectURL(link.href);
+          logActivity('EXPORT_CSV', { target_table: 'activity_log', detail: 'Export log aktivitas → CSV' });
+        });
+
+        load();
       }
 
       // ========== INIT ==========
@@ -1101,12 +1252,14 @@
             if (tabId === 'tunggakan') {
               generateTunggakanReport(document.getElementById('tunggakanStartMonth').value, document.getElementById('tunggakanEndMonth').value, document.getElementById('tunggakanKoordinator').value);
             }
+            if (tabId === 'log') initLogs();
           });
         });
       }
       function initLogout() {
         document.getElementById('logoutBtn').addEventListener('click', async (e) => {
           e.preventDefault();
+          await logActivity('LOGOUT', { detail: 'Logout dari panel admin' });
           await supabase.auth.signOut();
           window.location.href = 'login.html';
         });
