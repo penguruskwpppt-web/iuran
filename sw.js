@@ -1,4 +1,4 @@
-const CACHE_NAME = 'kwp3t-v1.0.0'; // Ubah versi ini setiap kali Anda update web
+const CACHE_NAME = 'kwp3t-v1.0.1'; // Ubah versi ini setiap kali Anda update web
 const RUNTIME_CACHE = 'kwp3t-runtime-v1';
 
 // Daftar file yang akan di-cache saat pertama kali diakses
@@ -9,8 +9,8 @@ const PRECACHE_ASSETS = [
   '/offline.html',
   '/manifest.json',
   '/images/logo.webp',
-  '/images/logo-192.webp',
-  '/images/logo-512.webp'
+  '/images/logo_192.png',
+  '/images/logo_512.png'
 ];
 
 // ===== INSTALL =====
