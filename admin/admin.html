@@ -354,11 +354,10 @@
       <p class="info">Catatan: Tunggakan dihitung per bulan berdasarkan riwayat status rumah. Bulan dengan status "Dibebaskan" tidak dihitung tunggakan.</p>
     </div>
 
-    <!-- ============ TAB LOG AKTIVITAS (BARU) ============ -->
     <div id="tab-log" class="tab-content">
       <h2>📋 Log Aktivitas</h2>
       <p class="info" style="margin-top:0; margin-bottom:16px;">
-        Catatan otomatis semua aksi pengurus. Log bersifat <strong>immutable</strong> (tidak bisa diubah/dihapus) dan hanya bisa dilihat oleh admin.
+        Catatan otomatis semua aksi pengurus. Log bersifat <strong>immutable</strong> (tidak bisa diubah/dihapus) dan bisa dilihat oleh <strong>semua pengurus</strong>.
       </p>
 
       <div class="log-stats" id="logStats"></div>
@@ -486,6 +485,20 @@
           detail: `Login sebagai ${userRole}`
         });
 
+        // ========== TAB LOG AKTIVITAS (SEMUA PENGURUS) ==========
+        // Muncul untuk admin, bendahara, sekretaris
+        const rolesBisaLihatLog = ['admin', 'bendahara', 'sekretaris'];
+        if (rolesBisaLihatLog.includes(userRole)) {
+          const tabsContainer = document.getElementById('tabsContainer');
+          const logTabBtn = document.createElement('button');
+          logTabBtn.className = 'tab-btn';
+          logTabBtn.setAttribute('data-tab', 'log');
+          logTabBtn.innerText = '📋 Log Aktivitas';
+          tabsContainer.appendChild(logTabBtn);
+          document.getElementById('tab-log').style.display = 'block';
+        }
+
+        // ========== TAB MANAJEMEN USER (HANYA ADMIN) ==========
         if (userRole === 'admin') {
           const tabsContainer = document.getElementById('tabsContainer');
           const usersTabBtn = document.createElement('button');
@@ -494,14 +507,6 @@
           usersTabBtn.innerText = 'Manajemen User';
           tabsContainer.appendChild(usersTabBtn);
           document.getElementById('tab-users').style.display = 'block';
-
-          // Tambah tab Log Aktivitas (hanya admin)
-          const logTabBtn = document.createElement('button');
-          logTabBtn.className = 'tab-btn';
-          logTabBtn.setAttribute('data-tab', 'log');
-          logTabBtn.innerText = '📋 Log Aktivitas';
-          tabsContainer.appendChild(logTabBtn);
-          document.getElementById('tab-log').style.display = 'block';
         }
 
         initDashboard();
@@ -1150,7 +1155,6 @@
 
         logCache = data || [];
 
-        // Stats
         const totalLog = logCache.length;
         const loginHariIni = logCache.filter(l => l.action === 'LOGIN' && new Date(l.created_at).toDateString() === new Date().toDateString()).length;
         const insertHariIni = logCache.filter(l => l.action === 'INSERT_TRANSAKSI' && new Date(l.created_at).toDateString() === new Date().toDateString()).length;
