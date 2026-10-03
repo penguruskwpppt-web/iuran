@@ -18,10 +18,8 @@
     body {
       font-family: 'Inter', sans-serif;
       background: #f4f4f4;
-      padding-bottom: 70px; /* space for bottom nav */
+      padding-bottom: 70px;
     }
-
-    /* Header styling */
     .app-header {
       background: #0b2e4f;
       color: white;
@@ -69,20 +67,15 @@
     .header-actions button:active {
       transform: scale(0.96);
     }
-
-    /* Main container */
     .container {
       max-width: 1200px;
       margin: 20px auto;
       padding: 0 16px;
     }
-
     h1 {
       margin-bottom: 20px;
       color: #0b2e4f;
     }
-
-    /* Tabs */
     .tabs {
       display: flex;
       gap: 10px;
@@ -106,15 +99,12 @@
       background: #0b2e4f;
       color: white;
     }
-
     .tab-content {
       display: none;
     }
     .tab-content.active {
       display: block;
     }
-
-    /* Stats grid */
     .stats-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -142,8 +132,6 @@
       font-weight: 800;
       color: #0b2e4f;
     }
-
-    /* Tables */
     .table-wrapper {
       overflow-x: auto;
       margin: 20px 0;
@@ -164,8 +152,6 @@
       background: #0b2e4f;
       color: white;
     }
-
-    /* Buttons */
     .btn-primary, .btn-secondary, .btn-danger {
       padding: 8px 16px;
       border: none;
@@ -206,8 +192,6 @@
       font-size: 0.85rem;
       color: #64748b;
     }
-
-    /* Form cards */
     .form-card {
       background: white;
       border-radius: 20px;
@@ -233,8 +217,6 @@
       border: 1px solid #e2e8f0;
       border-radius: 12px;
     }
-
-    /* Filter bar */
     .filter-bar {
       display: flex;
       flex-wrap: wrap;
@@ -259,8 +241,6 @@
       font-weight: 600;
       font-size: 0.85rem;
     }
-
-    /* Loading spinner */
     .btn-loading {
       position: relative;
       pointer-events: none;
@@ -283,8 +263,6 @@
     @keyframes spin {
       to { transform: rotate(360deg); }
     }
-
-    /* Chart container */
     .chart-container {
       background: white;
       padding: 20px;
@@ -296,8 +274,6 @@
       max-height: 300px;
       width: 100%;
     }
-
-    /* Bottom navigation */
     .bottom-nav {
       position: fixed;
       bottom: 0;
@@ -333,8 +309,6 @@
     .nav-item:active {
       transform: scale(0.95);
     }
-
-    /* Responsive */
     @media (max-width: 768px) {
       .container {
         padding: 0 12px;
@@ -375,8 +349,6 @@
         padding: 12px;
       }
     }
-
-    /* Print styles */
     @media print {
       body {
         padding-bottom: 0;
@@ -415,7 +387,6 @@
   </style>
 </head>
 <body>
-  <!-- Header -->
   <div class="app-header">
     <div class="header-title">
       <img src="../images/logo.webp" alt="Logo KWP3T" onerror="this.src='https://placehold.co/40x40?text=Logo'">
@@ -524,7 +495,7 @@
         <div class="table-wrapper">
           <table id="nonIuranTable">
             <thead>
-              <tr><th>Tanggal</th><th>Jenis</th><th>Keterangan</th><th>Jumlah</th><th>Aksi</th>
+              <tr><th>Tanggal</th><th>Jenis</th><th>Keterangan</th><th>Jumlah</th><th>Aksi</th></tr>
             </thead>
             <tbody></tbody>
            </table>
@@ -559,7 +530,7 @@
       <div class="table-wrapper">
         <table id="allTransactionsTable">
           <thead>
-            <tr><th>Tanggal</th><th>Jenis</th><th>Keterangan</th><th>Pemasukan</th><th>Pengeluaran</th><th>Saldo</th><th>Aksi</th>
+            <tr><th>Tanggal</th><th>Jenis</th><th>Keterangan</th><th>Pemasukan</th><th>Pengeluaran</th><th>Saldo</th><th>Aksi</th></tr>
           </thead>
           <tbody></tbody>
          </table>
@@ -592,7 +563,7 @@
       <div class="table-wrapper" id="tunggakanContainer">
         <table id="tunggakanTable">
           <thead>
-            <tr><th>No Rumah</th><th>Penghuni</th><th>Iuran/bln</th><th>Koordinator</th><th>Bulan Tunggakan</th><th>Total Tunggakan</th>
+            <tr><th>No Rumah</th><th>Penghuni</th><th>Iuran/bln</th><th>Koordinator</th><th>Bulan Tunggakan</th><th>Total Tunggakan</th></tr>
           </thead>
           <tbody></tbody>
          </table>
@@ -600,7 +571,7 @@
       <p class="info">Catatan: Tunggakan dihitung per bulan berdasarkan riwayat status rumah. Bulan dengan status "Dibebaskan" tidak dihitung tunggakan.</p>
     </div>
 
-    <!-- Manajemen User (hanya untuk admin) -->
+    <!-- Manajemen User -->
     <div id="tab-users" class="tab-content" style="display: none;">
       <h2>Daftar User & Role</h2>
       <div class="table-wrapper">
@@ -613,7 +584,6 @@
     </div>
   </div>
 
-  <!-- Bottom Navigation -->
   <div class="bottom-nav">
     <a href="admin.html" class="nav-item active"><i class="fas fa-chart-pie"></i><span>Dashboard</span></a>
     <a href="warga.html" class="nav-item"><i class="fas fa-users"></i><span>Warga</span></a>
@@ -631,6 +601,11 @@
 
       let userRole = null;
       let iuranChart = null, incomeExpenseChart = null;
+
+      // Helper: deteksi baris Saldo Awal (case-insensitive)
+      function isSaldoAwal(row) {
+        return (row.sumber || '').toLowerCase() === 'saldo awal';
+      }
 
       // ========== CEK LOGIN & ROLE ==========
       (async () => {
@@ -710,23 +685,47 @@
           const { count: totalKosong } = await supabase.from('warga').select('*', { count: 'exact', head: true }).eq('kondisi_terakhir', 'Kosong');
           const { count: totalDibebaskan } = await supabase.from('warga').select('*', { count: 'exact', head: true }).eq('kondisi_terakhir', 'Dibebaskan');
 
-          const { data: iuranData } = await supabase.from('transaksi_iuran').select('jumlah');
-          let totalIuran = iuranData?.reduce((s,t)=>s+t.jumlah,0) || 0;
+          // Sumber tunggal: transaksi_kas
+          const { data: allKas, error } = await supabase
+            .from('transaksi_kas')
+            .select('pemasukan, pengeluaran, saldo, sumber, tanggal')
+            .limit(100000)
+            .order('tanggal', { ascending: true })
+            .order('kas_id',  { ascending: true });
 
-          const { data: pemasukanLain } = await supabase.from('transaksi_kas').select('pemasukan').eq('jenis','Pemasukan').neq('sumber','Iuran Warga');
-          let totalPemasukanLain = pemasukanLain?.reduce((s,t)=>s+t.pemasukan,0) || 0;
+          if (error) throw error;
 
-          const { data: pengeluaranData } = await supabase.from('transaksi_kas').select('pengeluaran').eq('jenis','Pengeluaran');
-          let totalPengeluaran = pengeluaranData?.reduce((s,t)=>s+t.pengeluaran,0) || 0;
+          // Total Pemasukan: EXCLUDE Saldo Awal
+          const totalPemasukan = (allKas || [])
+            .filter(r => !isSaldoAwal(r))
+            .reduce((s, t) => s + (t.pemasukan || 0), 0);
 
-          const { data: saldoData } = await supabase.rpc('get_current_saldo');
-          const saldo = saldoData || 0;
+          // Total Pengeluaran: EXCLUDE Saldo Awal
+          const totalPengeluaran = (allKas || [])
+            .filter(r => !isSaldoAwal(r))
+            .reduce((s, t) => s + (t.pengeluaran || 0), 0);
 
+          // Iuran (dari sumber='Iuran Warga')
+          const totalIuran = (allKas || [])
+            .filter(r => r.sumber === 'Iuran Warga')
+            .reduce((s, t) => s + (t.pemasukan || 0), 0);
+
+          const totalPemasukanLain = totalPemasukan - totalIuran;
+
+          // Saldo Akhir: kolom saldo baris terakhir
+          const saldoAkhir = allKas && allKas.length > 0
+            ? allKas[allKas.length - 1].saldo
+            : 0;
+
+          // Iuran Bulan Ini
           const now = new Date();
           const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-          const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString();
-          const { data: iuranBulanIni } = await supabase.from('transaksi_kas').select('pemasukan').eq('jenis','Pemasukan').eq('sumber','Iuran Warga').gte('tanggal',firstDay).lte('tanggal',lastDay);
-          let totalIuranBulanIni = iuranBulanIni?.reduce((s,t)=>s+t.pemasukan,0) || 0;
+          const lastDay  = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59).toISOString();
+          const totalIuranBulanIni = (allKas || [])
+            .filter(r => r.sumber === 'Iuran Warga'
+                      && r.tanggal >= firstDay
+                      && r.tanggal <= lastDay)
+            .reduce((s, t) => s + (t.pemasukan || 0), 0);
 
           statsDiv.innerHTML = `
             <div class="stats-grid">
@@ -734,10 +733,11 @@
               <div class="card"><h3>Berpenghuni</h3><p>${totalPenghuni || 0}</p></div>
               <div class="card"><h3>Kosong</h3><p>${totalKosong || 0}</p></div>
               <div class="card"><h3>Dibebaskan</h3><p>${totalDibebaskan || 0}</p></div>
+              <div class="card"><h3>Total Pemasukan</h3><p>${formatRupiah(totalPemasukan)}</p></div>
               <div class="card"><h3>Total Iuran Terkumpul</h3><p>${formatRupiah(totalIuran)}</p></div>
               <div class="card"><h3>Total Pemasukan Lain</h3><p>${formatRupiah(totalPemasukanLain)}</p></div>
               <div class="card"><h3>Total Pengeluaran</h3><p>${formatRupiah(totalPengeluaran)}</p></div>
-              <div class="card"><h3>Saldo Kas Terakhir</h3><p>${formatRupiah(saldo)}</p></div>
+              <div class="card"><h3>Saldo Kas Terakhir</h3><p>${formatRupiah(saldoAkhir)}</p></div>
               <div class="card"><h3>Iuran Bulan Ini</h3><p>${formatRupiah(totalIuranBulanIni)}</p></div>
             </div>
           `;
@@ -749,25 +749,34 @@
 
       // ========== GRAFIK ==========
       async function initCharts() {
-        // Grafik iuran per bulan (12 bulan terakhir)
+        // Grafik iuran per bulan (12 bulan terakhir) — dari transaksi_kas
         const now = new Date();
         const months = [];
         const iuranData = [];
+        const firstOfRange = new Date(now.getFullYear(), now.getMonth() - 11, 1);
+
+        const { data: allKas } = await supabase
+          .from('transaksi_kas')
+          .select('tanggal, pemasukan, pengeluaran, sumber')
+          .gte('tanggal', firstOfRange.toISOString())
+          .lte('tanggal', new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59).toISOString())
+          .limit(100000)
+          .order('tanggal', { ascending: true })
+          .order('kas_id',  { ascending: true });
+
         for (let i = 11; i >= 0; i--) {
           const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
           const monthStart = new Date(d.getFullYear(), d.getMonth(), 1).toISOString();
-          const monthEnd = new Date(d.getFullYear(), d.getMonth() + 1, 0).toISOString();
+          const monthEnd   = new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59).toISOString();
           months.push(d.toLocaleDateString('id-ID', { month: 'short', year: 'numeric' }));
-          const { data } = await supabase
-            .from('transaksi_kas')
-            .select('pemasukan')
-            .eq('jenis', 'Pemasukan')
-            .eq('sumber', 'Iuran Warga')
-            .gte('tanggal', monthStart)
-            .lte('tanggal', monthEnd);
-          const total = data?.reduce((s,t)=>s+t.pemasukan,0) || 0;
+          const total = (allKas || [])
+            .filter(r => r.sumber === 'Iuran Warga'
+                      && r.tanggal >= monthStart
+                      && r.tanggal <= monthEnd)
+            .reduce((s, t) => s + (t.pemasukan || 0), 0);
           iuranData.push(total);
         }
+
         const ctxIuran = document.getElementById('iuranChart').getContext('2d');
         if (iuranChart) iuranChart.destroy();
         iuranChart = new Chart(ctxIuran, {
@@ -794,21 +803,23 @@
 
         // Grafik pemasukan & pengeluaran bulan ini
         const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-        const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString();
-        const { data: pemasukanBulanIni } = await supabase
+        const lastDay  = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59).toISOString();
+
+        // Ambil data bulan ini, EXCLUDE Saldo Awal
+        const { data: bulanIni } = await supabase
           .from('transaksi_kas')
-          .select('pemasukan')
-          .eq('jenis', 'Pemasukan')
+          .select('pemasukan, pengeluaran, sumber')
           .gte('tanggal', firstDay)
-          .lte('tanggal', lastDay);
-        const { data: pengeluaranBulanIni } = await supabase
-          .from('transaksi_kas')
-          .select('pengeluaran')
-          .eq('jenis', 'Pengeluaran')
-          .gte('tanggal', firstDay)
-          .lte('tanggal', lastDay);
-        const totalPemasukan = pemasukanBulanIni?.reduce((s,t)=>s+t.pemasukan,0) || 0;
-        const totalPengeluaran = pengeluaranBulanIni?.reduce((s,t)=>s+t.pengeluaran,0) || 0;
+          .lte('tanggal', lastDay)
+          .limit(100000)
+          .order('tanggal', { ascending: true });
+
+        const totalPemasukan = (bulanIni || [])
+          .filter(r => !isSaldoAwal(r))
+          .reduce((s, t) => s + (t.pemasukan || 0), 0);
+        const totalPengeluaran = (bulanIni || [])
+          .filter(r => !isSaldoAwal(r))
+          .reduce((s, t) => s + (t.pengeluaran || 0), 0);
 
         const ctxInEx = document.getElementById('incomeExpenseChart').getContext('2d');
         if (incomeExpenseChart) incomeExpenseChart.destroy();
@@ -835,7 +846,7 @@
       // ========== EKSPOR CSV (UNIVERSAL) ==========
       async function exportToCSV(tableName, columns, filename, orderColumn = null) {
         try {
-          let query = supabase.from(tableName).select(columns.join(','));
+          let query = supabase.from(tableName).select(columns.join(',')).limit(100000);
           if (orderColumn) {
             query = query.order(orderColumn, { ascending: true });
           }
@@ -887,6 +898,7 @@
         const { data: profiles, error } = await supabase
           .from('profiles')
           .select('id, email, role')
+          .limit(100000)
           .order('email');
         if (error) {
           console.error(error);
@@ -929,7 +941,7 @@
         }
       }
 
-      // ========== TRANSAKSI NON-IURAN (menggunakan RPC) ==========
+      // ========== TRANSAKSI NON-IURAN ==========
       function setupCategoryManual(selectId, manualGroupId, manualInputId) {
         const select = document.getElementById(selectId);
         const manualGroup = document.getElementById(manualGroupId);
@@ -1063,16 +1075,16 @@
           .from('transaksi_kas')
           .select('kas_id, tanggal, keterangan, pemasukan, pengeluaran, sumber')
           .eq('jenis', 'Pengeluaran')
-          .order('tanggal', { ascending: false })
-          .limit(20);
+          .limit(20)
+          .order('tanggal', { ascending: false });
 
         const { data: pemasukan, error: err2 } = await supabase
           .from('transaksi_kas')
           .select('kas_id, tanggal, keterangan, pemasukan, pengeluaran, sumber')
           .eq('jenis', 'Pemasukan')
           .neq('sumber', 'Iuran Warga')
-          .order('tanggal', { ascending: false })
-          .limit(20);
+          .limit(20)
+          .order('tanggal', { ascending: false });
 
         if (err1 || err2) {
           console.error('Error fetching non-iuran transactions:', err1, err2);
@@ -1138,7 +1150,9 @@
         let query = supabase
           .from('transaksi_kas')
           .select('kas_id, tanggal, keterangan, pemasukan, pengeluaran, saldo, sumber, jenis')
-          .order('tanggal', { ascending: false });
+          .limit(100000)
+          .order('tanggal', { ascending: false })
+          .order('kas_id',  { ascending: false });
 
         if (filterJenis !== 'all') {
           if (filterJenis === 'Iuran Warga') {
@@ -1150,7 +1164,7 @@
           }
         }
         if (startDate) query = query.gte('tanggal', startDate);
-        if (endDate) query = query.lte('tanggal', endDate);
+        if (endDate) query = query.lte('tanggal', endDate + 'T23:59:59');
 
         const { data, error } = await query;
         if (error) {
@@ -1228,6 +1242,7 @@
           .from('warga')
           .select('koordinator')
           .not('koordinator', 'is', null)
+          .limit(100000)
           .order('koordinator');
         if (error) {
           console.error(error);
@@ -1385,7 +1400,7 @@
         document.getElementById('export-all').onclick = exportAllData;
       }
 
-      // ========== PWA REGISTRATION (opsional) ==========
+      // PWA Registration
       if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('/sw.js').catch(err => console.log('SW registration failed:', err));
       }
