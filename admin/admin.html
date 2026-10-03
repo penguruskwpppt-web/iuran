@@ -83,6 +83,120 @@
     .btn-wa-tagih:hover { background: #128C7E; }
     .badge-bulan { display: inline-block; background: #fee2e2; color: #991b1b; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 700; margin-left: 4px; }
 
+    /* === PDF Print Header/Footer (hanya tampil saat cetak) === */
+    .pdf-print-header,
+    .pdf-print-footer {
+      display: none;
+      text-align: center;
+    }
+    .pdf-print-header img {
+      width: 70px;
+      height: 70px;
+      border-radius: 50%;
+      object-fit: cover;
+      margin-bottom: 8px;
+    }
+    .pdf-print-header h2 {
+      color: #0b2e4f;
+      font-size: 1.3rem;
+      margin: 6px 0;
+    }
+    .pdf-print-header .pdf-print-subtitle {
+      color: #64748b;
+      font-size: 0.85rem;
+      margin-bottom: 4px;
+    }
+    .pdf-print-header .pdf-print-date {
+      color: #333;
+      font-size: 0.8rem;
+      margin-bottom: 20px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid #0b2e4f;
+    }
+    .pdf-print-footer {
+      margin-top: 30px;
+      padding-top: 12px;
+      border-top: 1px solid #ccc;
+      font-size: 0.7rem;
+      color: #666;
+    }
+    .pdf-print-footer p { margin: 2px 0; }
+    .print-section-title {
+      margin-top: 24px;
+      color: #0b2e4f;
+    }
+
+    /* === Mode PDF (aktif saat export) === */
+    body.pdf-mode .app-header,
+    body.pdf-mode .bottom-nav,
+    body.pdf-mode .tabs,
+    body.pdf-mode .filter-bar,
+    body.pdf-mode .info,
+    body.pdf-mode .btn-wa-tagih,
+    body.pdf-mode .chart-container,
+    body.pdf-mode .form-card,
+    body.pdf-mode .btn-primary,
+    body.pdf-mode .btn-secondary,
+    body.pdf-mode .btn-danger,
+    body.pdf-mode #logoutBtn,
+    body.pdf-mode .tab-btn {
+      display: none !important;
+    }
+    body.pdf-mode {
+      background: white !important;
+      padding-bottom: 0 !important;
+    }
+    body.pdf-mode .container {
+      max-width: 100% !important;
+      padding: 0 !important;
+      margin: 0 !important;
+    }
+    body.pdf-mode #tunggakanPrintArea {
+      display: block !important;
+    }
+    body.pdf-mode .pdf-print-header,
+    body.pdf-mode .pdf-print-footer {
+      display: block !important;
+    }
+    body.pdf-mode .tunggakan-summary {
+      grid-template-columns: repeat(4, 1fr) !important;
+      gap: 12px !important;
+    }
+    body.pdf-mode .tunggakan-summary .ts-card {
+      box-shadow: none !important;
+      border: 1px solid #ccc !important;
+      page-break-inside: avoid;
+    }
+    body.pdf-mode .tunggakan-summary .ts-card.danger {
+      border-left: 4px solid #e74c3c !important;
+    }
+    body.pdf-mode .prioritas-section {
+      background: #fff !important;
+      border: 1px solid #c0392b !important;
+      border-left: 5px solid #e74c3c !important;
+      page-break-inside: avoid;
+    }
+    body.pdf-mode .prioritas-table th {
+      background: #c0392b !important;
+      color: white !important;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    body.pdf-mode table {
+      page-break-inside: auto;
+      font-size: 0.75rem;
+    }
+    body.pdf-mode tr {
+      page-break-inside: avoid;
+      page-break-after: auto;
+    }
+    body.pdf-mode thead {
+      display: table-header-group;
+    }
+    body.pdf-mode tfoot {
+      display: table-footer-group;
+    }
+
     @media (max-width: 768px) {
       .container { padding: 0 12px; }
       .stats-grid { grid-template-columns: 1fr; }
@@ -99,12 +213,20 @@
       .prioritas-table { font-size: 0.72rem; }
       .prioritas-table th, .prioritas-table td { padding: 6px 8px; }
     }
+
     @media print {
       body { padding-bottom: 0; }
-      .app-header, .bottom-nav, .tabs, .filter-bar, .btn-primary, .btn-secondary, .info, .form-card, #logoutBtn, .tab-btn, .chart-container, .btn-danger, .print-hide, .btn-wa-tagih { display: none !important; }
+      .app-header, .bottom-nav, .tabs, .filter-bar, .btn-primary, .btn-secondary, .btn-danger, #logoutBtn, .chart-container, .form-card, .btn-wa-tagih, .btn-delete, .btn-edit, .btn-save-role { display: none !important; }
       .container { margin: 0; padding: 0; }
-      table { page-break-inside: avoid; }
-      .prioritas-section { background: white; border-left: 3px solid #000; }
+      .table-wrapper { overflow: visible; }
+      table { page-break-inside: auto; }
+      tr { page-break-inside: avoid; }
+      .pdf-print-header, .pdf-print-footer { display: block !important; }
+      .pdf-print-header img { margin: 0 auto 8px; }
+      .pdf-print-header h2 { margin: 6px 0; }
+      .tunggakan-summary { grid-template-columns: repeat(4, 1fr) !important; }
+      .prioritas-section { page-break-inside: avoid; }
+      @page { margin: 0.5cm 1cm; }
     }
   </style>
 </head>
@@ -245,7 +367,7 @@
       </div>
     </div>
 
-    <!-- ============ TAB LAPORAN TUNGGAKAN (BARU) ============ -->
+    <!-- ============ TAB LAPORAN TUNGGAKAN ============ -->
     <div id="tab-tunggakan" class="tab-content">
       <h2>Laporan Tunggakan Iuran</h2>
 
@@ -261,22 +383,41 @@
         <button id="printTunggakanPDF" class="btn-secondary" style="background:#27ae60;">🖨️ Cetak PDF</button>
       </div>
 
-      <!-- Summary Cards -->
-      <div id="tunggakanSummary"></div>
+      <!-- ====== AREA YANG DICETAK PDF ====== -->
+      <div id="tunggakanPrintArea">
+        <!-- PDF Header (hanya muncul saat cetak) -->
+        <div class="pdf-print-header">
+          <img src="../images/logo.webp" alt="Logo KWP3T" onerror="this.src='https://placehold.co/80x80?text=Logo'">
+          <h2>Laporan Tunggakan Iuran KWP3T</h2>
+          <p class="pdf-print-subtitle">Perumahan Pondok Payung Teduh</p>
+          <p class="pdf-print-date" id="pdfPrintDate">-</p>
+        </div>
 
-      <!-- Prioritas ≥ 2 Bulan -->
-      <div id="tunggakanPrioritas"></div>
+        <!-- Summary Cards -->
+        <div id="tunggakanSummary"></div>
 
-      <!-- Tabel Lengkap -->
-      <h3 style="margin-top: 24px; color: #0b2e4f;">📋 Daftar Lengkap Tunggakan</h3>
-      <div class="table-wrapper" id="tunggakanContainer">
-        <table id="tunggakanTable">
-          <thead>
-            <tr><th>No Rumah</th><th>Penghuni</th><th>Iuran/bln</th><th>Koordinator</th><th>Bulan Tunggakan</th><th>Total Tunggakan</th></tr>
-          </thead>
-          <tbody></tbody>
-        </table>
+        <!-- Prioritas ≥ 2 Bulan -->
+        <div id="tunggakanPrioritas"></div>
+
+        <!-- Tabel Lengkap -->
+        <h3 class="print-section-title">📋 Daftar Lengkap Tunggakan</h3>
+        <div class="table-wrapper" id="tunggakanContainer">
+          <table id="tunggakanTable">
+            <thead>
+              <tr><th>No Rumah</th><th>Penghuni</th><th>Iuran/bln</th><th>Koordinator</th><th>Bulan Tunggakan</th><th>Total Tunggakan</th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+
+        <!-- PDF Footer (hanya muncul saat cetak) -->
+        <div class="pdf-print-footer">
+          <p>Dicetak dari Sistem KWP3T v3.2026 | Design by Yetno</p>
+          <p>Tanggal cetak: <span id="pdfPrintTimestamp">-</span></p>
+        </div>
       </div>
+      <!-- ====== END PDF AREA ====== -->
+
       <p class="info">Catatan: Tunggakan dihitung per bulan berdasarkan riwayat status rumah. Bulan dengan status "Dibebaskan" tidak dihitung tunggakan.</p>
     </div>
 
@@ -871,18 +1012,64 @@
         document.getElementById('resetTunggakanBtn').addEventListener('click', () => {
           startInput.value = defaultStart; endInput.value = defaultEnd; koordSelect.value = 'all'; loadReport();
         });
-        document.getElementById('printTunggakanPDF').addEventListener('click', () => {
-          const element = document.getElementById('tunggakanContainer');
+
+        // ==== CETAK PDF (Ringkasan + Prioritas + Tabel) ====
+        document.getElementById('printTunggakanPDF').addEventListener('click', async () => {
+          const printArea = document.getElementById('tunggakanPrintArea');
+          if (!printArea) {
+            alert('Area cetak tidak ditemukan.');
+            return;
+          }
+
+          // Set tanggal cetak di header & footer PDF
+          const now = new Date();
+          const tglCetak = now.toLocaleDateString('id-ID', {
+            weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+          });
+          const waktuCetak = now.toLocaleString('id-ID', {
+            day: '2-digit', month: 'short', year: 'numeric',
+            hour: '2-digit', minute: '2-digit'
+          });
+          const pdfDateEl = document.getElementById('pdfPrintDate');
+          const pdfTsEl   = document.getElementById('pdfPrintTimestamp');
+          if (pdfDateEl) pdfDateEl.textContent = `Periode: ${startInput.value} s/d ${endInput.value} | Dicetak: ${tglCetak}`;
+          if (pdfTsEl)   pdfTsEl.textContent   = waktuCetak;
+
+          // Aktifkan mode PDF (sembunyikan elemen non-cetak)
+          document.body.classList.add('pdf-mode');
+
+          // Tunggu CSS mode PDF diterapkan
+          await new Promise(resolve => setTimeout(resolve, 500));
+
           const opt = {
-            margin: [0.5, 0.5, 0.5, 0.5],
+            margin: [0.4, 0.4, 0.5, 0.4],
             filename: `laporan_tunggakan_${startInput.value}_to_${endInput.value}.pdf`,
-            image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2, letterRendering: true },
-            jsPDF: { unit: 'in', format: 'a4', orientation: 'landscape' },
+            image: { type: 'jpeg', quality: 0.95 },
+            html2canvas: {
+              scale: 2,
+              letterRendering: true,
+              useCORS: true,
+              scrollY: 0,
+              logging: false
+            },
+            jsPDF: {
+              unit: 'in',
+              format: 'a4',
+              orientation: 'portrait'
+            },
             pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
           };
-          html2pdf().set(opt).from(element).save();
+
+          try {
+            await html2pdf().set(opt).from(printArea).save();
+          } catch (err) {
+            console.error('PDF Error:', err);
+            alert('Gagal membuat PDF. Silakan coba lagi.');
+          } finally {
+            document.body.classList.remove('pdf-mode');
+          }
         });
+
         loadReport();
       }
 
