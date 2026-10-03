@@ -19,7 +19,6 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <style>
-    /* ========== CSS (sama seperti sebelumnya, tidak ada perubahan) ========== */
     :root {
       --primary: #0b2e4f;
       --accent: #f59e0b;
@@ -271,7 +270,7 @@
       align-items: flex-start;
     }
 
-    /* Dashboard stats – 5 cards, mobile satu kolom, desktop auto */
+    /* Dashboard stats – 5 cards */
     .dashboard-stats {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -308,7 +307,6 @@
       color: #64748b;
       font-weight: 500;
     }
-    /* Chart container – lebih sempit di desktop, tetap responsif */
     .chart-container {
       background: white;
       border-radius: 20px;
@@ -342,7 +340,7 @@
       width: 100%;
     }
 
-   /* Gallery – 3 columns */
+    /* Gallery – 3 columns */
     .gallery-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
@@ -416,7 +414,7 @@
       transform: rotate(180deg);
     }
 
-    /* Contact board – 3 columns, tombol tanpa icon */
+    /* Contact board */
     .contact-board {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
@@ -633,7 +631,7 @@
   </div>
 </header>
 
-<!-- Modal Info Pembayaran (sama seperti sebelumnya, tidak ada perubahan) -->
+<!-- Modal Info Pembayaran -->
 <div id="paymentModal" class="modal">
   <div class="modal-content">
     <span class="close-modal">&times;</span>
@@ -652,7 +650,6 @@
       <p>Serahkan iuran langsung kepada Koordinator Lorong masing‑masing. Daftar koordinator tersedia di bagian <a href="#kontak">Kontak & Lokasi</a>.</p>
     </div>
 
-    <!-- ========== BAGIAN KONFIRMASI (DIPERBARUI) ========== -->
     <p><strong>Konfirmasi Pembayaran Transfer:</strong></p>
     <div style="text-align: center; margin: 15px 0 10px;">
       <a href="https://chat.whatsapp.com/EAtl3hU82X19htpA8OyKJ4" 
@@ -674,7 +671,6 @@
         ⚠️ Pencatatan iuran hanya dilakukan oleh Sekretaris/Bendahara.
       </p>
     </div>
-    <!-- ========== AKHIR PERUBAHAN ========== -->
 
   </div>
 </div>
@@ -905,25 +901,29 @@
 
   async function loadDashboard() {
     try {
-      // Ambil semua pemasukan
-      const { data: allPemasukan } = await supabase
+      // ===== DISAMAKAN DENGAN laporan-kas.html =====
+      // Ambil SEMUA transaksi, urutkan by tanggal (tanpa filter jenis apapun)
+      const { data: allKas, error } = await supabase
         .from('transaksi_kas')
-        .select('pemasukan')
-        .eq('jenis', 'Pemasukan');
-      const totalPem = allPemasukan?.reduce((s, t) => s + (t.pemasukan || 0), 0) || 0;
+        .select('tanggal, pemasukan, pengeluaran, saldo')
+        .order('tanggal', { ascending: true });
+
+      if (error) throw error;
+
+      // Total Pemasukan: jumlahkan SEMUA kolom pemasukan
+      const totalPem = allKas?.reduce((s, t) => s + (t.pemasukan || 0), 0) || 0;
       document.getElementById('totalPemasukan').innerText = formatRupiah(totalPem);
 
-      // Ambil semua pengeluaran
-      const { data: allPengeluaran } = await supabase
-        .from('transaksi_kas')
-        .select('pengeluaran')
-        .eq('jenis', 'Pengeluaran');
-      const totalPeng = allPengeluaran?.reduce((s, t) => s + (t.pengeluaran || 0), 0) || 0;
+      // Total Pengeluaran: jumlahkan SEMUA kolom pengeluaran
+      const totalPeng = allKas?.reduce((s, t) => s + (t.pengeluaran || 0), 0) || 0;
       document.getElementById('totalPengeluaran').innerText = formatRupiah(totalPeng);
 
-      // Hitung saldo dari total pemasukan - total pengeluaran (sama seperti laporan kas)
-      const saldo = totalPem - totalPeng;
+      // Saldo Kas: ambil field `saldo` dari transaksi TERAKHIR (persis laporan-kas.html)
+      const saldo = (allKas && allKas.length > 0)
+        ? allKas[allKas.length - 1].saldo
+        : 0;
       document.getElementById('saldoKas').innerText = formatRupiah(saldo);
+      // ===== SELESAI DISAMAKAN =====
 
       // Ambil iuran bulan ini
       const now = new Date();
@@ -939,7 +939,7 @@
       const totalIuranBulanIni = iuranBulanIni?.reduce((s, t) => s + t.pemasukan, 0) || 0;
       document.getElementById('iuranBulanIni').innerText = formatRupiah(totalIuranBulanIni);
 
-      // Hitung total tunggakan (tetap menggunakan fungsi yang sudah ada)
+      // Hitung total tunggakan
       const totalTunggakan = await computeTotalArrears();
       document.getElementById('totalTunggakan').innerText = formatRupiah(totalTunggakan);
 
@@ -950,7 +950,7 @@
     }
   }
 
-  // Fungsi untuk menghitung total tunggakan (mirip dengan logika di loadChartData)
+  // Fungsi untuk menghitung total tunggakan
   async function computeTotalArrears() {
     try {
       const { data: allWarga } = await supabase.from('warga').select('no_rumah, kondisi_terakhir, iuran_per_bulan');
@@ -968,7 +968,6 @@
         current.setMonth(current.getMonth() + 1);
       }
 
-      // Group riwayat by no_rumah
       const historyByHouse = new Map();
       allRiwayat?.forEach(h => {
         if (!historyByHouse.has(h.no_rumah)) historyByHouse.set(h.no_rumah, []);
@@ -978,7 +977,6 @@
         arr.sort((a,b) => new Date(a.berlaku_sejak) - new Date(b.berlaku_sejak));
       }
 
-      // Group pembayaran by no_rumah
       const paymentByHouse = new Map();
       allPayments?.forEach(p => {
         const d = new Date(p.bulan);
@@ -998,7 +996,6 @@
           const year = monthObj.year;
           const month = monthObj.month;
           const dateStr = `${year}-${String(month).padStart(2,'0')}-01`;
-          // Dapatkan status & iuran yang berlaku
           let latest = null;
           for (let h of histories) {
             let berlakuStr = h.berlaku_sejak;
@@ -1027,13 +1024,11 @@
   // ========== LOAD DATA CHART (Per Bulan) ==========
   async function loadChartData() {
     try {
-      // Ambil data yang diperlukan
       const { data: allKas } = await supabase.from('transaksi_kas').select('tanggal, pemasukan, pengeluaran').order('tanggal', { ascending: true });
       const { data: allRiwayat } = await supabase.from('riwayat_kondisi').select('*');
       const { data: allWarga } = await supabase.from('warga').select('no_rumah, kondisi_terakhir, iuran_per_bulan');
       const { data: allPayments } = await supabase.from('transaksi_iuran').select('no_rumah, bulan');
 
-      // Hitung rentang bulan (dari Nov 2025 sampai bulan ini)
       const now = new Date();
       const startDate = new Date(2025, 10, 1);
       const months = [];
@@ -1045,8 +1040,7 @@
         current.setMonth(current.getMonth() + 1);
       }
 
-      // Kelompokkan pemasukan & pengeluaran per bulan
-      const incomeMap = new Map(); // key: `${year}-${month}`
+      const incomeMap = new Map();
       const expenseMap = new Map();
       allKas?.forEach(k => {
         const d = new Date(k.tanggal);
@@ -1055,20 +1049,16 @@
         expenseMap.set(key, (expenseMap.get(key) || 0) + (k.pengeluaran || 0));
       });
 
-      // Hitung tunggakan per bulan menggunakan logika riwayat
       const arrearsMap = new Map();
-      // Group riwayat by no_rumah
       const historyByHouse = new Map();
       allRiwayat?.forEach(h => {
         if (!historyByHouse.has(h.no_rumah)) historyByHouse.set(h.no_rumah, []);
         historyByHouse.get(h.no_rumah).push(h);
       });
-      // Sorted histories per house by berlaku_sejak
       for (let [no_rumah, arr] of historyByHouse.entries()) {
         arr.sort((a,b) => new Date(a.berlaku_sejak) - new Date(b.berlaku_sejak));
       }
 
-      // Prepare payment map per house
       const paymentByHouse = new Map();
       allPayments?.forEach(p => {
         const d = new Date(p.bulan);
@@ -1077,17 +1067,14 @@
         paymentByHouse.get(p.no_rumah).add(key);
       });
 
-      // Untuk setiap rumah, hitung tunggakan per bulan
       for (const w of allWarga) {
         const no_rumah = w.no_rumah;
         const histories = historyByHouse.get(no_rumah) || [];
         const paidMonths = paymentByHouse.get(no_rumah) || new Set();
-        // Untuk setiap bulan dalam rentang
         for (const monthObj of months) {
           const year = monthObj.year;
           const month = monthObj.month;
           const dateStr = `${year}-${String(month).padStart(2,'0')}-01`;
-          // Dapatkan status & iuran yang berlaku
           let latest = null;
           for (let h of histories) {
             let berlakuStr = h.berlaku_sejak;
@@ -1107,7 +1094,6 @@
         }
       }
 
-      // Siapkan data untuk chart
       const labels = months.map(m => {
         return m.date.toLocaleDateString('id-ID', { month: 'short', year: 'numeric' });
       });
@@ -1115,7 +1101,6 @@
       const expenseData = months.map(m => expenseMap.get(`${m.year}-${m.month}`) || 0);
       const arrearsData = months.map(m => arrearsMap.get(`${m.year}-${m.month}`) || 0);
 
-      // Simpan data untuk digunakan ulang
       currentChartData = {
         labels: labels,
         datasets: [
@@ -1125,7 +1110,6 @@
         ]
       };
 
-      // Render chart dengan tipe default (bar)
       renderChart('bar');
     } catch (err) {
       console.error('Gagal memuat data chart:', err);
@@ -1151,7 +1135,6 @@
       }
     };
 
-    // Jika tipe area (lineFilled), ubah fill menjadi true untuk semua dataset
     if (type === 'lineFilled') {
       config.type = 'line';
       config.data.datasets = config.data.datasets.map(ds => ({
@@ -1178,7 +1161,7 @@
     trendChart = new Chart(ctx, config);
   }
 
-  // ========== LOGIKA CEK TUNGGAKAN (SAMA SEPERTI iuran.html) ==========
+  // ========== LOGIKA CEK TUNGGAKAN ==========
   async function getRiwayatKondisiForHouse(noRumah) {
     const { data, error } = await supabase
       .from('riwayat_kondisi')
@@ -1341,13 +1324,11 @@
     document.getElementById('btnCekTunggakan').addEventListener('click', (e) => { e.preventDefault(); cekTunggakanByRumah(); });
     document.getElementById('btnPaymentHistory').addEventListener('click', (e) => { e.preventDefault(); showPaymentHistory(); });
 
-    // Chart type selector
     const chartTypeSelect = document.getElementById('chartTypeSelect');
     chartTypeSelect.addEventListener('change', (e) => {
       renderChart(e.target.value);
     });
 
-    // Modal payment
     const paymentModal = document.getElementById('paymentModal');
     const btnInfo = document.getElementById('btnInfoPembayaran');
     const closePayment = document.querySelector('#paymentModal .close-modal');
@@ -1355,18 +1336,15 @@
     closePayment.addEventListener('click', () => { paymentModal.style.display = 'none'; });
     window.addEventListener('click', (e) => { if (e.target === paymentModal) paymentModal.style.display = 'none'; });
 
-    // Modal history
     const historyModal = document.getElementById('historyModal');
     const closeHistory = document.getElementById('closeHistoryModal');
     closeHistory.addEventListener('click', () => { historyModal.style.display = 'none'; });
     window.addEventListener('click', (e) => { if (e.target === historyModal) historyModal.style.display = 'none'; });
 
-    // Menu mobile
     const menuToggle = document.getElementById('menuToggle');
     const navLinks = document.getElementById('navLinks');
     menuToggle.addEventListener('click', () => navLinks.classList.toggle('active'));
 
-    // FAQ
     document.querySelectorAll('.faq-question').forEach(q => {
       q.addEventListener('click', () => {
         const item = q.parentElement;
@@ -1378,7 +1356,6 @@
     });
     document.getElementById('year').textContent = new Date().getFullYear();
 
-    // ========== REGISTRASI SERVICE WORKER (PWA) ==========
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/sw.js')
         .then(reg => console.log('Service Worker registered', reg))
