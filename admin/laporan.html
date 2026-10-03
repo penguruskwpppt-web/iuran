@@ -137,10 +137,6 @@
     .btn-quick {
       background: #f59e0b;
     }
-    /* TAMBAHAN: gaya tombol rekalkulasi */
-    .btn-recalc {
-      background: #8e44ad;
-    }
 
     /* Summary grid */
     .summary-grid {
@@ -228,7 +224,7 @@
       to { transform: rotate(360deg); }
     }
 
-    /* PDF Styles (print & export) */
+    /* PDF Styles */
     .pdf-header {
       text-align: center;
       margin-bottom: 20px;
@@ -330,7 +326,7 @@
       transform: scale(0.95);
     }
 
-    /* Mode PDF - menyembunyikan elemen yang tidak perlu saat cetak */
+    /* Mode PDF */
     body.pdf-mode .app-header,
     body.pdf-mode .bottom-nav,
     body.pdf-mode .filter-bar,
@@ -339,8 +335,7 @@
     body.pdf-mode .btn-print,
     body.pdf-mode .btn-export-excel,
     body.pdf-mode .btn-export-pdf,
-    body.pdf-mode .btn-quick,
-    body.pdf-mode .btn-recalc { /* TAMBAHAN: sembunyikan juga tombol rekalkulasi */
+    body.pdf-mode .btn-quick {
       display: none !important;
     }
 
@@ -379,7 +374,7 @@
         padding-bottom: 0;
         margin: 0;
       }
-      .app-header, .bottom-nav, .filter-bar, .btn-print, .btn-export-excel, .btn-export-pdf, .btn-quick, .btn-recalc, .chart-container {
+      .app-header, .bottom-nav, .filter-bar, .btn-print, .btn-export-excel, .btn-export-pdf, .btn-quick, .chart-container {
         display: none !important;
       }
       .pdf-header {
@@ -436,8 +431,6 @@
       <button id="monthBtn" class="btn-quick"><i class="fas fa-calendar-alt"></i> Bulan Ini</button>
       <button id="filterBtn"><i class="fas fa-filter"></i> Filter</button>
       <button id="resetBtn"><i class="fas fa-undo"></i> Reset</button>
-      <!-- TAMBAHAN: tombol rekalkulasi saldo -->
-      <button id="recalcBtn" class="btn-recalc"><i class="fas fa-calculator"></i> Rekalkulasi Saldo</button>
       <button id="exportExcelBtn" class="btn-export-excel"><i class="fas fa-file-excel"></i> Export Excel</button>
       <button id="exportPdfBtn" class="btn-export-pdf"><i class="fas fa-file-pdf"></i> Cetak PDF</button>
       <button id="printBtn" class="btn-print"><i class="fas fa-print"></i> Cetak (Browser)</button>
@@ -458,7 +451,7 @@
       <div class="table-wrapper">
         <table id="kasTable">
           <thead>
-            <tr><th>Tanggal</th><th>Keterangan</th><th>Pemasukan</th><th>Pengeluaran</th><th>Saldo</th><th>Sumber</th>
+            <tr><th>Tanggal</th><th>Keterangan</th><th>Pemasukan</th><th>Pengeluaran</th><th>Saldo</th><th>Sumber</th></tr>
           </thead>
           <tbody></tbody>
         </table>
@@ -515,6 +508,7 @@
       let currentData = [];
       let currentStart = null;
       let currentEnd = null;
+      let saldoAwalGlobal = 0;
 
       // ========== CEK LOGIN & ROLE ==========
       (async () => {
@@ -567,6 +561,11 @@
         return iso;
       }
 
+      // Helper: deteksi baris Saldo Awal (case-insensitive)
+      function isSaldoAwal(row) {
+        return (row.sumber || '').toLowerCase() === 'saldo awal';
+      }
+
       async function loadKas(start = null, end = null) {
         currentStart = start;
         currentEnd = end;
@@ -582,10 +581,13 @@
         const tbody = document.querySelector('#kasTable tbody');
         tbody.innerHTML = '<tr><td colspan="6" class="loading">Memuat data...</td></tr>';
 
+        // Query dengan limit besar supaya tidak terpotong default 1000 baris
         let query = supabase
           .from('transaksi_kas')
           .select('tanggal,keterangan,pemasukan,pengeluaran,saldo,sumber')
-          .order('tanggal', { ascending: true });
+          .limit(100000)
+          .order('tanggal', { ascending: true })
+          .order('kas_id',  { ascending: true });
 
         if (start) query = query.gte('tanggal', start + 'T00:00:00');
         if (end) query = query.lte('tanggal', end + 'T23:59:59');
@@ -596,33 +598,46 @@
 
         if (error) {
           console.error(error);
-          tbody.innerHTML = '<td><td colspan="6">Gagal memuat data</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="6">Gagal memuat data</td></tr>';
           return;
         }
-        currentData = data;
 
-        let saldoAwal = 0;
+        // Pisahkan Saldo Awal
+        const saldoAwalRow = (data || []).find(r => isSaldoAwal(r));
+        if (saldoAwalRow) {
+          saldoAwalGlobal = saldoAwalRow.saldo;
+        } else if (!start) {
+          // Kalau tidak ada filter dan tidak ketemu Saldo Awal, pakai 0
+          saldoAwalGlobal = 0;
+        }
+        // Kalau ada filter (start diisi), saldo awal = saldo baris sebelum start
+
+        // Kalau ada filter, cari saldo baris terakhir sebelum start
         if (start) {
           const { data: prevData } = await supabase
             .from('transaksi_kas')
             .select('saldo')
             .lt('tanggal', start + 'T00:00:00')
             .order('tanggal', { ascending: false })
+            .order('kas_id',  { ascending: false })
             .limit(1);
-          saldoAwal = prevData?.[0]?.saldo || 0;
+          saldoAwalGlobal = prevData?.[0]?.saldo || 0;
         }
 
-        const totalPemasukan = data.reduce((sum, row) => sum + (row.pemasukan || 0), 0);
-        const totalPengeluaran = data.reduce((sum, row) => sum + (row.pengeluaran || 0), 0);
-        const saldoAkhir = saldoAwal + totalPemasukan - totalPengeluaran;
+        // Filter Saldo Awal dari tabel
+        currentData = (data || []).filter(r => !isSaldoAwal(r));
 
-        document.getElementById('saldoAwal').innerText = formatRupiah(saldoAwal);
+        const totalPemasukan = currentData.reduce((sum, row) => sum + (row.pemasukan || 0), 0);
+        const totalPengeluaran = currentData.reduce((sum, row) => sum + (row.pengeluaran || 0), 0);
+        const saldoAkhir = saldoAwalGlobal + totalPemasukan - totalPengeluaran;
+
+        document.getElementById('saldoAwal').innerText = formatRupiah(saldoAwalGlobal);
         document.getElementById('totalPemasukan').innerText = formatRupiah(totalPemasukan);
         document.getElementById('totalPengeluaran').innerText = formatRupiah(totalPengeluaran);
         document.getElementById('saldoAkhir').innerText = formatRupiah(saldoAkhir);
 
-        renderTable(data);
-        updateChart(data);
+        renderTable(currentData);
+        updateChart(currentData);
       }
 
       function renderTable(data) {
@@ -705,70 +720,6 @@
         });
       }
 
-      // ========== TAMBAHAN: REKALKULASI SALDO ==========
-      async function recalculateSaldo() {
-        // Konfirmasi ke pengguna
-        const confirmMsg = 'Fitur ini akan menghitung ulang seluruh saldo berdasarkan urutan transaksi.\n\nProses ini tidak dapat dibatalkan dan mungkin memakan waktu beberapa detik.\nLanjutkan?';
-        if (!confirm(confirmMsg)) return;
-
-        const loadingDiv = document.getElementById('loadingIndicator');
-        loadingDiv.style.display = 'block';
-        loadingDiv.innerHTML = '<div class="loading-spinner"></div> Mengambil data transaksi...';
-
-        try {
-          // Ambil semua transaksi urut tanggal dan ID
-          const { data: transaksi, error } = await supabase
-            .from('transaksi_kas')
-            .select('id, tanggal, pemasukan, pengeluaran')
-            .order('tanggal', { ascending: true })
-            .order('id', { ascending: true }); // ID sebagai pengaman jika tanggal sama
-
-          if (error) throw new Error('Gagal mengambil data: ' + error.message);
-          if (!transaksi.length) {
-            alert('Tidak ada data transaksi.');
-            loadingDiv.style.display = 'none';
-            loadingDiv.innerHTML = '<div class="loading-spinner"></div> Memuat data...';
-            return;
-          }
-
-          let saldoJalan = 0;
-          let updated = 0;
-          const total = transaksi.length;
-
-          loadingDiv.innerHTML = `<div class="loading-spinner"></div> Memperbarui saldo (0/${total})...`;
-
-          // Loop satu per satu agar akurat dan update progress
-          for (let i = 0; i < transaksi.length; i++) {
-            const item = transaksi[i];
-            const pemasukan = item.pemasukan || 0;
-            const pengeluaran = item.pengeluaran || 0;
-            saldoJalan = saldoJalan + pemasukan - pengeluaran;
-
-            const { error: updateErr } = await supabase
-              .from('transaksi_kas')
-              .update({ saldo: saldoJalan })
-              .eq('id', item.id);
-
-            if (updateErr) throw new Error(`Gagal update ID ${item.id}: ${updateErr.message}`);
-            updated++;
-            if (updated % 10 === 0 || updated === total) {
-              loadingDiv.innerHTML = `<div class="loading-spinner"></div> Memperbarui saldo (${updated}/${total})...`;
-            }
-          }
-
-          loadingDiv.style.display = 'none';
-          loadingDiv.innerHTML = '<div class="loading-spinner"></div> Memuat data...';
-          alert(`✅ Rekalkulasi selesai! ${updated} transaksi telah diperbarui.`);
-          // Refresh tampilan laporan dengan filter saat ini
-          await loadKas(currentStart, currentEnd);
-        } catch (err) {
-          console.error(err);
-          alert('Terjadi kesalahan: ' + err.message);
-          loadingDiv.style.display = 'none';
-          loadingDiv.innerHTML = '<div class="loading-spinner"></div> Memuat data...';
-        }
-      }
-
       function exportToExcel() {
         if (!currentData.length) {
           alert('Tidak ada data untuk diekspor');
@@ -794,7 +745,6 @@
           return;
         }
 
-        // Siapkan data untuk summary PDF
         const saldoAwal = document.getElementById('saldoAwal').innerText;
         const totalPemasukan = document.getElementById('totalPemasukan').innerText;
         const totalPengeluaran = document.getElementById('totalPengeluaran').innerText;
@@ -815,20 +765,17 @@
           printTimestamp.innerText = formatted;
         }
 
-        // Aktifkan mode PDF (sembunyikan elemen UI)
         document.body.classList.add('pdf-mode');
 
-        // Tampilkan loading indikator untuk PDF
         const loadingDiv = document.getElementById('loadingIndicator');
         loadingDiv.style.display = 'block';
         loadingDiv.innerHTML = '<div class="loading-spinner"></div> Menyiapkan PDF...';
 
-        // Beri waktu untuk CSS mode PDF diterapkan (terutama di mobile)
         await new Promise(resolve => setTimeout(resolve, 800));
 
         const element = document.getElementById('pdfContainer');
         const opt = {
-          margin: [0.5, 0.5, 0.5, 0.5], // top, right, bottom, left (inci)
+          margin: [0.5, 0.5, 0.5, 0.5],
           filename: `laporan_kas_${new Date().toISOString().slice(0,10)}.pdf`,
           image: { type: 'jpeg', quality: 0.98 },
           html2canvas: { scale: 2, letterRendering: true, useCORS: true },
@@ -842,7 +789,6 @@
           console.error('PDF Error:', err);
           alert('Gagal membuat PDF. Silakan coba lagi.');
         } finally {
-          // Kembalikan tampilan normal
           document.body.classList.remove('pdf-mode');
           loadingDiv.style.display = 'none';
           loadingDiv.innerHTML = '<div class="loading-spinner"></div> Memuat data...';
@@ -859,7 +805,6 @@
         const exportExcelBtn = document.getElementById('exportExcelBtn');
         const exportPdfBtn = document.getElementById('exportPdfBtn');
         const printBtn = document.getElementById('printBtn');
-        const recalcBtn = document.getElementById('recalcBtn'); // TAMBAHAN
 
         startInput.addEventListener('change', () => {
           if (endInput.value) loadKas(startInput.value, endInput.value);
@@ -893,8 +838,6 @@
         exportExcelBtn.addEventListener('click', exportToExcel);
         exportPdfBtn.addEventListener('click', exportToPDF);
         printBtn.addEventListener('click', () => window.print());
-        // TAMBAHAN: event listener untuk rekalkulasi
-        if (recalcBtn) recalcBtn.addEventListener('click', recalculateSaldo);
 
         document.getElementById('logoutBtn').addEventListener('click', async (e) => {
           e.preventDefault();
@@ -902,6 +845,14 @@
           window.location.href = 'login.html';
         });
       }
+
+      // Footer timestamp
+      const now = new Date();
+      const footerTime = now.toLocaleString('id-ID', {
+        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+        hour: '2-digit', minute: '2-digit', second: '2-digit'
+      });
+      document.getElementById('printTimestamp').innerText = `Dicetak: ${footerTime}`;
     })();
   </script>
 </body>
