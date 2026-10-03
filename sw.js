@@ -1,64 +1,83 @@
-const CACHE_NAME = 'kwp3t-cache-v1';
-const urlsToCache = [
+const CACHE_NAME = 'kwp3t-v1.0.0'; // Ubah versi ini setiap kali Anda update web
+const RUNTIME_CACHE = 'kwp3t-runtime-v1';
+
+// Daftar file yang akan di-cache saat pertama kali diakses
+const PRECACHE_ASSETS = [
   '/',
   '/index.html',
-  '/404.html',
   '/laporan-kas.html',
-  '/admin/login.html',
+  '/offline.html',
+  '/manifest.json',
   '/images/logo.webp',
   '/images/logo-192.webp',
-  '/images/logo-512.webp',
-  '/images/thr.webp',
-  '/images/gotong.webp',
-  '/images/tiang.webp',
-  'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap',
-  'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css',
-  'https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js',
-  'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
+  '/images/logo-512.webp'
 ];
 
-// Install event: cache semua asset yang diperlukan
-self.addEventListener('install', event => {
+// ===== INSTALL =====
+self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME)
-      .then(cache => cache.addAll(urlsToCache))
+      .then((cache) => cache.addAll(PRECACHE_ASSETS))
       .then(() => self.skipWaiting())
   );
 });
 
-// Fetch event: serve dari cache, jika tidak ada ambil dari network
-self.addEventListener('fetch', event => {
-  event.respondWith(
-    caches.match(event.request)
-      .then(response => {
-        if (response) {
-          return response;
-        }
-        return fetch(event.request).then(networkResponse => {
-          // Optional: cache file baru yang belum ada (hanya untuk GET dan dari origin yang sama)
-          if (event.request.method === 'GET' && event.request.url.startsWith(self.location.origin)) {
-            const responseToCache = networkResponse.clone();
-            caches.open(CACHE_NAME).then(cache => {
-              cache.put(event.request, responseToCache);
-            });
-          }
-          return networkResponse;
-        });
-      })
-  );
-});
-
-// Activate event: hapus cache lama
-self.addEventListener('activate', event => {
+// ===== ACTIVATE =====
+self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then(cacheNames => {
+    caches.keys().then((keys) => {
       return Promise.all(
-        cacheNames.map(cacheName => {
-          if (cacheName !== CACHE_NAME) {
-            return caches.delete(cacheName);
-          }
-        })
+        keys.filter((key) => key !== CACHE_NAME && key !== RUNTIME_CACHE)
+            .map((key) => caches.delete(key))
       );
     }).then(() => self.clients.claim())
   );
+});
+
+// ===== FETCH =====
+self.addEventListener('fetch', (event) => {
+  const { request } = event;
+  const url = new URL(request.url);
+
+  if (request.method !== 'GET') return;
+
+  // Jangan cache request ke Supabase (harus selalu fresh)
+  if (url.hostname.includes('supabase.co')) return;
+
+  // HTML: Network-first (selalu ambil versi terbaru, fallback ke cache/offline)
+  if (request.mode === 'navigate' || request.destination === 'document') {
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          const copy = response.clone();
+          caches.open(RUNTIME_CACHE).then((cache) => cache.put(request, copy));
+          return response;
+        })
+        .catch(() => {
+          return caches.match(request).then((cached) => cached || caches.match('/offline.html'));
+        })
+    );
+    return;
+  }
+
+  // Aset statis (Gambar, CSS, JS, Font): Cache-first
+  const isStatic = ['style', 'script', 'font', 'image'].includes(request.destination)
+    || url.hostname === 'cdn.jsdelivr.net'
+    || url.hostname === 'cdnjs.cloudflare.com'
+    || url.hostname === 'fonts.googleapis.com'
+    || url.hostname === 'fonts.gstatic.com';
+
+  if (isStatic) {
+    event.respondWith(
+      caches.match(request).then((cached) => {
+        if (cached) return cached;
+        return fetch(request).then((response) => {
+          if (!response || response.status !== 200 || response.type === 'opaque') return response;
+          const copy = response.clone();
+          caches.open(RUNTIME_CACHE).then((cache) => cache.put(request, copy));
+          return response;
+        }).catch(() => caches.match('/offline.html'));
+      })
+    );
+  }
 });
