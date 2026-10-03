@@ -2,22 +2,19 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
   <title>KWP3T – Komunitas Warga Perumahan Pondok Payung Teduh</title>
   <meta name="description" content="KWP3T adalah komunitas warga Perumahan Pondok Payung Teduh yang mengelola iuran untuk keamanan, kebersihan, dan perawatan komplek secara transparan.">
   
-  <!-- ========== PWA META TAGS ========== -->
-  <link rel="manifest" href="/manifest.json">
+  <!-- PWA Meta Tags -->
+  <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#0b2e4f">
-  <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="KWP3T">
-  <link rel="apple-touch-icon" href="/images/logo_192.png">
-  <link rel="apple-touch-icon" sizes="152x152" href="/images/logo_192.png">
-  <link rel="apple-touch-icon" sizes="180x180" href="/images/logo_192.png">
-  <link rel="icon" href="/images/logo.webp" type="image/webp">
+  <link rel="apple-touch-icon" href="images/logo-192.webp">
   
+  <link rel="icon" href="images/logo.webp" type="image/webp">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -81,7 +78,6 @@
     .nav-links {
       display: flex;
       gap: 24px;
-      align-items: center;
     }
     .nav-links a {
       color: #e2e8f0;
@@ -139,31 +135,6 @@
     .btn-wa:hover {
       background: var(--whatsapp-dark);
       transform: translateY(-2px);
-    }
-
-    /* PWA Install Button */
-    #pwaInstallBtn {
-      display: none;
-      align-items: center;
-      gap: 6px;
-      background: var(--accent);
-      color: #000;
-      border: none;
-      padding: 8px 16px;
-      border-radius: 30px;
-      font-weight: 700;
-      font-size: 0.85rem;
-      cursor: pointer;
-      transition: 0.2s;
-      animation: pulse-install 2s ease-in-out infinite;
-    }
-    #pwaInstallBtn:hover {
-      background: #e67e22;
-      transform: translateY(-2px);
-    }
-    @keyframes pulse-install {
-      0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7); }
-      50% { box-shadow: 0 0 0 10px rgba(245, 158, 11, 0); }
     }
 
     /* Modal */
@@ -578,26 +549,6 @@
       text-align: right;
     }
 
-    /* Offline indicator */
-    .offline-badge {
-      display: none;
-      position: fixed;
-      top: 10px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: #e74c3c;
-      color: white;
-      padding: 8px 20px;
-      border-radius: 30px;
-      font-size: 0.85rem;
-      font-weight: 600;
-      z-index: 3000;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-    }
-    body.is-offline .offline-badge {
-      display: block;
-    }
-
     /* Mobile adjustments */
     @media (max-width: 768px) {
       .hero h1 { font-size: 2rem; }
@@ -651,14 +602,11 @@
 </head>
 <body>
 
-<!-- ========== OFFLINE INDICATOR ========== -->
-<div class="offline-badge">📡 Anda sedang offline</div>
-
 <header>
   <div class="container">
     <div class="navbar">
       <a href="index.html" class="logo">
-        <img src="/images/logo.webp" alt="Logo KWP3T">
+        <img src="images/logo.webp" alt="Logo KWP3T">
         <h1>KWP3T</h1>
       </a>
       <button class="menu-toggle" id="menuToggle">☰</button>
@@ -669,7 +617,6 @@
         <a href="#pengumuman">Pengumuman</a>
         <a href="#faq">FAQ</a>
         <a href="#kontak">Kontak</a>
-        <button id="pwaInstallBtn">📲 Install App</button>
         <a href="admin/login.html" target="_blank">🔐 Admin</a>
       </div>
     </div>
@@ -724,6 +671,7 @@
         ⚠️ Pencatatan iuran hanya dilakukan oleh Sekretaris/Bendahara.
       </p>
     </div>
+
   </div>
 </div>
 
@@ -941,54 +889,75 @@
     return d.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
   }
 
+  function getLocalDateString(date) {
+    const offset = date.getTimezoneOffset();
+    const localDate = new Date(date.getTime() - (offset * 60 * 1000));
+    return localDate.toISOString().split('T')[0];
+  }
+
+  // Helper: deteksi baris Saldo Awal (case-insensitive)
+  // Saldo Awal BUKAN pemasukan — hanya posisi kas awal, tidak boleh masuk SUM(pemasukan)
+  function isSaldoAwal(row) {
+    return (row.sumber || '').toLowerCase() === 'saldo awal';
+  }
+
   // ========== DASHBOARD & CHART ==========
   let trendChart = null;
   let currentChartData = { labels: [], datasets: [] };
 
   async function loadDashboard() {
     try {
-      // Ambil SEMUA transaksi (persis laporan-kas.html)
+      // Ambil SEMUA transaksi, urut tanggal + kas_id (stabil)
       const { data: allKas, error } = await supabase
         .from('transaksi_kas')
-        .select('tanggal, pemasukan, pengeluaran, saldo')
-        .order('tanggal', { ascending: true });
+        .select('tanggal, pemasukan, pengeluaran, saldo, jenis, sumber')
+        .order('tanggal', { ascending: true })
+        .order('kas_id',  { ascending: true });
 
       if (error) throw error;
 
-      const totalPem = allKas?.reduce((s, t) => s + (t.pemasukan || 0), 0) || 0;
+      // Total Pemasukan: EXCLUDE Saldo Awal
+      // Saldo Awal tersimpan sebagai `pemasukan` di database, tapi secara akuntansi BUKAN pemasukan.
+      const totalPem = (allKas || [])
+        .filter(r => !isSaldoAwal(r))
+        .reduce((s, t) => s + (t.pemasukan || 0), 0);
       document.getElementById('totalPemasukan').innerText = formatRupiah(totalPem);
 
-      const totalPeng = allKas?.reduce((s, t) => s + (t.pengeluaran || 0), 0) || 0;
+      // Total Pengeluaran: EXCLUDE Saldo Awal (konsisten dengan pemasukan)
+      const totalPeng = (allKas || [])
+        .filter(r => !isSaldoAwal(r))
+        .reduce((s, t) => s + (t.pengeluaran || 0), 0);
       document.getElementById('totalPengeluaran').innerText = formatRupiah(totalPeng);
 
-      const saldo = (allKas && allKas.length > 0) ? allKas[allKas.length - 1].saldo : 0;
+      // Saldo Kas: ambil `saldo` dari baris TERAKHIR (nilai ledger yang sudah tersimpan)
+      const saldo = (allKas && allKas.length > 0)
+        ? allKas[allKas.length - 1].saldo
+        : 0;
       document.getElementById('saldoKas').innerText = formatRupiah(saldo);
 
-      // Iuran bulan ini
+      // Iuran bulan ini — filter eksplisit sumber='Iuran Warga'
       const now = new Date();
       const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-      const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString();
-      const { data: iuranBulanIni } = await supabase
-        .from('transaksi_kas')
-        .select('pemasukan')
-        .eq('jenis', 'Pemasukan')
-        .eq('sumber', 'Iuran Warga')
-        .gte('tanggal', firstDay)
-        .lte('tanggal', lastDay);
-      const totalIuranBulanIni = iuranBulanIni?.reduce((s, t) => s + t.pemasukan, 0) || 0;
+      const lastDay  = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59).toISOString();
+      const totalIuranBulanIni = (allKas || [])
+        .filter(r => r.sumber === 'Iuran Warga'
+                  && r.tanggal >= firstDay
+                  && r.tanggal <= lastDay)
+        .reduce((s, t) => s + (t.pemasukan || 0), 0);
       document.getElementById('iuranBulanIni').innerText = formatRupiah(totalIuranBulanIni);
 
-      // Tunggakan via RPC (sama dengan admin.html)
+      // Total tunggakan (RPC - sama dengan admin.html)
       const totalTunggakan = await computeTotalArrears();
       document.getElementById('totalTunggakan').innerText = formatRupiah(totalTunggakan);
 
+      // Chart
       await loadChartData();
     } catch (err) {
       console.error(err);
     }
   }
 
-  // ========== TOTAL TUNGGAKAN (via RPC) ==========
+  // ========== TOTAL TUNGGAKAN (SAMA DENGAN admin.html via RPC) ==========
   async function computeTotalArrears() {
     try {
       const now = new Date();
@@ -1003,6 +972,7 @@
 
       if (error) throw error;
       if (!data || data.length === 0) return 0;
+
       return data.reduce((sum, r) => sum + (r.total_tunggakan || 0), 0);
     } catch (err) {
       console.error('Error computing total arrears:', err);
@@ -1010,10 +980,14 @@
     }
   }
 
-  // ========== LOAD DATA CHART ==========
+  // ========== LOAD DATA CHART (Per Bulan) ==========
   async function loadChartData() {
     try {
-      const { data: allKas } = await supabase.from('transaksi_kas').select('tanggal, pemasukan, pengeluaran').order('tanggal', { ascending: true });
+      const { data: allKas } = await supabase
+        .from('transaksi_kas')
+        .select('tanggal, pemasukan, pengeluaran, sumber')
+        .order('tanggal', { ascending: true })
+        .order('kas_id',  { ascending: true });
 
       const now = new Date();
       const startDate = new Date(2025, 10, 1);
@@ -1029,6 +1003,8 @@
       const incomeMap = new Map();
       const expenseMap = new Map();
       allKas?.forEach(k => {
+        // EXCLUDE Saldo Awal dari chart
+        if (isSaldoAwal(k)) return;
         const d = new Date(k.tanggal);
         const key = `${d.getFullYear()}-${d.getMonth()+1}`;
         incomeMap.set(key, (incomeMap.get(key) || 0) + (k.pemasukan || 0));
@@ -1046,17 +1022,21 @@
             p_koordinator_filter: null
           });
           if (rpcErr) {
+            console.warn('RPC tunggakan gagal untuk', monthStr, rpcErr);
             arrearsMap.set(`${m.year}-${m.month}`, 0);
             continue;
           }
           const total = (reportData || []).reduce((s, r) => s + (r.total_tunggakan || 0), 0);
           arrearsMap.set(`${m.year}-${m.month}`, total);
         } catch (e) {
+          console.warn('RPC tunggakan error untuk', monthStr, e);
           arrearsMap.set(`${m.year}-${m.month}`, 0);
         }
       }
 
-      const labels = months.map(m => m.date.toLocaleDateString('id-ID', { month: 'short', year: 'numeric' }));
+      const labels = months.map(m => {
+        return m.date.toLocaleDateString('id-ID', { month: 'short', year: 'numeric' });
+      });
       const incomeData = months.map(m => incomeMap.get(`${m.year}-${m.month}`) || 0);
       const expenseData = months.map(m => expenseMap.get(`${m.year}-${m.month}`) || 0);
       const arrearsData = months.map(m => arrearsMap.get(`${m.year}-${m.month}`) || 0);
@@ -1066,7 +1046,7 @@
         datasets: [
           { label: 'Pemasukan', data: incomeData, borderColor: '#2ecc71', backgroundColor: 'rgba(46,204,113,0.1)', tension: 0.2, fill: false },
           { label: 'Pengeluaran', data: expenseData, borderColor: '#e74c3c', backgroundColor: 'rgba(231,76,60,0.1)', tension: 0.2, fill: false },
-          { label: 'Tunggakan', data: arrearsData, borderColor: '#f39c12', backgroundColor: 'rgba(243,156,18,0.1)', tension: 0.2, fill: false, borderDash: [5, 5] }
+          { label: 'Tunggakan per Bulan', data: arrearsData, borderColor: '#f39c12', backgroundColor: 'rgba(243,156,18,0.1)', tension: 0.2, fill: false, borderDash: [5, 5] }
         ]
       };
 
@@ -1097,17 +1077,31 @@
 
     if (type === 'lineFilled') {
       config.type = 'line';
-      config.data.datasets = config.data.datasets.map(ds => ({ ...ds, fill: true, backgroundColor: ds.backgroundColor }));
+      config.data.datasets = config.data.datasets.map(ds => ({
+        ...ds,
+        fill: true,
+        backgroundColor: ds.backgroundColor
+      }));
     } else if (type === 'line') {
-      config.data.datasets = config.data.datasets.map(ds => ({ ...ds, fill: false, backgroundColor: 'transparent' }));
+      config.data.datasets = config.data.datasets.map(ds => ({
+        ...ds,
+        fill: false,
+        backgroundColor: 'transparent'
+      }));
     } else if (type === 'bar') {
-      config.data.datasets = config.data.datasets.map(ds => ({ ...ds, fill: false, backgroundColor: ds.borderColor, borderColor: ds.borderColor, borderRadius: 4 }));
+      config.data.datasets = config.data.datasets.map(ds => ({
+        ...ds,
+        fill: false,
+        backgroundColor: ds.borderColor,
+        borderColor: ds.borderColor,
+        borderRadius: 4
+      }));
     }
 
     trendChart = new Chart(ctx, config);
   }
 
-  // ========== CEK TUNGGAKAN PER RUMAH (via RPC) ==========
+  // ========== LOGIKA CEK TUNGGAKAN (via RPC, sama dengan admin.html) ==========
   async function cekTunggakanByRumah() {
     const noRumah = prompt("Masukkan nomor rumah yang ingin dicek tunggakannya:", "")
     if (!noRumah) return
@@ -1210,7 +1204,9 @@
     document.getElementById('btnPaymentHistory').addEventListener('click', (e) => { e.preventDefault(); showPaymentHistory(); });
 
     const chartTypeSelect = document.getElementById('chartTypeSelect');
-    chartTypeSelect.addEventListener('change', (e) => renderChart(e.target.value));
+    chartTypeSelect.addEventListener('change', (e) => {
+      renderChart(e.target.value);
+    });
 
     const paymentModal = document.getElementById('paymentModal');
     const btnInfo = document.getElementById('btnInfoPembayaran');
@@ -1238,73 +1234,13 @@
       });
     });
     document.getElementById('year').textContent = new Date().getFullYear();
-  });
-</script>
 
-<!-- ========== PWA REGISTRATION & INSTALL PROMPT ========== -->
-<script>
-  // ===== Register Service Worker =====
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
+    if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/sw.js')
-        .then((reg) => {
-          console.log('[PWA] Service Worker registered:', reg.scope);
-
-          // Cek update SW
-          reg.addEventListener('updatefound', () => {
-            const newWorker = reg.installing;
-            newWorker.addEventListener('statechange', () => {
-              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                if (confirm('Versi terbaru KWP3T tersedia. Muat ulang sekarang?')) {
-                  newWorker.postMessage({ type: 'SKIP_WAITING' });
-                  window.location.reload();
-                }
-              }
-            });
-          });
-        })
-        .catch((err) => console.warn('[PWA] SW registration failed:', err));
-    });
-  }
-
-  // ===== Install Prompt (A2HS) =====
-  let deferredPrompt = null;
-  const installBtn = document.getElementById('pwaInstallBtn');
-
-  window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
-    deferredPrompt = e;
-    if (installBtn) installBtn.style.display = 'inline-flex';
-  });
-
-  if (installBtn) {
-    installBtn.addEventListener('click', async () => {
-      if (!deferredPrompt) return;
-      deferredPrompt.prompt();
-      const { outcome } = await deferredPrompt.userChoice;
-      console.log('[PWA] User choice:', outcome);
-      deferredPrompt = null;
-      installBtn.style.display = 'none';
-    });
-  }
-
-  // Sembunyikan tombol kalau sudah di-install
-  window.addEventListener('appinstalled', () => {
-    console.log('[PWA] App installed');
-    if (installBtn) installBtn.style.display = 'none';
-  });
-
-  // ===== Offline / Online indicator =====
-  function updateOnlineStatus() {
-    if (navigator.onLine) {
-      document.body.classList.remove('is-offline');
-    } else {
-      document.body.classList.add('is-offline');
+        .then(reg => console.log('Service Worker registered', reg))
+        .catch(err => console.error('Service Worker registration failed', err));
     }
-  }
-  window.addEventListener('online', updateOnlineStatus);
-  window.addEventListener('offline', updateOnlineStatus);
-  updateOnlineStatus();
+  });
 </script>
 </body>
 </html>
